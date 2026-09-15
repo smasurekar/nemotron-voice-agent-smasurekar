@@ -1,5 +1,5 @@
 ---
-name: create-voice-agent
+name: nemotron-voice-agent-builder
 description: Create or refine NVIDIA voice agents with Pipecat or LiveKit. Use for Cascaded or Omni pipelines, speech customization, and cloud or local deployment.
 version: "2.2.0"
 license: CC-BY-4.0 AND Apache-2.0
@@ -14,6 +14,19 @@ Creates a working NVIDIA voice agent or updates an existing project:
 
 - **Cascaded**: ASR transcribes, a text LLM answers, TTS speaks.
 - **Omni**: one audio-in LLM replaces ASR and the text LLM. TTS still speaks.
+
+## When to Use This Skill
+
+Use this skill when the user wants to build, scaffold, configure, refine, or fix an
+NVIDIA voice agent — a real-time speech pipeline with audio input and spoken output — on
+Pipecat or LiveKit. This covers Cascaded (ASR → LLM → TTS) and Omni (audio-in LLM + TTS)
+pipelines, speech customization (ASR word boosting, TTS pronunciation), multilingual
+routing, and cloud or local deployment (NIM, vLLM, NeMo-Speech.cpp) on workstations, DGX
+Spark, or Jetson Thor.
+
+Do not use this skill for text-only chatbots or RAG, standalone batch speech-to-text
+transcription, generic Docker or infrastructure help, or unrelated CUDA or model work that
+has no voice-agent pipeline.
 
 ## Workflow
 
