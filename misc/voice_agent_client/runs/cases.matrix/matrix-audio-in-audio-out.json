@@ -1,0 +1,538 @@
+{
+  "case_id": "matrix-audio-in-audio-out",
+  "model": "nvidia/nemotron-realtime-client-tools",
+  "session_id": "sess_25fa4bcdf2e4420395d890e4ce8473ee",
+  "instructions": "Answer the question in one short sentence.",
+  "input_text": "",
+  "input_audio": "question.wav   2.29s mono PCM16 @ 24 kHz",
+  "text": "Paris is the capital of France.",
+  "user_transcript": "What is the capital of France?",
+  "output_audio_bytes": 134096,
+  "output_audio_duration_s": 2.794,
+  "output_sample_rate_hz": 24000,
+  "timings": {
+    "connect_s": 0.058822,
+    "session_ready_s": 0.140537,
+    "input_committed_s": 2.400242,
+    "input_sent_s": 4.051902,
+    "first_text_s": 4.997231,
+    "first_audio_s": 5.035228,
+    "response_done_s": 7.733335
+  },
+  "errors": [],
+  "tool_calls": [],
+  "usage": {},
+  "completed": true,
+  "termination_reason": "response_completed",
+  "events": [
+    {
+      "sequence": 0,
+      "type": "session.updated",
+      "received_at_s": 0.140524,
+      "data": {
+        "event_id": "event_35fa4ec41db04f1a97b54d75727feda6",
+        "type": "session.updated",
+        "session": {
+          "id": "sess_25fa4bcdf2e4420395d890e4ce8473ee",
+          "object": "realtime.session",
+          "type": "realtime",
+          "audio": {
+            "input": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "noise_reduction": null,
+              "transcription": {
+                "model": "nemotron-speech-streaming-en-0.6b"
+              },
+              "turn_detection": {
+                "type": "semantic_vad",
+                "eagerness": "auto",
+                "create_response": true,
+                "interrupt_response": true
+              }
+            },
+            "output": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "speed": 1.0,
+              "voice": "John"
+            }
+          },
+          "include": [],
+          "instructions": "Answer the question in one short sentence.",
+          "max_output_tokens": 256,
+          "model": "nvidia/nemotron-realtime-client-tools",
+          "output_modalities": [
+            "audio"
+          ],
+          "parallel_tool_calls": true,
+          "prompt": null,
+          "tool_choice": "none",
+          "tools": [],
+          "nvidia": {
+            "pipeline_mode": "generic-assistant",
+            "prompt_key": "generic_assistant_without_tools",
+            "llm_id": "self-hosted:singlegpu:nemotron-lightning",
+            "asr_id": "self-hosted:singlegpu:nemotron-asr-streaming-english",
+            "tts_id": "self-hosted:singlegpu:magpie-multilingual-tts",
+            "model_id": "nvidia/nvidia/nemotron-3.5-lightning",
+            "asr_model": "nemotron-speech-streaming-en-0.6b",
+            "tts_model": "magpie-tts-multilingual"
+          }
+        }
+      }
+    },
+    {
+      "sequence": 1,
+      "type": "input_audio_buffer.speech_started",
+      "received_at_s": 0.652534,
+      "data": {
+        "event_id": "event_3d484a18c4fe4f1b977158d90d0439ab",
+        "type": "input_audio_buffer.speech_started",
+        "item_id": "item_759a4237f3924ff58def95213e63d5a2",
+        "audio_start_ms": 88
+      }
+    },
+    {
+      "sequence": 2,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 2.381735,
+      "data": {
+        "event_id": "event_c9c69f36a8174c3c9d2f2939dc332a61",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "smart_turn_inference": 0.04202751200500643
+        },
+        "source": {
+          "processor": "BaseSmartTurn",
+          "model": null,
+          "kind": "TurnMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 3,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 2.398538,
+      "data": {
+        "event_id": "event_0ba3b86bc33e44d689e1b05ebb021f48",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "asr_ttfb": 0.26275014877319336
+        },
+        "source": {
+          "processor": "RealtimeNvidiaSTTService#143",
+          "model": "nemotron-speech-streaming-en-0.6b",
+          "kind": "TTFBMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 4,
+      "type": "input_audio_buffer.speech_stopped",
+      "received_at_s": 2.400224,
+      "data": {
+        "event_id": "event_0cdd992682ff45f39a2f54b50aa32d81",
+        "type": "input_audio_buffer.speech_stopped",
+        "item_id": "item_759a4237f3924ff58def95213e63d5a2",
+        "audio_end_ms": 2080
+      }
+    },
+    {
+      "sequence": 5,
+      "type": "input_audio_buffer.committed",
+      "received_at_s": 2.400238,
+      "data": {
+        "event_id": "event_0bd699e5ee7c4da1be6399d7c5038ac1",
+        "type": "input_audio_buffer.committed",
+        "item_id": "item_759a4237f3924ff58def95213e63d5a2",
+        "previous_item_id": null
+      }
+    },
+    {
+      "sequence": 6,
+      "type": "conversation.item.added",
+      "received_at_s": 2.400251,
+      "data": {
+        "event_id": "event_490025e11e254ccaa9107366ad9730a8",
+        "type": "conversation.item.added",
+        "previous_item_id": null,
+        "item": {
+          "id": "item_759a4237f3924ff58def95213e63d5a2",
+          "type": "message",
+          "role": "user",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "input_audio",
+              "transcript": null
+            }
+          ],
+          "object": "realtime.item"
+        }
+      }
+    },
+    {
+      "sequence": 7,
+      "type": "conversation.item.done",
+      "received_at_s": 2.400259,
+      "data": {
+        "event_id": "event_f009c691dec54c9ea06c871fc5f08cf9",
+        "type": "conversation.item.done",
+        "previous_item_id": null,
+        "item": {
+          "id": "item_759a4237f3924ff58def95213e63d5a2",
+          "type": "message",
+          "role": "user",
+          "status": "completed",
+          "content": [
+            {
+              "type": "input_audio",
+              "transcript": "What is the capital of France?"
+            }
+          ],
+          "object": "realtime.item"
+        }
+      }
+    },
+    {
+      "sequence": 8,
+      "type": "conversation.item.input_audio_transcription.completed",
+      "received_at_s": 2.400267,
+      "data": {
+        "event_id": "event_4c1ee4f1955c44bea5e4a1b360b71d67",
+        "type": "conversation.item.input_audio_transcription.completed",
+        "item_id": "item_759a4237f3924ff58def95213e63d5a2",
+        "content_index": 0,
+        "transcript": "What is the capital of France?",
+        "usage": {
+          "type": "duration",
+          "seconds": 1.992
+        }
+      }
+    },
+    {
+      "sequence": 9,
+      "type": "response.created",
+      "received_at_s": 2.403275,
+      "data": {
+        "event_id": "event_9cfe360128de474695a56f963c74e091",
+        "type": "response.created",
+        "response": {
+          "id": "resp_282af26cf9f0459da5fd4727d4f6b107",
+          "object": "realtime.response",
+          "status": "in_progress",
+          "status_details": null,
+          "output": [],
+          "conversation_id": "conv_7a7d37e9256f43469805c688f1096ba6",
+          "output_modalities": [
+            "audio"
+          ],
+          "max_output_tokens": 256,
+          "audio": {
+            "output": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "voice": "John"
+            }
+          },
+          "usage": null,
+          "metadata": null
+        }
+      }
+    },
+    {
+      "sequence": 10,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 4.989781,
+      "data": {
+        "event_id": "event_1f5d7e75dd394322a618a2b22938c424",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_ttft": 2.583369016647339
+        },
+        "source": {
+          "processor": "NvidiaLLMService#144",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "TTFBMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 11,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 4.99165,
+      "data": {
+        "event_id": "event_cc3d54d1c9b14b2298d98df9fa882133",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_processing_time": 2.587845802307129
+        },
+        "source": {
+          "processor": "NvidiaLLMService#144",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "ProcessingMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 12,
+      "type": "conversation.item.added",
+      "received_at_s": 4.995745,
+      "data": {
+        "event_id": "event_a275ac7af2624e03b2135968503f75f0",
+        "type": "conversation.item.added",
+        "previous_item_id": "item_759a4237f3924ff58def95213e63d5a2",
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "in_progress",
+          "content": [],
+          "object": "realtime.item",
+          "id": "item_303fa57c38d14dfc9514b781d02df70a"
+        }
+      }
+    },
+    {
+      "sequence": 13,
+      "type": "response.output_item.added",
+      "received_at_s": 4.995805,
+      "data": {
+        "event_id": "event_7ac1b9518bc740c1a48ab419350ce8b8",
+        "type": "response.output_item.added",
+        "response_id": "resp_282af26cf9f0459da5fd4727d4f6b107",
+        "output_index": 0,
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "in_progress",
+          "content": [],
+          "object": "realtime.item",
+          "id": "item_303fa57c38d14dfc9514b781d02df70a"
+        }
+      }
+    },
+    {
+      "sequence": 14,
+      "type": "response.content_part.added",
+      "received_at_s": 4.995835,
+      "data": {
+        "event_id": "event_dc26f6c239ff4f818034ad4f391e71e6",
+        "type": "response.content_part.added",
+        "response_id": "resp_282af26cf9f0459da5fd4727d4f6b107",
+        "item_id": "item_303fa57c38d14dfc9514b781d02df70a",
+        "output_index": 0,
+        "content_index": 0,
+        "part": {
+          "type": "audio",
+          "transcript": ""
+        }
+      }
+    },
+    {
+      "sequence": 15,
+      "type": "response.output_audio_transcript.delta",
+      "received_at_s": 4.997221,
+      "data": {
+        "event_id": "event_5269e35c7f6c41148edc7dd8875fddc2",
+        "type": "response.output_audio_transcript.delta",
+        "response_id": "resp_282af26cf9f0459da5fd4727d4f6b107",
+        "item_id": "item_303fa57c38d14dfc9514b781d02df70a",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 16,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 5.03477,
+      "data": {
+        "event_id": "event_27b3cf0423ab4e22888284db3ac15c31",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "tts_ttfb": 0.041602373123168945
+        },
+        "source": {
+          "processor": "NvidiaTTSService#145",
+          "model": "magpie-tts-multilingual",
+          "kind": "TTFBMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 17,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 5.035613,
+      "data": {
+        "event_id": "event_bc1ad1a8f1b645c0a91a9ff8a323f3da",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "server_e2e": 2.9
+        },
+        "source": {
+          "kind": "UserBotLatencyObserver",
+          "message_type": "user-bot-latency"
+        }
+      }
+    },
+    {
+      "sequence": 18,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 5.035624,
+      "data": {
+        "event_id": "event_471e8752d75b4e399ca01545c69e58fa",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "vad_smart_turn": 0.264
+        },
+        "source": {
+          "kind": "UserBotLatencyObserver",
+          "message_type": "latency-breakdown"
+        }
+      }
+    },
+    {
+      "sequence": 19,
+      "type": "response.output_audio.done",
+      "received_at_s": 7.733128,
+      "data": {
+        "event_id": "event_05e9467844484cc5b76bce1358c91a96",
+        "type": "response.output_audio.done",
+        "response_id": "resp_282af26cf9f0459da5fd4727d4f6b107",
+        "item_id": "item_303fa57c38d14dfc9514b781d02df70a",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 20,
+      "type": "response.output_audio_transcript.done",
+      "received_at_s": 7.73318,
+      "data": {
+        "event_id": "event_b81e0b83f2bc4573b3529b8dab267e2e",
+        "type": "response.output_audio_transcript.done",
+        "response_id": "resp_282af26cf9f0459da5fd4727d4f6b107",
+        "item_id": "item_303fa57c38d14dfc9514b781d02df70a",
+        "output_index": 0,
+        "content_index": 0,
+        "transcript": "Paris is the capital of France."
+      }
+    },
+    {
+      "sequence": 21,
+      "type": "response.content_part.done",
+      "received_at_s": 7.733213,
+      "data": {
+        "event_id": "event_c7ebec0e82b34b828f6579678f4a0eec",
+        "type": "response.content_part.done",
+        "response_id": "resp_282af26cf9f0459da5fd4727d4f6b107",
+        "item_id": "item_303fa57c38d14dfc9514b781d02df70a",
+        "output_index": 0,
+        "content_index": 0,
+        "part": {
+          "type": "audio",
+          "transcript": "Paris is the capital of France."
+        }
+      }
+    },
+    {
+      "sequence": 22,
+      "type": "conversation.item.done",
+      "received_at_s": 7.733246,
+      "data": {
+        "event_id": "event_440e2002be784a1daf995a09d9167822",
+        "type": "conversation.item.done",
+        "previous_item_id": "item_759a4237f3924ff58def95213e63d5a2",
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "completed",
+          "content": [
+            {
+              "type": "output_audio",
+              "transcript": "Paris is the capital of France."
+            }
+          ],
+          "object": "realtime.item",
+          "id": "item_303fa57c38d14dfc9514b781d02df70a"
+        }
+      }
+    },
+    {
+      "sequence": 23,
+      "type": "response.output_item.done",
+      "received_at_s": 7.73328,
+      "data": {
+        "event_id": "event_ba96cbc5cb6c49e0b000eb421784b634",
+        "type": "response.output_item.done",
+        "response_id": "resp_282af26cf9f0459da5fd4727d4f6b107",
+        "output_index": 0,
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "completed",
+          "content": [
+            {
+              "type": "output_audio",
+              "transcript": "Paris is the capital of France."
+            }
+          ],
+          "object": "realtime.item",
+          "id": "item_303fa57c38d14dfc9514b781d02df70a"
+        }
+      }
+    },
+    {
+      "sequence": 24,
+      "type": "response.done",
+      "received_at_s": 7.733328,
+      "data": {
+        "event_id": "event_3730a3f02d8547c7a468518cdb126249",
+        "type": "response.done",
+        "response": {
+          "id": "resp_282af26cf9f0459da5fd4727d4f6b107",
+          "object": "realtime.response",
+          "status": "completed",
+          "status_details": null,
+          "output": [
+            {
+              "type": "message",
+              "role": "assistant",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_audio",
+                  "transcript": "Paris is the capital of France."
+                }
+              ],
+              "object": "realtime.item",
+              "id": "item_303fa57c38d14dfc9514b781d02df70a"
+            }
+          ],
+          "conversation_id": "conv_7a7d37e9256f43469805c688f1096ba6",
+          "output_modalities": [
+            "audio"
+          ],
+          "max_output_tokens": 256,
+          "audio": {
+            "output": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "voice": "John"
+            }
+          },
+          "usage": null,
+          "metadata": null
+        }
+      }
+    }
+  ]
+}

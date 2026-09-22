@@ -1,0 +1,483 @@
+{
+  "case_id": "text-greeting",
+  "model": "nvidia/nemotron-realtime-frontend-backend",
+  "session_id": "sess_53dff50604904b0bb0acaa5fe5e8d2c2",
+  "instructions": "Answer in one short sentence.",
+  "input_text": "Say hello in one short sentence.",
+  "input_audio": "",
+  "text": "Hello! How can I help you today?",
+  "user_transcript": "",
+  "output_audio_bytes": 0,
+  "output_audio_duration_s": 0.0,
+  "output_sample_rate_hz": 24000,
+  "timings": {
+    "connect_s": 0.069677,
+    "session_ready_s": 1.145623,
+    "input_sent_s": 1.15313,
+    "first_text_s": 2.534044,
+    "response_done_s": 2.556754
+  },
+  "errors": [],
+  "tool_calls": [],
+  "usage": {},
+  "completed": true,
+  "termination_reason": "response_completed",
+  "events": [
+    {
+      "sequence": 0,
+      "type": "session.updated",
+      "received_at_s": 1.145611,
+      "data": {
+        "event_id": "event_741b8c28ae4f4b1cbc301789bc706734",
+        "type": "session.updated",
+        "session": {
+          "id": "sess_53dff50604904b0bb0acaa5fe5e8d2c2",
+          "object": "realtime.session",
+          "type": "realtime",
+          "audio": {
+            "input": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "noise_reduction": null,
+              "transcription": {
+                "model": "nemotron-speech-streaming-en-0.6b"
+              },
+              "turn_detection": {
+                "type": "semantic_vad",
+                "eagerness": "auto",
+                "create_response": true,
+                "interrupt_response": true
+              }
+            },
+            "output": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "speed": 1.0,
+              "voice": "John"
+            }
+          },
+          "include": [],
+          "instructions": "Answer in one short sentence.",
+          "max_output_tokens": 256,
+          "model": "nvidia/nemotron-realtime-frontend-backend",
+          "output_modalities": [
+            "text"
+          ],
+          "parallel_tool_calls": true,
+          "prompt": null,
+          "tool_choice": "none",
+          "tools": [],
+          "nvidia": {
+            "pipeline_mode": "frontend-backend-agent",
+            "prompt_key": "talker",
+            "llm_id": "self-hosted:singlegpu:nemotron-lightning",
+            "thinker_llm_id": "self-hosted:singlegpu:nemotron-lightning",
+            "asr_id": "self-hosted:singlegpu:nemotron-asr-streaming-english",
+            "tts_id": "self-hosted:singlegpu:magpie-multilingual-tts",
+            "model_id": "nvidia/nvidia/nemotron-3.5-lightning",
+            "thinker_model_id": "nvidia/nvidia/nemotron-3.5-lightning",
+            "asr_model": "nemotron-speech-streaming-en-0.6b",
+            "tts_model": "magpie-tts-multilingual",
+            "delegate_tools": [
+              "call_backend",
+              "cancel_backend"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "sequence": 1,
+      "type": "conversation.item.added",
+      "received_at_s": 1.153109,
+      "data": {
+        "event_id": "event_517757b3ad3a438c8dd2e71242ea1a8c",
+        "type": "conversation.item.added",
+        "previous_item_id": null,
+        "item": {
+          "type": "message",
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "Say hello in one short sentence."
+            }
+          ],
+          "object": "realtime.item",
+          "status": "completed",
+          "id": "item_7d83f771bd654936a998f3801d1179e3"
+        }
+      }
+    },
+    {
+      "sequence": 2,
+      "type": "conversation.item.done",
+      "received_at_s": 1.153127,
+      "data": {
+        "event_id": "event_2d16901ae5bf4f47abf9e6932ba0d34b",
+        "type": "conversation.item.done",
+        "previous_item_id": null,
+        "item": {
+          "type": "message",
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "Say hello in one short sentence."
+            }
+          ],
+          "object": "realtime.item",
+          "status": "completed",
+          "id": "item_7d83f771bd654936a998f3801d1179e3"
+        }
+      }
+    },
+    {
+      "sequence": 3,
+      "type": "response.created",
+      "received_at_s": 1.153814,
+      "data": {
+        "event_id": "event_0c78011d3c4c420f91ddd7b9ea3963e4",
+        "type": "response.created",
+        "response": {
+          "id": "resp_0443a5e25ca94496a691d50005350f84",
+          "object": "realtime.response",
+          "status": "in_progress",
+          "status_details": null,
+          "output": [],
+          "conversation_id": "conv_94c543f7256e4189b9d3f4564e21f946",
+          "output_modalities": [
+            "text"
+          ],
+          "max_output_tokens": 256,
+          "usage": null,
+          "metadata": null
+        }
+      }
+    },
+    {
+      "sequence": 4,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 2.533983,
+      "data": {
+        "event_id": "event_e7d283e1f2d54303ba6a35383b10dd7b",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_ttft": 1.3782775402069092
+        },
+        "source": {
+          "processor": "NvidiaLLMService#0",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "TTFBMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 5,
+      "type": "conversation.item.added",
+      "received_at_s": 2.534018,
+      "data": {
+        "event_id": "event_0b548c0ce10843459e54b5ed38e09cf6",
+        "type": "conversation.item.added",
+        "previous_item_id": "item_7d83f771bd654936a998f3801d1179e3",
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "in_progress",
+          "content": [],
+          "object": "realtime.item",
+          "id": "item_25aae04a49934c2b9a31e70647939aea"
+        }
+      }
+    },
+    {
+      "sequence": 6,
+      "type": "response.output_item.added",
+      "received_at_s": 2.534027,
+      "data": {
+        "event_id": "event_372b7d8612c94d5686d5811ab6473be4",
+        "type": "response.output_item.added",
+        "response_id": "resp_0443a5e25ca94496a691d50005350f84",
+        "output_index": 0,
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "in_progress",
+          "content": [],
+          "object": "realtime.item",
+          "id": "item_25aae04a49934c2b9a31e70647939aea"
+        }
+      }
+    },
+    {
+      "sequence": 7,
+      "type": "response.content_part.added",
+      "received_at_s": 2.534036,
+      "data": {
+        "event_id": "event_8312a6d5e94547d087b68601db9dc95a",
+        "type": "response.content_part.added",
+        "response_id": "resp_0443a5e25ca94496a691d50005350f84",
+        "item_id": "item_25aae04a49934c2b9a31e70647939aea",
+        "output_index": 0,
+        "content_index": 0,
+        "part": {
+          "type": "text",
+          "text": ""
+        }
+      }
+    },
+    {
+      "sequence": 8,
+      "type": "response.output_text.delta",
+      "received_at_s": 2.534041,
+      "data": {
+        "event_id": "event_25683ee2504a4037b216cd2fd77fb00d",
+        "type": "response.output_text.delta",
+        "response_id": "resp_0443a5e25ca94496a691d50005350f84",
+        "item_id": "item_25aae04a49934c2b9a31e70647939aea",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 9,
+      "type": "response.output_text.delta",
+      "received_at_s": 2.534085,
+      "data": {
+        "event_id": "event_3429925116f542d6b1ee8b04150384d0",
+        "type": "response.output_text.delta",
+        "response_id": "resp_0443a5e25ca94496a691d50005350f84",
+        "item_id": "item_25aae04a49934c2b9a31e70647939aea",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 10,
+      "type": "response.output_text.delta",
+      "received_at_s": 2.534095,
+      "data": {
+        "event_id": "event_e9c70168e7a147e2a1ed98b275f4ac71",
+        "type": "response.output_text.delta",
+        "response_id": "resp_0443a5e25ca94496a691d50005350f84",
+        "item_id": "item_25aae04a49934c2b9a31e70647939aea",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 11,
+      "type": "response.output_text.delta",
+      "received_at_s": 2.534101,
+      "data": {
+        "event_id": "event_3c24936fd34b4140804642d10146086f",
+        "type": "response.output_text.delta",
+        "response_id": "resp_0443a5e25ca94496a691d50005350f84",
+        "item_id": "item_25aae04a49934c2b9a31e70647939aea",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 12,
+      "type": "response.output_text.delta",
+      "received_at_s": 2.534299,
+      "data": {
+        "event_id": "event_a6982413b69541479e76a8aee8b29040",
+        "type": "response.output_text.delta",
+        "response_id": "resp_0443a5e25ca94496a691d50005350f84",
+        "item_id": "item_25aae04a49934c2b9a31e70647939aea",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 13,
+      "type": "response.output_text.delta",
+      "received_at_s": 2.539096,
+      "data": {
+        "event_id": "event_fd3e04a3223f4c6a83e5427b06642390",
+        "type": "response.output_text.delta",
+        "response_id": "resp_0443a5e25ca94496a691d50005350f84",
+        "item_id": "item_25aae04a49934c2b9a31e70647939aea",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 14,
+      "type": "response.output_text.delta",
+      "received_at_s": 2.542598,
+      "data": {
+        "event_id": "event_f33aed401a5141a68715abbab8bfa1d7",
+        "type": "response.output_text.delta",
+        "response_id": "resp_0443a5e25ca94496a691d50005350f84",
+        "item_id": "item_25aae04a49934c2b9a31e70647939aea",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 15,
+      "type": "response.output_text.delta",
+      "received_at_s": 2.545406,
+      "data": {
+        "event_id": "event_47bc927617bf42fa87eb908605d52d8f",
+        "type": "response.output_text.delta",
+        "response_id": "resp_0443a5e25ca94496a691d50005350f84",
+        "item_id": "item_25aae04a49934c2b9a31e70647939aea",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 16,
+      "type": "response.output_text.delta",
+      "received_at_s": 2.548429,
+      "data": {
+        "event_id": "event_669ef13b9b364b9d9a430b65eb7e8338",
+        "type": "response.output_text.delta",
+        "response_id": "resp_0443a5e25ca94496a691d50005350f84",
+        "item_id": "item_25aae04a49934c2b9a31e70647939aea",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 17,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 2.554978,
+      "data": {
+        "event_id": "event_ad87ef0199a04fe19167908adde5c575",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_processing_time": 1.399385690689087
+        },
+        "source": {
+          "processor": "NvidiaLLMService#0",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "ProcessingMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 18,
+      "type": "response.output_text.done",
+      "received_at_s": 2.556619,
+      "data": {
+        "event_id": "event_a5b78617428943ff951f00a95ff6358b",
+        "type": "response.output_text.done",
+        "response_id": "resp_0443a5e25ca94496a691d50005350f84",
+        "item_id": "item_25aae04a49934c2b9a31e70647939aea",
+        "output_index": 0,
+        "content_index": 0,
+        "text": "Hello! How can I help you today?"
+      }
+    },
+    {
+      "sequence": 19,
+      "type": "response.content_part.done",
+      "received_at_s": 2.556667,
+      "data": {
+        "event_id": "event_7b0ed8ad07464b1fb0be6f2abad0c421",
+        "type": "response.content_part.done",
+        "response_id": "resp_0443a5e25ca94496a691d50005350f84",
+        "item_id": "item_25aae04a49934c2b9a31e70647939aea",
+        "output_index": 0,
+        "content_index": 0,
+        "part": {
+          "type": "text",
+          "text": "Hello! How can I help you today?"
+        }
+      }
+    },
+    {
+      "sequence": 20,
+      "type": "conversation.item.done",
+      "received_at_s": 2.556693,
+      "data": {
+        "event_id": "event_d591a14c73084e88a1b9d15c2fdb5300",
+        "type": "conversation.item.done",
+        "previous_item_id": "item_7d83f771bd654936a998f3801d1179e3",
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "completed",
+          "content": [
+            {
+              "type": "output_text",
+              "text": "Hello! How can I help you today?"
+            }
+          ],
+          "object": "realtime.item",
+          "id": "item_25aae04a49934c2b9a31e70647939aea"
+        }
+      }
+    },
+    {
+      "sequence": 21,
+      "type": "response.output_item.done",
+      "received_at_s": 2.556715,
+      "data": {
+        "event_id": "event_4cbb9854b41c452db7e2da256704aab7",
+        "type": "response.output_item.done",
+        "response_id": "resp_0443a5e25ca94496a691d50005350f84",
+        "output_index": 0,
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "completed",
+          "content": [
+            {
+              "type": "output_text",
+              "text": "Hello! How can I help you today?"
+            }
+          ],
+          "object": "realtime.item",
+          "id": "item_25aae04a49934c2b9a31e70647939aea"
+        }
+      }
+    },
+    {
+      "sequence": 22,
+      "type": "response.done",
+      "received_at_s": 2.556749,
+      "data": {
+        "event_id": "event_8bae4b17f8a54035b77b9b770fede733",
+        "type": "response.done",
+        "response": {
+          "id": "resp_0443a5e25ca94496a691d50005350f84",
+          "object": "realtime.response",
+          "status": "completed",
+          "status_details": null,
+          "output": [
+            {
+              "type": "message",
+              "role": "assistant",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "Hello! How can I help you today?"
+                }
+              ],
+              "object": "realtime.item",
+              "id": "item_25aae04a49934c2b9a31e70647939aea"
+            }
+          ],
+          "conversation_id": "conv_94c543f7256e4189b9d3f4564e21f946",
+          "output_modalities": [
+            "text"
+          ],
+          "max_output_tokens": 256,
+          "usage": null,
+          "metadata": null
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,451 @@
+{
+  "case_id": "matrix-text-in-text-out",
+  "model": "nvidia/nemotron-realtime-client-tools",
+  "session_id": "sess_3e68444e33ee41b1bde7ec1d94b8d036",
+  "instructions": "Answer in one short sentence.",
+  "input_text": "What is the capital of France?",
+  "input_audio": "",
+  "text": "Paris is the capital of France.",
+  "user_transcript": "",
+  "output_audio_bytes": 0,
+  "output_audio_duration_s": 0.0,
+  "output_sample_rate_hz": 24000,
+  "timings": {
+    "connect_s": 0.055343,
+    "session_ready_s": 0.134994,
+    "input_sent_s": 0.142551,
+    "first_text_s": 1.136271,
+    "response_done_s": 1.154731
+  },
+  "errors": [],
+  "tool_calls": [],
+  "usage": {},
+  "completed": true,
+  "termination_reason": "response_completed",
+  "events": [
+    {
+      "sequence": 0,
+      "type": "session.updated",
+      "received_at_s": 0.13498,
+      "data": {
+        "event_id": "event_0ddf9245235649f2832576e8d47174ab",
+        "type": "session.updated",
+        "session": {
+          "id": "sess_3e68444e33ee41b1bde7ec1d94b8d036",
+          "object": "realtime.session",
+          "type": "realtime",
+          "audio": {
+            "input": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "noise_reduction": null,
+              "transcription": {
+                "model": "nemotron-speech-streaming-en-0.6b"
+              },
+              "turn_detection": {
+                "type": "semantic_vad",
+                "eagerness": "auto",
+                "create_response": true,
+                "interrupt_response": true
+              }
+            },
+            "output": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "speed": 1.0,
+              "voice": "John"
+            }
+          },
+          "include": [],
+          "instructions": "Answer in one short sentence.",
+          "max_output_tokens": 256,
+          "model": "nvidia/nemotron-realtime-client-tools",
+          "output_modalities": [
+            "text"
+          ],
+          "parallel_tool_calls": true,
+          "prompt": null,
+          "tool_choice": "none",
+          "tools": [],
+          "nvidia": {
+            "pipeline_mode": "generic-assistant",
+            "prompt_key": "generic_assistant_without_tools",
+            "llm_id": "self-hosted:singlegpu:nemotron-lightning",
+            "asr_id": "self-hosted:singlegpu:nemotron-asr-streaming-english",
+            "tts_id": "self-hosted:singlegpu:magpie-multilingual-tts",
+            "model_id": "nvidia/nvidia/nemotron-3.5-lightning",
+            "asr_model": "nemotron-speech-streaming-en-0.6b",
+            "tts_model": "magpie-tts-multilingual"
+          }
+        }
+      }
+    },
+    {
+      "sequence": 1,
+      "type": "conversation.item.added",
+      "received_at_s": 0.142531,
+      "data": {
+        "event_id": "event_b6dced48573047d18dcf7b1f63c904fa",
+        "type": "conversation.item.added",
+        "previous_item_id": null,
+        "item": {
+          "type": "message",
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "What is the capital of France?"
+            }
+          ],
+          "object": "realtime.item",
+          "status": "completed",
+          "id": "item_d92fb867b8f646bf8e3bfa45d36d3427"
+        }
+      }
+    },
+    {
+      "sequence": 2,
+      "type": "conversation.item.done",
+      "received_at_s": 0.142548,
+      "data": {
+        "event_id": "event_9c45c89b6c184b3abae1fb7dab76efe6",
+        "type": "conversation.item.done",
+        "previous_item_id": null,
+        "item": {
+          "type": "message",
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "What is the capital of France?"
+            }
+          ],
+          "object": "realtime.item",
+          "status": "completed",
+          "id": "item_d92fb867b8f646bf8e3bfa45d36d3427"
+        }
+      }
+    },
+    {
+      "sequence": 3,
+      "type": "response.created",
+      "received_at_s": 0.143081,
+      "data": {
+        "event_id": "event_e90c97994d0349c9a591960ec5465411",
+        "type": "response.created",
+        "response": {
+          "id": "resp_6da4d590e3ee440881277788d71fa2de",
+          "object": "realtime.response",
+          "status": "in_progress",
+          "status_details": null,
+          "output": [],
+          "conversation_id": "conv_15fbf06677cf4a84b43946a2b9b9010f",
+          "output_modalities": [
+            "text"
+          ],
+          "max_output_tokens": 256,
+          "usage": null,
+          "metadata": null
+        }
+      }
+    },
+    {
+      "sequence": 4,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 1.136004,
+      "data": {
+        "event_id": "event_3b2b89fc574c49a082a5f849af138f99",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_ttft": 0.9889650344848633
+        },
+        "source": {
+          "processor": "NvidiaLLMService#141",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "TTFBMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 5,
+      "type": "conversation.item.added",
+      "received_at_s": 1.13613,
+      "data": {
+        "event_id": "event_0ee62a2da8674065ad86387c08ed32ca",
+        "type": "conversation.item.added",
+        "previous_item_id": "item_d92fb867b8f646bf8e3bfa45d36d3427",
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "in_progress",
+          "content": [],
+          "object": "realtime.item",
+          "id": "item_a172d139c7a947f38f7d4ba12daea51e"
+        }
+      }
+    },
+    {
+      "sequence": 6,
+      "type": "response.output_item.added",
+      "received_at_s": 1.136177,
+      "data": {
+        "event_id": "event_f4c7357747924db0a510bce0b6073a2b",
+        "type": "response.output_item.added",
+        "response_id": "resp_6da4d590e3ee440881277788d71fa2de",
+        "output_index": 0,
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "in_progress",
+          "content": [],
+          "object": "realtime.item",
+          "id": "item_a172d139c7a947f38f7d4ba12daea51e"
+        }
+      }
+    },
+    {
+      "sequence": 7,
+      "type": "response.content_part.added",
+      "received_at_s": 1.136227,
+      "data": {
+        "event_id": "event_bf6b0298a7aa486b99c718ee11749e60",
+        "type": "response.content_part.added",
+        "response_id": "resp_6da4d590e3ee440881277788d71fa2de",
+        "item_id": "item_a172d139c7a947f38f7d4ba12daea51e",
+        "output_index": 0,
+        "content_index": 0,
+        "part": {
+          "type": "text",
+          "text": ""
+        }
+      }
+    },
+    {
+      "sequence": 8,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.13626,
+      "data": {
+        "event_id": "event_c3a174a45f3d443a84dca9ccbe29e8c8",
+        "type": "response.output_text.delta",
+        "response_id": "resp_6da4d590e3ee440881277788d71fa2de",
+        "item_id": "item_a172d139c7a947f38f7d4ba12daea51e",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 9,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.137039,
+      "data": {
+        "event_id": "event_5741db7121b74b77ad905d31d6a4e113",
+        "type": "response.output_text.delta",
+        "response_id": "resp_6da4d590e3ee440881277788d71fa2de",
+        "item_id": "item_a172d139c7a947f38f7d4ba12daea51e",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 10,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.138223,
+      "data": {
+        "event_id": "event_51664093a3834834ad0027fdee2c7091",
+        "type": "response.output_text.delta",
+        "response_id": "resp_6da4d590e3ee440881277788d71fa2de",
+        "item_id": "item_a172d139c7a947f38f7d4ba12daea51e",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 11,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.138946,
+      "data": {
+        "event_id": "event_bcf8e2d09b2047ba9039b7cb396c8ff3",
+        "type": "response.output_text.delta",
+        "response_id": "resp_6da4d590e3ee440881277788d71fa2de",
+        "item_id": "item_a172d139c7a947f38f7d4ba12daea51e",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 12,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.141003,
+      "data": {
+        "event_id": "event_c2165ecfde314f3483505e5e645442c4",
+        "type": "response.output_text.delta",
+        "response_id": "resp_6da4d590e3ee440881277788d71fa2de",
+        "item_id": "item_a172d139c7a947f38f7d4ba12daea51e",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 13,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.143355,
+      "data": {
+        "event_id": "event_4242a16561f24d2d93f26b8e2088ffa0",
+        "type": "response.output_text.delta",
+        "response_id": "resp_6da4d590e3ee440881277788d71fa2de",
+        "item_id": "item_a172d139c7a947f38f7d4ba12daea51e",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 14,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.146471,
+      "data": {
+        "event_id": "event_363e5df1bc68425fb8b99932d5e63e9b",
+        "type": "response.output_text.delta",
+        "response_id": "resp_6da4d590e3ee440881277788d71fa2de",
+        "item_id": "item_a172d139c7a947f38f7d4ba12daea51e",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 15,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 1.152485,
+      "data": {
+        "event_id": "event_7d0c5b4dbb5a40ec84877acd88caacdd",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_processing_time": 1.0076615810394287
+        },
+        "source": {
+          "processor": "NvidiaLLMService#141",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "ProcessingMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 16,
+      "type": "response.output_text.done",
+      "received_at_s": 1.154529,
+      "data": {
+        "event_id": "event_676c3933b99247478498252333a5c90f",
+        "type": "response.output_text.done",
+        "response_id": "resp_6da4d590e3ee440881277788d71fa2de",
+        "item_id": "item_a172d139c7a947f38f7d4ba12daea51e",
+        "output_index": 0,
+        "content_index": 0,
+        "text": "Paris is the capital of France."
+      }
+    },
+    {
+      "sequence": 17,
+      "type": "response.content_part.done",
+      "received_at_s": 1.154595,
+      "data": {
+        "event_id": "event_f87df92bae624d91a105d59573021242",
+        "type": "response.content_part.done",
+        "response_id": "resp_6da4d590e3ee440881277788d71fa2de",
+        "item_id": "item_a172d139c7a947f38f7d4ba12daea51e",
+        "output_index": 0,
+        "content_index": 0,
+        "part": {
+          "type": "text",
+          "text": "Paris is the capital of France."
+        }
+      }
+    },
+    {
+      "sequence": 18,
+      "type": "conversation.item.done",
+      "received_at_s": 1.154628,
+      "data": {
+        "event_id": "event_84e055dd1b484125a480a76b006f3fb4",
+        "type": "conversation.item.done",
+        "previous_item_id": "item_d92fb867b8f646bf8e3bfa45d36d3427",
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "completed",
+          "content": [
+            {
+              "type": "output_text",
+              "text": "Paris is the capital of France."
+            }
+          ],
+          "object": "realtime.item",
+          "id": "item_a172d139c7a947f38f7d4ba12daea51e"
+        }
+      }
+    },
+    {
+      "sequence": 19,
+      "type": "response.output_item.done",
+      "received_at_s": 1.154657,
+      "data": {
+        "event_id": "event_a96db620a4554f4cb45cf0dcb5773fb4",
+        "type": "response.output_item.done",
+        "response_id": "resp_6da4d590e3ee440881277788d71fa2de",
+        "output_index": 0,
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "completed",
+          "content": [
+            {
+              "type": "output_text",
+              "text": "Paris is the capital of France."
+            }
+          ],
+          "object": "realtime.item",
+          "id": "item_a172d139c7a947f38f7d4ba12daea51e"
+        }
+      }
+    },
+    {
+      "sequence": 20,
+      "type": "response.done",
+      "received_at_s": 1.154724,
+      "data": {
+        "event_id": "event_9ae54fb0c1284c70b5d07a8bdb0a0658",
+        "type": "response.done",
+        "response": {
+          "id": "resp_6da4d590e3ee440881277788d71fa2de",
+          "object": "realtime.response",
+          "status": "completed",
+          "status_details": null,
+          "output": [
+            {
+              "type": "message",
+              "role": "assistant",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "Paris is the capital of France."
+                }
+              ],
+              "object": "realtime.item",
+              "id": "item_a172d139c7a947f38f7d4ba12daea51e"
+            }
+          ],
+          "conversation_id": "conv_15fbf06677cf4a84b43946a2b9b9010f",
+          "output_modalities": [
+            "text"
+          ],
+          "max_output_tokens": 256,
+          "usage": null,
+          "metadata": null
+        }
+      }
+    }
+  ]
+}

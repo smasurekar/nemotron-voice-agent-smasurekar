@@ -1,0 +1,379 @@
+{
+  "case_id": "text-arithmetic",
+  "model": "nvidia/nemotron-realtime-frontend-backend",
+  "session_id": "sess_a7fb713cddc64cf1abbd709b7d45e0de",
+  "instructions": "Reply with only the number, no words.",
+  "input_text": "What is two plus two?",
+  "input_audio": "",
+  "text": "4",
+  "user_transcript": "",
+  "output_audio_bytes": 0,
+  "output_audio_duration_s": 0.0,
+  "output_sample_rate_hz": 24000,
+  "timings": {
+    "connect_s": 0.070311,
+    "session_ready_s": 0.17372,
+    "input_sent_s": 0.182133,
+    "first_text_s": 1.202668,
+    "response_done_s": 1.203614
+  },
+  "errors": [],
+  "tool_calls": [],
+  "usage": {},
+  "completed": true,
+  "termination_reason": "response_completed",
+  "events": [
+    {
+      "sequence": 0,
+      "type": "session.updated",
+      "received_at_s": 0.17371,
+      "data": {
+        "event_id": "event_0b2bbbac6ecf4e8eb1bcc5d3dbb11f04",
+        "type": "session.updated",
+        "session": {
+          "id": "sess_a7fb713cddc64cf1abbd709b7d45e0de",
+          "object": "realtime.session",
+          "type": "realtime",
+          "audio": {
+            "input": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "noise_reduction": null,
+              "transcription": {
+                "model": "nemotron-speech-streaming-en-0.6b"
+              },
+              "turn_detection": {
+                "type": "semantic_vad",
+                "eagerness": "auto",
+                "create_response": true,
+                "interrupt_response": true
+              }
+            },
+            "output": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "speed": 1.0,
+              "voice": "John"
+            }
+          },
+          "include": [],
+          "instructions": "Reply with only the number, no words.",
+          "max_output_tokens": 16,
+          "model": "nvidia/nemotron-realtime-frontend-backend",
+          "output_modalities": [
+            "text"
+          ],
+          "parallel_tool_calls": true,
+          "prompt": null,
+          "tool_choice": "none",
+          "tools": [],
+          "nvidia": {
+            "pipeline_mode": "frontend-backend-agent",
+            "prompt_key": "talker",
+            "llm_id": "self-hosted:singlegpu:nemotron-lightning",
+            "thinker_llm_id": "self-hosted:singlegpu:nemotron-lightning",
+            "asr_id": "self-hosted:singlegpu:nemotron-asr-streaming-english",
+            "tts_id": "self-hosted:singlegpu:magpie-multilingual-tts",
+            "model_id": "nvidia/nvidia/nemotron-3.5-lightning",
+            "thinker_model_id": "nvidia/nvidia/nemotron-3.5-lightning",
+            "asr_model": "nemotron-speech-streaming-en-0.6b",
+            "tts_model": "magpie-tts-multilingual",
+            "delegate_tools": [
+              "call_backend",
+              "cancel_backend"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "sequence": 1,
+      "type": "conversation.item.added",
+      "received_at_s": 0.182104,
+      "data": {
+        "event_id": "event_503baed7e6c247039d01444d342e9986",
+        "type": "conversation.item.added",
+        "previous_item_id": null,
+        "item": {
+          "type": "message",
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "What is two plus two?"
+            }
+          ],
+          "object": "realtime.item",
+          "status": "completed",
+          "id": "item_c0b30c26d4c44d49bf70419a633c4570"
+        }
+      }
+    },
+    {
+      "sequence": 2,
+      "type": "conversation.item.done",
+      "received_at_s": 0.18213,
+      "data": {
+        "event_id": "event_7bf9e982fe344f759a3cf2f9699aee28",
+        "type": "conversation.item.done",
+        "previous_item_id": null,
+        "item": {
+          "type": "message",
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "What is two plus two?"
+            }
+          ],
+          "object": "realtime.item",
+          "status": "completed",
+          "id": "item_c0b30c26d4c44d49bf70419a633c4570"
+        }
+      }
+    },
+    {
+      "sequence": 3,
+      "type": "response.created",
+      "received_at_s": 0.182927,
+      "data": {
+        "event_id": "event_ebabd2f953424edd91106fcd10df00cd",
+        "type": "response.created",
+        "response": {
+          "id": "resp_eee68dc522cc482eb3e0fffa579c4de5",
+          "object": "realtime.response",
+          "status": "in_progress",
+          "status_details": null,
+          "output": [],
+          "conversation_id": "conv_8afda9b69c824cf2b0fa664318643ffc",
+          "output_modalities": [
+            "text"
+          ],
+          "max_output_tokens": 16,
+          "usage": null,
+          "metadata": null
+        }
+      }
+    },
+    {
+      "sequence": 4,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 1.202302,
+      "data": {
+        "event_id": "event_fb18aba3eecc4542a449b7175da0868a",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_ttft": 1.0142731666564941
+        },
+        "source": {
+          "processor": "NvidiaLLMService#2",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "TTFBMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 5,
+      "type": "conversation.item.added",
+      "received_at_s": 1.202478,
+      "data": {
+        "event_id": "event_d8859f5c75144309ae9128d206627894",
+        "type": "conversation.item.added",
+        "previous_item_id": "item_c0b30c26d4c44d49bf70419a633c4570",
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "in_progress",
+          "content": [],
+          "object": "realtime.item",
+          "id": "item_d9b0ef36c3cb40fa8084fbd19769d7b8"
+        }
+      }
+    },
+    {
+      "sequence": 6,
+      "type": "response.output_item.added",
+      "received_at_s": 1.202566,
+      "data": {
+        "event_id": "event_147394996ec3497487c69e21e628c03b",
+        "type": "response.output_item.added",
+        "response_id": "resp_eee68dc522cc482eb3e0fffa579c4de5",
+        "output_index": 0,
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "in_progress",
+          "content": [],
+          "object": "realtime.item",
+          "id": "item_d9b0ef36c3cb40fa8084fbd19769d7b8"
+        }
+      }
+    },
+    {
+      "sequence": 7,
+      "type": "response.content_part.added",
+      "received_at_s": 1.202641,
+      "data": {
+        "event_id": "event_159859a570c64f40a7d946f2580538c4",
+        "type": "response.content_part.added",
+        "response_id": "resp_eee68dc522cc482eb3e0fffa579c4de5",
+        "item_id": "item_d9b0ef36c3cb40fa8084fbd19769d7b8",
+        "output_index": 0,
+        "content_index": 0,
+        "part": {
+          "type": "text",
+          "text": ""
+        }
+      }
+    },
+    {
+      "sequence": 8,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.202665,
+      "data": {
+        "event_id": "event_f17bd328d43c43a1bf57395fb00d5193",
+        "type": "response.output_text.delta",
+        "response_id": "resp_eee68dc522cc482eb3e0fffa579c4de5",
+        "item_id": "item_d9b0ef36c3cb40fa8084fbd19769d7b8",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 9,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 1.202999,
+      "data": {
+        "event_id": "event_4e239e583d1a477089dd4ce1daa4e732",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_processing_time": 1.0190093517303467
+        },
+        "source": {
+          "processor": "NvidiaLLMService#2",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "ProcessingMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 10,
+      "type": "response.output_text.done",
+      "received_at_s": 1.203534,
+      "data": {
+        "event_id": "event_db7587184fa44339aad092eb13f062e1",
+        "type": "response.output_text.done",
+        "response_id": "resp_eee68dc522cc482eb3e0fffa579c4de5",
+        "item_id": "item_d9b0ef36c3cb40fa8084fbd19769d7b8",
+        "output_index": 0,
+        "content_index": 0,
+        "text": "4"
+      }
+    },
+    {
+      "sequence": 11,
+      "type": "response.content_part.done",
+      "received_at_s": 1.203553,
+      "data": {
+        "event_id": "event_daaaa7332622428ca9b37458fcc0836f",
+        "type": "response.content_part.done",
+        "response_id": "resp_eee68dc522cc482eb3e0fffa579c4de5",
+        "item_id": "item_d9b0ef36c3cb40fa8084fbd19769d7b8",
+        "output_index": 0,
+        "content_index": 0,
+        "part": {
+          "type": "text",
+          "text": "4"
+        }
+      }
+    },
+    {
+      "sequence": 12,
+      "type": "conversation.item.done",
+      "received_at_s": 1.203573,
+      "data": {
+        "event_id": "event_dfe7db66a0b347e0929dcf8244671d3b",
+        "type": "conversation.item.done",
+        "previous_item_id": "item_c0b30c26d4c44d49bf70419a633c4570",
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "completed",
+          "content": [
+            {
+              "type": "output_text",
+              "text": "4"
+            }
+          ],
+          "object": "realtime.item",
+          "id": "item_d9b0ef36c3cb40fa8084fbd19769d7b8"
+        }
+      }
+    },
+    {
+      "sequence": 13,
+      "type": "response.output_item.done",
+      "received_at_s": 1.203586,
+      "data": {
+        "event_id": "event_5b64e221cd8648a0925e7046edebeb40",
+        "type": "response.output_item.done",
+        "response_id": "resp_eee68dc522cc482eb3e0fffa579c4de5",
+        "output_index": 0,
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "completed",
+          "content": [
+            {
+              "type": "output_text",
+              "text": "4"
+            }
+          ],
+          "object": "realtime.item",
+          "id": "item_d9b0ef36c3cb40fa8084fbd19769d7b8"
+        }
+      }
+    },
+    {
+      "sequence": 14,
+      "type": "response.done",
+      "received_at_s": 1.20361,
+      "data": {
+        "event_id": "event_3e224ccf3ccd4e23997e450c3b79de14",
+        "type": "response.done",
+        "response": {
+          "id": "resp_eee68dc522cc482eb3e0fffa579c4de5",
+          "object": "realtime.response",
+          "status": "completed",
+          "status_details": null,
+          "output": [
+            {
+              "type": "message",
+              "role": "assistant",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "4"
+                }
+              ],
+              "object": "realtime.item",
+              "id": "item_d9b0ef36c3cb40fa8084fbd19769d7b8"
+            }
+          ],
+          "conversation_id": "conv_8afda9b69c824cf2b0fa664318643ffc",
+          "output_modalities": [
+            "text"
+          ],
+          "max_output_tokens": 16,
+          "usage": null,
+          "metadata": null
+        }
+      }
+    }
+  ]
+}

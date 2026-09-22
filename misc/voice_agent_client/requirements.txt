@@ -1,0 +1,19 @@
+# Dependencies for the standalone Realtime client in this folder.
+#
+# They are ALREADY INSTALLED in the repo virtualenv (../../.venv), which is the
+# supported way to run this client:
+#
+#     .venv/bin/python misc/voice_agent_client/run_client.py --preflight
+#
+# This file exists only for running it under a different interpreter:
+#
+#     python3 -m venv .client-venv
+#     .client-venv/bin/pip install -r misc/voice_agent_client/requirements.txt
+#
+# Only `websockets` is strictly required. numpy and soxr are needed solely to
+# resample or downmix an input WAV whose rate or channel count does not already
+# match the session format - pre-convert with ffmpeg and you can skip them.
+
+websockets>=14,<16   # the Realtime WebSocket transport
+numpy>=1.26          # mono downmix, PCM16 clipping
+soxr>=0.5            # HQ resampling, the same kernel the evaluator pins

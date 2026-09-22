@@ -1,0 +1,428 @@
+{
+  "case_id": "text-to-speech",
+  "model": "nvidia/nemotron-realtime-frontend-backend",
+  "session_id": "sess_2b8d164e594f493ebb30da4c87133e8b",
+  "instructions": "Answer in one short sentence.",
+  "input_text": "Name one planet in our solar system.",
+  "input_audio": "",
+  "text": "Venus",
+  "user_transcript": "",
+  "output_audio_bytes": 47892,
+  "output_audio_duration_s": 0.998,
+  "output_sample_rate_hz": 24000,
+  "timings": {
+    "connect_s": 0.07411,
+    "session_ready_s": 0.176248,
+    "input_sent_s": 0.18359,
+    "first_text_s": 2.005929,
+    "first_audio_s": 2.054857,
+    "response_done_s": 2.957535
+  },
+  "errors": [],
+  "tool_calls": [],
+  "usage": {},
+  "completed": true,
+  "termination_reason": "response_completed",
+  "events": [
+    {
+      "sequence": 0,
+      "type": "session.updated",
+      "received_at_s": 0.176237,
+      "data": {
+        "event_id": "event_c9a1dbc21bdc4ac58d8b8040737da05d",
+        "type": "session.updated",
+        "session": {
+          "id": "sess_2b8d164e594f493ebb30da4c87133e8b",
+          "object": "realtime.session",
+          "type": "realtime",
+          "audio": {
+            "input": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "noise_reduction": null,
+              "transcription": {
+                "model": "nemotron-speech-streaming-en-0.6b"
+              },
+              "turn_detection": {
+                "type": "semantic_vad",
+                "eagerness": "auto",
+                "create_response": true,
+                "interrupt_response": true
+              }
+            },
+            "output": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "speed": 1.0,
+              "voice": "John"
+            }
+          },
+          "include": [],
+          "instructions": "Answer in one short sentence.",
+          "max_output_tokens": 256,
+          "model": "nvidia/nemotron-realtime-frontend-backend",
+          "output_modalities": [
+            "audio"
+          ],
+          "parallel_tool_calls": true,
+          "prompt": null,
+          "tool_choice": "none",
+          "tools": [],
+          "nvidia": {
+            "pipeline_mode": "frontend-backend-agent",
+            "prompt_key": "talker",
+            "llm_id": "self-hosted:singlegpu:nemotron-lightning",
+            "thinker_llm_id": "self-hosted:singlegpu:nemotron-lightning",
+            "asr_id": "self-hosted:singlegpu:nemotron-asr-streaming-english",
+            "tts_id": "self-hosted:singlegpu:magpie-multilingual-tts",
+            "model_id": "nvidia/nvidia/nemotron-3.5-lightning",
+            "thinker_model_id": "nvidia/nvidia/nemotron-3.5-lightning",
+            "asr_model": "nemotron-speech-streaming-en-0.6b",
+            "tts_model": "magpie-tts-multilingual",
+            "delegate_tools": [
+              "call_backend",
+              "cancel_backend"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "sequence": 1,
+      "type": "conversation.item.added",
+      "received_at_s": 0.183572,
+      "data": {
+        "event_id": "event_32f4065a814045b89cdb3400a87227f9",
+        "type": "conversation.item.added",
+        "previous_item_id": null,
+        "item": {
+          "type": "message",
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "Name one planet in our solar system."
+            }
+          ],
+          "object": "realtime.item",
+          "status": "completed",
+          "id": "item_c531a187717a4b8a86eea392a0465677"
+        }
+      }
+    },
+    {
+      "sequence": 2,
+      "type": "conversation.item.done",
+      "received_at_s": 0.183588,
+      "data": {
+        "event_id": "event_b252356c67c6486e934c0b46f54af977",
+        "type": "conversation.item.done",
+        "previous_item_id": null,
+        "item": {
+          "type": "message",
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "Name one planet in our solar system."
+            }
+          ],
+          "object": "realtime.item",
+          "status": "completed",
+          "id": "item_c531a187717a4b8a86eea392a0465677"
+        }
+      }
+    },
+    {
+      "sequence": 3,
+      "type": "response.created",
+      "received_at_s": 0.184244,
+      "data": {
+        "event_id": "event_2d50c15e155f42a28cc76167192add58",
+        "type": "response.created",
+        "response": {
+          "id": "resp_ee2b209d01764c3d8b0455462b08c477",
+          "object": "realtime.response",
+          "status": "in_progress",
+          "status_details": null,
+          "output": [],
+          "conversation_id": "conv_10afeac2af7648bfadbc7e012c05b466",
+          "output_modalities": [
+            "audio"
+          ],
+          "max_output_tokens": 256,
+          "audio": {
+            "output": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "voice": "John"
+            }
+          },
+          "usage": null,
+          "metadata": null
+        }
+      }
+    },
+    {
+      "sequence": 4,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 2.002705,
+      "data": {
+        "event_id": "event_2a86aeeebdba49ed9305725b01cdc3ad",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_ttft": 1.8147876262664795
+        },
+        "source": {
+          "processor": "NvidiaLLMService#6",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "TTFBMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 5,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 2.004191,
+      "data": {
+        "event_id": "event_e32ac2c20135470f83f4ce2a29e351ad",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_processing_time": 1.8180210590362549
+        },
+        "source": {
+          "processor": "NvidiaLLMService#6",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "ProcessingMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 6,
+      "type": "conversation.item.added",
+      "received_at_s": 2.005451,
+      "data": {
+        "event_id": "event_c2592db5fc5341f2a45aa9a3ecc3a657",
+        "type": "conversation.item.added",
+        "previous_item_id": "item_c531a187717a4b8a86eea392a0465677",
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "in_progress",
+          "content": [],
+          "object": "realtime.item",
+          "id": "item_dc5b89c9634f45d381361471bd33ba66"
+        }
+      }
+    },
+    {
+      "sequence": 7,
+      "type": "response.output_item.added",
+      "received_at_s": 2.005466,
+      "data": {
+        "event_id": "event_45c99f917ca24101a58bf95116da1ca9",
+        "type": "response.output_item.added",
+        "response_id": "resp_ee2b209d01764c3d8b0455462b08c477",
+        "output_index": 0,
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "in_progress",
+          "content": [],
+          "object": "realtime.item",
+          "id": "item_dc5b89c9634f45d381361471bd33ba66"
+        }
+      }
+    },
+    {
+      "sequence": 8,
+      "type": "response.content_part.added",
+      "received_at_s": 2.005474,
+      "data": {
+        "event_id": "event_42751862c47b4a73aeec3a92cec39f4d",
+        "type": "response.content_part.added",
+        "response_id": "resp_ee2b209d01764c3d8b0455462b08c477",
+        "item_id": "item_dc5b89c9634f45d381361471bd33ba66",
+        "output_index": 0,
+        "content_index": 0,
+        "part": {
+          "type": "audio",
+          "transcript": ""
+        }
+      }
+    },
+    {
+      "sequence": 9,
+      "type": "response.output_audio_transcript.delta",
+      "received_at_s": 2.005924,
+      "data": {
+        "event_id": "event_0a04efa3b2cc4ea0ae5772d217ec5e02",
+        "type": "response.output_audio_transcript.delta",
+        "response_id": "resp_ee2b209d01764c3d8b0455462b08c477",
+        "item_id": "item_dc5b89c9634f45d381361471bd33ba66",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 10,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 2.054358,
+      "data": {
+        "event_id": "event_ee38ffe34aa9453cbedd0fc1c512d865",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "tts_ttfb": 0.04894423484802246
+        },
+        "source": {
+          "processor": "NvidiaTTSService#4",
+          "model": "magpie-tts-multilingual",
+          "kind": "TTFBMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 11,
+      "type": "response.output_audio.done",
+      "received_at_s": 2.957295,
+      "data": {
+        "event_id": "event_6032bf8823a0411ea3b28c41170839c3",
+        "type": "response.output_audio.done",
+        "response_id": "resp_ee2b209d01764c3d8b0455462b08c477",
+        "item_id": "item_dc5b89c9634f45d381361471bd33ba66",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 12,
+      "type": "response.output_audio_transcript.done",
+      "received_at_s": 2.957353,
+      "data": {
+        "event_id": "event_e6b2ed30e1564a50a2969a8c742c5f38",
+        "type": "response.output_audio_transcript.done",
+        "response_id": "resp_ee2b209d01764c3d8b0455462b08c477",
+        "item_id": "item_dc5b89c9634f45d381361471bd33ba66",
+        "output_index": 0,
+        "content_index": 0,
+        "transcript": "Venus"
+      }
+    },
+    {
+      "sequence": 13,
+      "type": "response.content_part.done",
+      "received_at_s": 2.957387,
+      "data": {
+        "event_id": "event_bad32b0dd8dd4ca0a62a514697623bcb",
+        "type": "response.content_part.done",
+        "response_id": "resp_ee2b209d01764c3d8b0455462b08c477",
+        "item_id": "item_dc5b89c9634f45d381361471bd33ba66",
+        "output_index": 0,
+        "content_index": 0,
+        "part": {
+          "type": "audio",
+          "transcript": "Venus"
+        }
+      }
+    },
+    {
+      "sequence": 14,
+      "type": "conversation.item.done",
+      "received_at_s": 2.957437,
+      "data": {
+        "event_id": "event_46c125d562394658b3868acd0fb4008f",
+        "type": "conversation.item.done",
+        "previous_item_id": "item_c531a187717a4b8a86eea392a0465677",
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "completed",
+          "content": [
+            {
+              "type": "output_audio",
+              "transcript": "Venus"
+            }
+          ],
+          "object": "realtime.item",
+          "id": "item_dc5b89c9634f45d381361471bd33ba66"
+        }
+      }
+    },
+    {
+      "sequence": 15,
+      "type": "response.output_item.done",
+      "received_at_s": 2.957471,
+      "data": {
+        "event_id": "event_caeffcbe904a47d2bdc8a164de573d1f",
+        "type": "response.output_item.done",
+        "response_id": "resp_ee2b209d01764c3d8b0455462b08c477",
+        "output_index": 0,
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "completed",
+          "content": [
+            {
+              "type": "output_audio",
+              "transcript": "Venus"
+            }
+          ],
+          "object": "realtime.item",
+          "id": "item_dc5b89c9634f45d381361471bd33ba66"
+        }
+      }
+    },
+    {
+      "sequence": 16,
+      "type": "response.done",
+      "received_at_s": 2.957526,
+      "data": {
+        "event_id": "event_8d187bfa2d5340ebb5a96458a7bee8a4",
+        "type": "response.done",
+        "response": {
+          "id": "resp_ee2b209d01764c3d8b0455462b08c477",
+          "object": "realtime.response",
+          "status": "completed",
+          "status_details": null,
+          "output": [
+            {
+              "type": "message",
+              "role": "assistant",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_audio",
+                  "transcript": "Venus"
+                }
+              ],
+              "object": "realtime.item",
+              "id": "item_dc5b89c9634f45d381361471bd33ba66"
+            }
+          ],
+          "conversation_id": "conv_10afeac2af7648bfadbc7e012c05b466",
+          "output_modalities": [
+            "audio"
+          ],
+          "max_output_tokens": 256,
+          "audio": {
+            "output": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "voice": "John"
+            }
+          },
+          "usage": null,
+          "metadata": null
+        }
+      }
+    }
+  ]
+}

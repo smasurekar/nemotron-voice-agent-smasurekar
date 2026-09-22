@@ -1,0 +1,379 @@
+{
+  "case_id": "text-instruction-following",
+  "model": "nvidia/nemotron-realtime-frontend-backend",
+  "session_id": "sess_917c1c216e204a29aea6c09d3685040f",
+  "instructions": "Answer in exactly three words.",
+  "input_text": "Describe the color of a clear midday sky.",
+  "input_audio": "",
+  "text": "blue",
+  "user_transcript": "",
+  "output_audio_bytes": 0,
+  "output_audio_duration_s": 0.0,
+  "output_sample_rate_hz": 24000,
+  "timings": {
+    "connect_s": 0.079803,
+    "session_ready_s": 0.183402,
+    "input_sent_s": 0.19076,
+    "first_text_s": 1.204606,
+    "response_done_s": 1.20959
+  },
+  "errors": [],
+  "tool_calls": [],
+  "usage": {},
+  "completed": true,
+  "termination_reason": "response_completed",
+  "events": [
+    {
+      "sequence": 0,
+      "type": "session.updated",
+      "received_at_s": 0.183392,
+      "data": {
+        "event_id": "event_21b9b3f0ae834cdba13387b31f81c25c",
+        "type": "session.updated",
+        "session": {
+          "id": "sess_917c1c216e204a29aea6c09d3685040f",
+          "object": "realtime.session",
+          "type": "realtime",
+          "audio": {
+            "input": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "noise_reduction": null,
+              "transcription": {
+                "model": "nemotron-speech-streaming-en-0.6b"
+              },
+              "turn_detection": {
+                "type": "semantic_vad",
+                "eagerness": "auto",
+                "create_response": true,
+                "interrupt_response": true
+              }
+            },
+            "output": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "speed": 1.0,
+              "voice": "John"
+            }
+          },
+          "include": [],
+          "instructions": "Answer in exactly three words.",
+          "max_output_tokens": 256,
+          "model": "nvidia/nemotron-realtime-frontend-backend",
+          "output_modalities": [
+            "text"
+          ],
+          "parallel_tool_calls": true,
+          "prompt": null,
+          "tool_choice": "none",
+          "tools": [],
+          "nvidia": {
+            "pipeline_mode": "frontend-backend-agent",
+            "prompt_key": "talker",
+            "llm_id": "self-hosted:singlegpu:nemotron-lightning",
+            "thinker_llm_id": "self-hosted:singlegpu:nemotron-lightning",
+            "asr_id": "self-hosted:singlegpu:nemotron-asr-streaming-english",
+            "tts_id": "self-hosted:singlegpu:magpie-multilingual-tts",
+            "model_id": "nvidia/nvidia/nemotron-3.5-lightning",
+            "thinker_model_id": "nvidia/nvidia/nemotron-3.5-lightning",
+            "asr_model": "nemotron-speech-streaming-en-0.6b",
+            "tts_model": "magpie-tts-multilingual",
+            "delegate_tools": [
+              "call_backend",
+              "cancel_backend"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "sequence": 1,
+      "type": "conversation.item.added",
+      "received_at_s": 0.190728,
+      "data": {
+        "event_id": "event_40c9333296e14a9bbbaffc3539f6bd70",
+        "type": "conversation.item.added",
+        "previous_item_id": null,
+        "item": {
+          "type": "message",
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "Describe the color of a clear midday sky."
+            }
+          ],
+          "object": "realtime.item",
+          "status": "completed",
+          "id": "item_99f4609205334bc485b01363e19c79b8"
+        }
+      }
+    },
+    {
+      "sequence": 2,
+      "type": "conversation.item.done",
+      "received_at_s": 0.190758,
+      "data": {
+        "event_id": "event_8dccf1449b874b0794fa95004fd870bb",
+        "type": "conversation.item.done",
+        "previous_item_id": null,
+        "item": {
+          "type": "message",
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "Describe the color of a clear midday sky."
+            }
+          ],
+          "object": "realtime.item",
+          "status": "completed",
+          "id": "item_99f4609205334bc485b01363e19c79b8"
+        }
+      }
+    },
+    {
+      "sequence": 3,
+      "type": "response.created",
+      "received_at_s": 0.191479,
+      "data": {
+        "event_id": "event_3b711b0b785f4910887dab554559a40a",
+        "type": "response.created",
+        "response": {
+          "id": "resp_fa5cb8e296b04097b7f09d347a42e01e",
+          "object": "realtime.response",
+          "status": "in_progress",
+          "status_details": null,
+          "output": [],
+          "conversation_id": "conv_384c4fb503b04ebca8f7b8b75bef4243",
+          "output_modalities": [
+            "text"
+          ],
+          "max_output_tokens": 256,
+          "usage": null,
+          "metadata": null
+        }
+      }
+    },
+    {
+      "sequence": 4,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 1.204399,
+      "data": {
+        "event_id": "event_598b51515abb43ec9e44746754a7c60d",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_ttft": 1.0097084045410156
+        },
+        "source": {
+          "processor": "NvidiaLLMService#4",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "TTFBMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 5,
+      "type": "conversation.item.added",
+      "received_at_s": 1.204493,
+      "data": {
+        "event_id": "event_6aeb1cb867a44257a9f7c48bd807e0da",
+        "type": "conversation.item.added",
+        "previous_item_id": "item_99f4609205334bc485b01363e19c79b8",
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "in_progress",
+          "content": [],
+          "object": "realtime.item",
+          "id": "item_1f52303eab7b41afbb5dbc0f0f3020c9"
+        }
+      }
+    },
+    {
+      "sequence": 6,
+      "type": "response.output_item.added",
+      "received_at_s": 1.204533,
+      "data": {
+        "event_id": "event_a4c6dbc35c4742d9b948582adbc19207",
+        "type": "response.output_item.added",
+        "response_id": "resp_fa5cb8e296b04097b7f09d347a42e01e",
+        "output_index": 0,
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "in_progress",
+          "content": [],
+          "object": "realtime.item",
+          "id": "item_1f52303eab7b41afbb5dbc0f0f3020c9"
+        }
+      }
+    },
+    {
+      "sequence": 7,
+      "type": "response.content_part.added",
+      "received_at_s": 1.204568,
+      "data": {
+        "event_id": "event_257f2f3a4afd4a5c899f1993e0ebbd4f",
+        "type": "response.content_part.added",
+        "response_id": "resp_fa5cb8e296b04097b7f09d347a42e01e",
+        "item_id": "item_1f52303eab7b41afbb5dbc0f0f3020c9",
+        "output_index": 0,
+        "content_index": 0,
+        "part": {
+          "type": "text",
+          "text": ""
+        }
+      }
+    },
+    {
+      "sequence": 8,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.204597,
+      "data": {
+        "event_id": "event_f2c1146a47ce4efa83af7526e834f567",
+        "type": "response.output_text.delta",
+        "response_id": "resp_fa5cb8e296b04097b7f09d347a42e01e",
+        "item_id": "item_1f52303eab7b41afbb5dbc0f0f3020c9",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 9,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 1.207057,
+      "data": {
+        "event_id": "event_047fa5a4337a47b8b33cd63f608bd995",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_processing_time": 1.0137627124786377
+        },
+        "source": {
+          "processor": "NvidiaLLMService#4",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "ProcessingMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 10,
+      "type": "response.output_text.done",
+      "received_at_s": 1.209371,
+      "data": {
+        "event_id": "event_a46ca75550a44f97b3da75fa8b4a338f",
+        "type": "response.output_text.done",
+        "response_id": "resp_fa5cb8e296b04097b7f09d347a42e01e",
+        "item_id": "item_1f52303eab7b41afbb5dbc0f0f3020c9",
+        "output_index": 0,
+        "content_index": 0,
+        "text": "blue"
+      }
+    },
+    {
+      "sequence": 11,
+      "type": "response.content_part.done",
+      "received_at_s": 1.209448,
+      "data": {
+        "event_id": "event_997b4753417247f2826fa99a2dda6463",
+        "type": "response.content_part.done",
+        "response_id": "resp_fa5cb8e296b04097b7f09d347a42e01e",
+        "item_id": "item_1f52303eab7b41afbb5dbc0f0f3020c9",
+        "output_index": 0,
+        "content_index": 0,
+        "part": {
+          "type": "text",
+          "text": "blue"
+        }
+      }
+    },
+    {
+      "sequence": 12,
+      "type": "conversation.item.done",
+      "received_at_s": 1.209494,
+      "data": {
+        "event_id": "event_ca1874b59a5745c49e782834db90648b",
+        "type": "conversation.item.done",
+        "previous_item_id": "item_99f4609205334bc485b01363e19c79b8",
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "completed",
+          "content": [
+            {
+              "type": "output_text",
+              "text": "blue"
+            }
+          ],
+          "object": "realtime.item",
+          "id": "item_1f52303eab7b41afbb5dbc0f0f3020c9"
+        }
+      }
+    },
+    {
+      "sequence": 13,
+      "type": "response.output_item.done",
+      "received_at_s": 1.20953,
+      "data": {
+        "event_id": "event_a3a917fd6f3645dabdb45bb7c2b84246",
+        "type": "response.output_item.done",
+        "response_id": "resp_fa5cb8e296b04097b7f09d347a42e01e",
+        "output_index": 0,
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "completed",
+          "content": [
+            {
+              "type": "output_text",
+              "text": "blue"
+            }
+          ],
+          "object": "realtime.item",
+          "id": "item_1f52303eab7b41afbb5dbc0f0f3020c9"
+        }
+      }
+    },
+    {
+      "sequence": 14,
+      "type": "response.done",
+      "received_at_s": 1.209581,
+      "data": {
+        "event_id": "event_95a63389e5c64aec9cc4b96b5a55c0d4",
+        "type": "response.done",
+        "response": {
+          "id": "resp_fa5cb8e296b04097b7f09d347a42e01e",
+          "object": "realtime.response",
+          "status": "completed",
+          "status_details": null,
+          "output": [
+            {
+              "type": "message",
+              "role": "assistant",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "blue"
+                }
+              ],
+              "object": "realtime.item",
+              "id": "item_1f52303eab7b41afbb5dbc0f0f3020c9"
+            }
+          ],
+          "conversation_id": "conv_384c4fb503b04ebca8f7b8b75bef4243",
+          "output_modalities": [
+            "text"
+          ],
+          "max_output_tokens": 256,
+          "usage": null,
+          "metadata": null
+        }
+      }
+    }
+  ]
+}

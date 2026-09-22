@@ -1,0 +1,806 @@
+{
+  "case_id": "matrix-text-in-tool-text-out",
+  "model": "nvidia/nemotron-realtime-client-tools",
+  "session_id": "sess_849e36c7d4974d4c93ae7eb6fe6333b1",
+  "instructions": "You have no weather knowledge of your own. Call get_weather for any weather question and answer only from its result, in one short sentence.",
+  "input_text": "What is the weather in San Jose right now?",
+  "input_audio": "",
+  "text": "San\u202fJose: sunny, 21\u202f\u00b0C.",
+  "user_transcript": "",
+  "output_audio_bytes": 0,
+  "output_audio_duration_s": 0.0,
+  "output_sample_rate_hz": 24000,
+  "timings": {
+    "connect_s": 0.057674,
+    "session_ready_s": 0.141312,
+    "input_sent_s": 0.14765,
+    "response_done_s": 1.896685,
+    "first_text_s": 1.849747
+  },
+  "errors": [],
+  "tool_calls": [
+    {
+      "call_id": "chatcmpl-tool-97d25e0eb807e24b",
+      "name": "get_weather",
+      "arguments": "{\"city\": \"San Jose\"}",
+      "output": "{\"city\": \"San Jose\", \"temperature_c\": 21, \"conditions\": \"sunny\"}",
+      "answered": true
+    }
+  ],
+  "usage": {},
+  "completed": true,
+  "termination_reason": "response_completed",
+  "events": [
+    {
+      "sequence": 0,
+      "type": "session.updated",
+      "received_at_s": 0.141302,
+      "data": {
+        "event_id": "event_81a4e5fc61aa4f61a89da211afc11dcd",
+        "type": "session.updated",
+        "session": {
+          "id": "sess_849e36c7d4974d4c93ae7eb6fe6333b1",
+          "object": "realtime.session",
+          "type": "realtime",
+          "audio": {
+            "input": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "noise_reduction": null,
+              "transcription": {
+                "model": "nemotron-speech-streaming-en-0.6b"
+              },
+              "turn_detection": {
+                "type": "semantic_vad",
+                "eagerness": "auto",
+                "create_response": true,
+                "interrupt_response": true
+              }
+            },
+            "output": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "speed": 1.0,
+              "voice": "John"
+            }
+          },
+          "include": [],
+          "instructions": "You have no weather knowledge of your own. Call get_weather for any weather question and answer only from its result, in one short sentence.",
+          "max_output_tokens": 256,
+          "model": "nvidia/nemotron-realtime-client-tools",
+          "output_modalities": [
+            "text"
+          ],
+          "parallel_tool_calls": true,
+          "prompt": null,
+          "tool_choice": "required",
+          "tools": [
+            {
+              "type": "function",
+              "name": "get_weather",
+              "description": "Return the current weather for a city.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "city": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "additionalProperties": false
+              }
+            }
+          ],
+          "nvidia": {
+            "pipeline_mode": "generic-assistant",
+            "prompt_key": "generic_assistant_without_tools",
+            "llm_id": "self-hosted:singlegpu:nemotron-lightning",
+            "asr_id": "self-hosted:singlegpu:nemotron-asr-streaming-english",
+            "tts_id": "self-hosted:singlegpu:magpie-multilingual-tts",
+            "model_id": "nvidia/nvidia/nemotron-3.5-lightning",
+            "asr_model": "nemotron-speech-streaming-en-0.6b",
+            "tts_model": "magpie-tts-multilingual"
+          }
+        }
+      }
+    },
+    {
+      "sequence": 1,
+      "type": "conversation.item.added",
+      "received_at_s": 0.147631,
+      "data": {
+        "event_id": "event_3d91173770e24377a6eb2ab919834044",
+        "type": "conversation.item.added",
+        "previous_item_id": null,
+        "item": {
+          "type": "message",
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "What is the weather in San Jose right now?"
+            }
+          ],
+          "object": "realtime.item",
+          "status": "completed",
+          "id": "item_73f356322385434598a206abaff0d623"
+        }
+      }
+    },
+    {
+      "sequence": 2,
+      "type": "conversation.item.done",
+      "received_at_s": 0.147647,
+      "data": {
+        "event_id": "event_9be2594d884b4cb5807156fbc563c4cb",
+        "type": "conversation.item.done",
+        "previous_item_id": null,
+        "item": {
+          "type": "message",
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "What is the weather in San Jose right now?"
+            }
+          ],
+          "object": "realtime.item",
+          "status": "completed",
+          "id": "item_73f356322385434598a206abaff0d623"
+        }
+      }
+    },
+    {
+      "sequence": 3,
+      "type": "response.created",
+      "received_at_s": 0.148354,
+      "data": {
+        "event_id": "event_4cf755bfc8724003a2efffc0c3cca0ef",
+        "type": "response.created",
+        "response": {
+          "id": "resp_dc2c3cc6b6b144b4812dc3daa138077d",
+          "object": "realtime.response",
+          "status": "in_progress",
+          "status_details": null,
+          "output": [],
+          "conversation_id": "conv_8ac0225a759b48bb8c24000ff5dbc92f",
+          "output_modalities": [
+            "text"
+          ],
+          "max_output_tokens": 256,
+          "usage": null,
+          "metadata": null
+        }
+      }
+    },
+    {
+      "sequence": 4,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 1.342672,
+      "data": {
+        "event_id": "event_ef052b6607c34d0cbb3eaec113072ead",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_ttft": 1.1890230178833008
+        },
+        "source": {
+          "processor": "NvidiaLLMService#146",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "TTFBMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 5,
+      "type": "conversation.item.added",
+      "received_at_s": 1.342704,
+      "data": {
+        "event_id": "event_4e62acd501f044b599d4e1853f9e3def",
+        "type": "conversation.item.added",
+        "previous_item_id": "item_73f356322385434598a206abaff0d623",
+        "item": {
+          "type": "function_call",
+          "status": "in_progress",
+          "call_id": "chatcmpl-tool-97d25e0eb807e24b",
+          "name": "get_weather",
+          "arguments": "",
+          "object": "realtime.item",
+          "id": "item_fe829281f843453d9111e1508ad609f2"
+        }
+      }
+    },
+    {
+      "sequence": 6,
+      "type": "response.output_item.added",
+      "received_at_s": 1.342715,
+      "data": {
+        "event_id": "event_cb7fc21b6cf74e809cb3c192fe73c79e",
+        "type": "response.output_item.added",
+        "response_id": "resp_dc2c3cc6b6b144b4812dc3daa138077d",
+        "output_index": 0,
+        "item": {
+          "type": "function_call",
+          "status": "in_progress",
+          "call_id": "chatcmpl-tool-97d25e0eb807e24b",
+          "name": "get_weather",
+          "arguments": "",
+          "object": "realtime.item",
+          "id": "item_fe829281f843453d9111e1508ad609f2"
+        }
+      }
+    },
+    {
+      "sequence": 7,
+      "type": "response.function_call_arguments.delta",
+      "received_at_s": 1.342722,
+      "data": {
+        "event_id": "event_2dc32d20d0e64b0990c81ee850f6ec53",
+        "type": "response.function_call_arguments.delta",
+        "response_id": "resp_dc2c3cc6b6b144b4812dc3daa138077d",
+        "item_id": "item_fe829281f843453d9111e1508ad609f2",
+        "output_index": 0,
+        "call_id": "chatcmpl-tool-97d25e0eb807e24b"
+      }
+    },
+    {
+      "sequence": 8,
+      "type": "response.function_call_arguments.done",
+      "received_at_s": 1.342728,
+      "data": {
+        "event_id": "event_cfcf818e876c45718eb42e4ff0157dfb",
+        "type": "response.function_call_arguments.done",
+        "response_id": "resp_dc2c3cc6b6b144b4812dc3daa138077d",
+        "item_id": "item_fe829281f843453d9111e1508ad609f2",
+        "output_index": 0,
+        "call_id": "chatcmpl-tool-97d25e0eb807e24b",
+        "name": "get_weather",
+        "arguments": "{\"city\": \"San Jose\"}"
+      }
+    },
+    {
+      "sequence": 9,
+      "type": "conversation.item.done",
+      "received_at_s": 1.342735,
+      "data": {
+        "event_id": "event_1c8e748a50574341af2632bf24a79a0c",
+        "type": "conversation.item.done",
+        "previous_item_id": "item_73f356322385434598a206abaff0d623",
+        "item": {
+          "type": "function_call",
+          "status": "completed",
+          "call_id": "chatcmpl-tool-97d25e0eb807e24b",
+          "name": "get_weather",
+          "arguments": "{\"city\": \"San Jose\"}",
+          "object": "realtime.item",
+          "id": "item_fe829281f843453d9111e1508ad609f2"
+        }
+      }
+    },
+    {
+      "sequence": 10,
+      "type": "response.output_item.done",
+      "received_at_s": 1.342741,
+      "data": {
+        "event_id": "event_2e415f3a7a464d04ada9eea035615f80",
+        "type": "response.output_item.done",
+        "response_id": "resp_dc2c3cc6b6b144b4812dc3daa138077d",
+        "output_index": 0,
+        "item": {
+          "type": "function_call",
+          "status": "completed",
+          "call_id": "chatcmpl-tool-97d25e0eb807e24b",
+          "name": "get_weather",
+          "arguments": "{\"city\": \"San Jose\"}",
+          "object": "realtime.item",
+          "id": "item_fe829281f843453d9111e1508ad609f2"
+        }
+      }
+    },
+    {
+      "sequence": 11,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 1.34276,
+      "data": {
+        "event_id": "event_f151a136f46a4d36b7d7a2c69b3654b7",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_processing_time": 1.1901042461395264
+        },
+        "source": {
+          "processor": "NvidiaLLMService#146",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "ProcessingMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 12,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 1.342767,
+      "data": {
+        "event_id": "event_637c0cfc07af46079cad6c2ddbf385b6",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_tokens_per_sec": 21.00656314864457
+        },
+        "source": {
+          "kind": "derived",
+          "from": [
+            "LLMUsageMetricsData",
+            "ProcessingMetricsData"
+          ]
+        }
+      }
+    },
+    {
+      "sequence": 13,
+      "type": "response.done",
+      "received_at_s": 1.343452,
+      "data": {
+        "event_id": "event_7df808e6bb7748fc902f604d0e6ad269",
+        "type": "response.done",
+        "response": {
+          "id": "resp_dc2c3cc6b6b144b4812dc3daa138077d",
+          "object": "realtime.response",
+          "status": "completed",
+          "status_details": null,
+          "output": [
+            {
+              "type": "function_call",
+              "status": "completed",
+              "call_id": "chatcmpl-tool-97d25e0eb807e24b",
+              "name": "get_weather",
+              "arguments": "{\"city\": \"San Jose\"}",
+              "object": "realtime.item",
+              "id": "item_fe829281f843453d9111e1508ad609f2"
+            }
+          ],
+          "conversation_id": "conv_8ac0225a759b48bb8c24000ff5dbc92f",
+          "output_modalities": [
+            "text"
+          ],
+          "max_output_tokens": 256,
+          "usage": {
+            "total_tokens": 342,
+            "input_tokens": 317,
+            "output_tokens": 25,
+            "input_token_details": {
+              "text_tokens": 317,
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            },
+            "output_token_details": {
+              "text_tokens": 25,
+              "audio_tokens": 0
+            }
+          },
+          "metadata": null
+        }
+      }
+    },
+    {
+      "sequence": 14,
+      "type": "conversation.item.added",
+      "received_at_s": 1.345052,
+      "data": {
+        "event_id": "event_3c374fffeef64019aa995e369be8d249",
+        "type": "conversation.item.added",
+        "previous_item_id": "item_fe829281f843453d9111e1508ad609f2",
+        "item": {
+          "type": "function_call_output",
+          "status": "completed",
+          "call_id": "chatcmpl-tool-97d25e0eb807e24b",
+          "output": "{\"city\": \"San Jose\", \"temperature_c\": 21, \"conditions\": \"sunny\"}",
+          "object": "realtime.item",
+          "id": "item_b894ade908c54fd089f02e3ae205bb26"
+        }
+      }
+    },
+    {
+      "sequence": 15,
+      "type": "conversation.item.done",
+      "received_at_s": 1.345072,
+      "data": {
+        "event_id": "event_7ce2697d5bbe45aaa364ca16edc3c2c2",
+        "type": "conversation.item.done",
+        "previous_item_id": "item_fe829281f843453d9111e1508ad609f2",
+        "item": {
+          "type": "function_call_output",
+          "status": "completed",
+          "call_id": "chatcmpl-tool-97d25e0eb807e24b",
+          "output": "{\"city\": \"San Jose\", \"temperature_c\": 21, \"conditions\": \"sunny\"}",
+          "object": "realtime.item",
+          "id": "item_b894ade908c54fd089f02e3ae205bb26"
+        }
+      }
+    },
+    {
+      "sequence": 16,
+      "type": "response.created",
+      "received_at_s": 1.345463,
+      "data": {
+        "event_id": "event_5ee3d134380f4bc693fb5b694b8215a0",
+        "type": "response.created",
+        "response": {
+          "id": "resp_7891e36890d84b9cb109613a3a85f14b",
+          "object": "realtime.response",
+          "status": "in_progress",
+          "status_details": null,
+          "output": [],
+          "conversation_id": "conv_8ac0225a759b48bb8c24000ff5dbc92f",
+          "output_modalities": [
+            "text"
+          ],
+          "max_output_tokens": 256,
+          "usage": null,
+          "metadata": null
+        }
+      }
+    },
+    {
+      "sequence": 17,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 1.849557,
+      "data": {
+        "event_id": "event_9c7d8beeca514e7e8931aa2db68e88dd",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_ttft": 0.4988265037536621
+        },
+        "source": {
+          "processor": "NvidiaLLMService#146",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "TTFBMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 18,
+      "type": "conversation.item.added",
+      "received_at_s": 1.849655,
+      "data": {
+        "event_id": "event_43d2d14924cf44ffaddc530db9f8959e",
+        "type": "conversation.item.added",
+        "previous_item_id": "item_b894ade908c54fd089f02e3ae205bb26",
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "in_progress",
+          "content": [],
+          "object": "realtime.item",
+          "id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490"
+        }
+      }
+    },
+    {
+      "sequence": 19,
+      "type": "response.output_item.added",
+      "received_at_s": 1.849688,
+      "data": {
+        "event_id": "event_73fa9763ca27436cb604961112b5aea6",
+        "type": "response.output_item.added",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "output_index": 0,
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "in_progress",
+          "content": [],
+          "object": "realtime.item",
+          "id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490"
+        }
+      }
+    },
+    {
+      "sequence": 20,
+      "type": "response.content_part.added",
+      "received_at_s": 1.849716,
+      "data": {
+        "event_id": "event_e85679e0b9c345ef91908b782bc312c1",
+        "type": "response.content_part.added",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "item_id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490",
+        "output_index": 0,
+        "content_index": 0,
+        "part": {
+          "type": "text",
+          "text": ""
+        }
+      }
+    },
+    {
+      "sequence": 21,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.849741,
+      "data": {
+        "event_id": "event_6fb4b7eac6974d7ba5e327827436ea64",
+        "type": "response.output_text.delta",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "item_id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 22,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.851444,
+      "data": {
+        "event_id": "event_14db6cf62aeb4e2f936a28841c85252c",
+        "type": "response.output_text.delta",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "item_id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 23,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.851543,
+      "data": {
+        "event_id": "event_b9640fce0284402dae93b49444fe82e2",
+        "type": "response.output_text.delta",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "item_id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 24,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.851766,
+      "data": {
+        "event_id": "event_a7bec93593a94a92a26066f8c7d0ea11",
+        "type": "response.output_text.delta",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "item_id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 25,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.853661,
+      "data": {
+        "event_id": "event_44aa4698e4a44ec19c2e1f9913ed22f8",
+        "type": "response.output_text.delta",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "item_id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 26,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.854925,
+      "data": {
+        "event_id": "event_2293f49d58c149e7bc33fa54db4d7d1f",
+        "type": "response.output_text.delta",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "item_id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 27,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.857362,
+      "data": {
+        "event_id": "event_aa49105c3dff433b854e3ebe3fd1b6ed",
+        "type": "response.output_text.delta",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "item_id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 28,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.8595,
+      "data": {
+        "event_id": "event_2105b59794834d62aa348c09b4e60b31",
+        "type": "response.output_text.delta",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "item_id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 29,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.894335,
+      "data": {
+        "event_id": "event_e03e040eecb846a89b32f58a7a043d78",
+        "type": "response.output_text.delta",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "item_id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 30,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.894372,
+      "data": {
+        "event_id": "event_b7615a9145174f6c9f3caae48e892229",
+        "type": "response.output_text.delta",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "item_id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 31,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.894391,
+      "data": {
+        "event_id": "event_0a1b5c99a2b540ec93a67f303a6987cd",
+        "type": "response.output_text.delta",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "item_id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 32,
+      "type": "response.output_text.delta",
+      "received_at_s": 1.894408,
+      "data": {
+        "event_id": "event_e671de041db64d73845af47e3468c47c",
+        "type": "response.output_text.delta",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "item_id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 33,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 1.89509,
+      "data": {
+        "event_id": "event_5ae6f08cc78546b5a5f87ecada312dc2",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_processing_time": 0.5490524768829346
+        },
+        "source": {
+          "processor": "NvidiaLLMService#146",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "ProcessingMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 34,
+      "type": "response.output_text.done",
+      "received_at_s": 1.8966,
+      "data": {
+        "event_id": "event_d70f526a9f614961b24ba6c3844112c1",
+        "type": "response.output_text.done",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "item_id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490",
+        "output_index": 0,
+        "content_index": 0,
+        "text": "San\u202fJose: sunny, 21\u202f\u00b0C."
+      }
+    },
+    {
+      "sequence": 35,
+      "type": "response.content_part.done",
+      "received_at_s": 1.896625,
+      "data": {
+        "event_id": "event_867951fe1cff40b7b5d9c8c881d26625",
+        "type": "response.content_part.done",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "item_id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490",
+        "output_index": 0,
+        "content_index": 0,
+        "part": {
+          "type": "text",
+          "text": "San\u202fJose: sunny, 21\u202f\u00b0C."
+        }
+      }
+    },
+    {
+      "sequence": 36,
+      "type": "conversation.item.done",
+      "received_at_s": 1.896643,
+      "data": {
+        "event_id": "event_29c18dc1ef4744d8b4e94f91872f7333",
+        "type": "conversation.item.done",
+        "previous_item_id": "item_b894ade908c54fd089f02e3ae205bb26",
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "completed",
+          "content": [
+            {
+              "type": "output_text",
+              "text": "San\u202fJose: sunny, 21\u202f\u00b0C."
+            }
+          ],
+          "object": "realtime.item",
+          "id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490"
+        }
+      }
+    },
+    {
+      "sequence": 37,
+      "type": "response.output_item.done",
+      "received_at_s": 1.896658,
+      "data": {
+        "event_id": "event_21c2d1c8456a48c0996f072c671c4a60",
+        "type": "response.output_item.done",
+        "response_id": "resp_7891e36890d84b9cb109613a3a85f14b",
+        "output_index": 0,
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "completed",
+          "content": [
+            {
+              "type": "output_text",
+              "text": "San\u202fJose: sunny, 21\u202f\u00b0C."
+            }
+          ],
+          "object": "realtime.item",
+          "id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490"
+        }
+      }
+    },
+    {
+      "sequence": 38,
+      "type": "response.done",
+      "received_at_s": 1.896682,
+      "data": {
+        "event_id": "event_9c9ca33f64324bc6bbd766102a68f946",
+        "type": "response.done",
+        "response": {
+          "id": "resp_7891e36890d84b9cb109613a3a85f14b",
+          "object": "realtime.response",
+          "status": "completed",
+          "status_details": null,
+          "output": [
+            {
+              "type": "message",
+              "role": "assistant",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "San\u202fJose: sunny, 21\u202f\u00b0C."
+                }
+              ],
+              "object": "realtime.item",
+              "id": "item_3c56ddd8bc7a43b79a00c0c0e5fef490"
+            }
+          ],
+          "conversation_id": "conv_8ac0225a759b48bb8c24000ff5dbc92f",
+          "output_modalities": [
+            "text"
+          ],
+          "max_output_tokens": 256,
+          "usage": null,
+          "metadata": null
+        }
+      }
+    }
+  ]
+}

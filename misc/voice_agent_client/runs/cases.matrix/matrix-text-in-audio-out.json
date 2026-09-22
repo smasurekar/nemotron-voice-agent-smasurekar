@@ -1,0 +1,422 @@
+{
+  "case_id": "matrix-text-in-audio-out",
+  "model": "nvidia/nemotron-realtime-client-tools",
+  "session_id": "sess_104cf67d355d4a3bab3e11b9b585b0b7",
+  "instructions": "Answer in one short sentence.",
+  "input_text": "What is the capital of France?",
+  "input_audio": "",
+  "text": "Paris",
+  "user_transcript": "",
+  "output_audio_bytes": 52680,
+  "output_audio_duration_s": 1.097,
+  "output_sample_rate_hz": 24000,
+  "timings": {
+    "connect_s": 0.060212,
+    "session_ready_s": 0.140878,
+    "input_sent_s": 0.148356,
+    "first_text_s": 1.63758,
+    "first_audio_s": 1.679201,
+    "response_done_s": 2.68128
+  },
+  "errors": [],
+  "tool_calls": [],
+  "usage": {},
+  "completed": true,
+  "termination_reason": "response_completed",
+  "events": [
+    {
+      "sequence": 0,
+      "type": "session.updated",
+      "received_at_s": 0.140867,
+      "data": {
+        "event_id": "event_587d34d19b89492ca49ad488ac4b6862",
+        "type": "session.updated",
+        "session": {
+          "id": "sess_104cf67d355d4a3bab3e11b9b585b0b7",
+          "object": "realtime.session",
+          "type": "realtime",
+          "audio": {
+            "input": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "noise_reduction": null,
+              "transcription": {
+                "model": "nemotron-speech-streaming-en-0.6b"
+              },
+              "turn_detection": {
+                "type": "semantic_vad",
+                "eagerness": "auto",
+                "create_response": true,
+                "interrupt_response": true
+              }
+            },
+            "output": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "speed": 1.0,
+              "voice": "John"
+            }
+          },
+          "include": [],
+          "instructions": "Answer in one short sentence.",
+          "max_output_tokens": 256,
+          "model": "nvidia/nemotron-realtime-client-tools",
+          "output_modalities": [
+            "audio"
+          ],
+          "parallel_tool_calls": true,
+          "prompt": null,
+          "tool_choice": "none",
+          "tools": [],
+          "nvidia": {
+            "pipeline_mode": "generic-assistant",
+            "prompt_key": "generic_assistant_without_tools",
+            "llm_id": "self-hosted:singlegpu:nemotron-lightning",
+            "asr_id": "self-hosted:singlegpu:nemotron-asr-streaming-english",
+            "tts_id": "self-hosted:singlegpu:magpie-multilingual-tts",
+            "model_id": "nvidia/nvidia/nemotron-3.5-lightning",
+            "asr_model": "nemotron-speech-streaming-en-0.6b",
+            "tts_model": "magpie-tts-multilingual"
+          }
+        }
+      }
+    },
+    {
+      "sequence": 1,
+      "type": "conversation.item.added",
+      "received_at_s": 0.14834,
+      "data": {
+        "event_id": "event_de7cd84b1e834454bd3184db74e56d0a",
+        "type": "conversation.item.added",
+        "previous_item_id": null,
+        "item": {
+          "type": "message",
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "What is the capital of France?"
+            }
+          ],
+          "object": "realtime.item",
+          "status": "completed",
+          "id": "item_918aff5dad0d4b4c991872ccf7df137e"
+        }
+      }
+    },
+    {
+      "sequence": 2,
+      "type": "conversation.item.done",
+      "received_at_s": 0.148353,
+      "data": {
+        "event_id": "event_df6f25e388d346009739dd1f29a395f8",
+        "type": "conversation.item.done",
+        "previous_item_id": null,
+        "item": {
+          "type": "message",
+          "role": "user",
+          "content": [
+            {
+              "type": "input_text",
+              "text": "What is the capital of France?"
+            }
+          ],
+          "object": "realtime.item",
+          "status": "completed",
+          "id": "item_918aff5dad0d4b4c991872ccf7df137e"
+        }
+      }
+    },
+    {
+      "sequence": 3,
+      "type": "response.created",
+      "received_at_s": 0.14901,
+      "data": {
+        "event_id": "event_c54b04ef7de64941a4ead2be4d5e3a9b",
+        "type": "response.created",
+        "response": {
+          "id": "resp_f083bd0cf04d4a41b4dc63f4ea684b9b",
+          "object": "realtime.response",
+          "status": "in_progress",
+          "status_details": null,
+          "output": [],
+          "conversation_id": "conv_b4647cd8dbf44883b8a46091d6739956",
+          "output_modalities": [
+            "audio"
+          ],
+          "max_output_tokens": 256,
+          "audio": {
+            "output": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "voice": "John"
+            }
+          },
+          "usage": null,
+          "metadata": null
+        }
+      }
+    },
+    {
+      "sequence": 4,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 1.633689,
+      "data": {
+        "event_id": "event_892600535ea64cc991f56c672b559318",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_ttft": 1.4816148281097412
+        },
+        "source": {
+          "processor": "NvidiaLLMService#142",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "TTFBMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 5,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 1.635416,
+      "data": {
+        "event_id": "event_501dbf0ae2104384a0ee49a647761bec",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "llm_processing_time": 1.484375238418579
+        },
+        "source": {
+          "processor": "NvidiaLLMService#142",
+          "model": "nvidia/nvidia/nemotron-3.5-lightning",
+          "kind": "ProcessingMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 6,
+      "type": "conversation.item.added",
+      "received_at_s": 1.637368,
+      "data": {
+        "event_id": "event_ea074b7181514c38b262f67766468b42",
+        "type": "conversation.item.added",
+        "previous_item_id": "item_918aff5dad0d4b4c991872ccf7df137e",
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "in_progress",
+          "content": [],
+          "object": "realtime.item",
+          "id": "item_c01ef0f09d8942e1882faa808e8be238"
+        }
+      }
+    },
+    {
+      "sequence": 7,
+      "type": "response.output_item.added",
+      "received_at_s": 1.637387,
+      "data": {
+        "event_id": "event_74e291c607f946b6880f3f66163e0a23",
+        "type": "response.output_item.added",
+        "response_id": "resp_f083bd0cf04d4a41b4dc63f4ea684b9b",
+        "output_index": 0,
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "in_progress",
+          "content": [],
+          "object": "realtime.item",
+          "id": "item_c01ef0f09d8942e1882faa808e8be238"
+        }
+      }
+    },
+    {
+      "sequence": 8,
+      "type": "response.content_part.added",
+      "received_at_s": 1.637395,
+      "data": {
+        "event_id": "event_3048cfcb8eb54a1a8da171beadd7ad74",
+        "type": "response.content_part.added",
+        "response_id": "resp_f083bd0cf04d4a41b4dc63f4ea684b9b",
+        "item_id": "item_c01ef0f09d8942e1882faa808e8be238",
+        "output_index": 0,
+        "content_index": 0,
+        "part": {
+          "type": "audio",
+          "transcript": ""
+        }
+      }
+    },
+    {
+      "sequence": 9,
+      "type": "response.output_audio_transcript.delta",
+      "received_at_s": 1.637574,
+      "data": {
+        "event_id": "event_3503f5448bd446f0ad75eaa565d9a9e5",
+        "type": "response.output_audio_transcript.delta",
+        "response_id": "resp_f083bd0cf04d4a41b4dc63f4ea684b9b",
+        "item_id": "item_c01ef0f09d8942e1882faa808e8be238",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 10,
+      "type": "nvidia.metrics.updated",
+      "received_at_s": 1.678692,
+      "data": {
+        "event_id": "event_6cd909d1fcee4553bb07c678910b043e",
+        "type": "nvidia.metrics.updated",
+        "metrics": {
+          "tts_ttfb": 0.0418391227722168
+        },
+        "source": {
+          "processor": "NvidiaTTSService#143",
+          "model": "magpie-tts-multilingual",
+          "kind": "TTFBMetricsData"
+        }
+      }
+    },
+    {
+      "sequence": 11,
+      "type": "response.output_audio.done",
+      "received_at_s": 2.68103,
+      "data": {
+        "event_id": "event_e108bd9b27c04c22b7ef80283c5a0c63",
+        "type": "response.output_audio.done",
+        "response_id": "resp_f083bd0cf04d4a41b4dc63f4ea684b9b",
+        "item_id": "item_c01ef0f09d8942e1882faa808e8be238",
+        "output_index": 0,
+        "content_index": 0
+      }
+    },
+    {
+      "sequence": 12,
+      "type": "response.output_audio_transcript.done",
+      "received_at_s": 2.681089,
+      "data": {
+        "event_id": "event_f0477b166b574d259f273c57bf39adc8",
+        "type": "response.output_audio_transcript.done",
+        "response_id": "resp_f083bd0cf04d4a41b4dc63f4ea684b9b",
+        "item_id": "item_c01ef0f09d8942e1882faa808e8be238",
+        "output_index": 0,
+        "content_index": 0,
+        "transcript": "Paris"
+      }
+    },
+    {
+      "sequence": 13,
+      "type": "response.content_part.done",
+      "received_at_s": 2.681127,
+      "data": {
+        "event_id": "event_13c8837c16d84c3aa46e198d8e780b8c",
+        "type": "response.content_part.done",
+        "response_id": "resp_f083bd0cf04d4a41b4dc63f4ea684b9b",
+        "item_id": "item_c01ef0f09d8942e1882faa808e8be238",
+        "output_index": 0,
+        "content_index": 0,
+        "part": {
+          "type": "audio",
+          "transcript": "Paris"
+        }
+      }
+    },
+    {
+      "sequence": 14,
+      "type": "conversation.item.done",
+      "received_at_s": 2.681177,
+      "data": {
+        "event_id": "event_8357faeaf0b54cb1a22d0b617c9a1304",
+        "type": "conversation.item.done",
+        "previous_item_id": "item_918aff5dad0d4b4c991872ccf7df137e",
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "completed",
+          "content": [
+            {
+              "type": "output_audio",
+              "transcript": "Paris"
+            }
+          ],
+          "object": "realtime.item",
+          "id": "item_c01ef0f09d8942e1882faa808e8be238"
+        }
+      }
+    },
+    {
+      "sequence": 15,
+      "type": "response.output_item.done",
+      "received_at_s": 2.681211,
+      "data": {
+        "event_id": "event_1aa9f7bb22fd4da2aa9601b553e29f0e",
+        "type": "response.output_item.done",
+        "response_id": "resp_f083bd0cf04d4a41b4dc63f4ea684b9b",
+        "output_index": 0,
+        "item": {
+          "type": "message",
+          "role": "assistant",
+          "status": "completed",
+          "content": [
+            {
+              "type": "output_audio",
+              "transcript": "Paris"
+            }
+          ],
+          "object": "realtime.item",
+          "id": "item_c01ef0f09d8942e1882faa808e8be238"
+        }
+      }
+    },
+    {
+      "sequence": 16,
+      "type": "response.done",
+      "received_at_s": 2.681269,
+      "data": {
+        "event_id": "event_4daf4e16d99d444cbd76445c5d4609a3",
+        "type": "response.done",
+        "response": {
+          "id": "resp_f083bd0cf04d4a41b4dc63f4ea684b9b",
+          "object": "realtime.response",
+          "status": "completed",
+          "status_details": null,
+          "output": [
+            {
+              "type": "message",
+              "role": "assistant",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_audio",
+                  "transcript": "Paris"
+                }
+              ],
+              "object": "realtime.item",
+              "id": "item_c01ef0f09d8942e1882faa808e8be238"
+            }
+          ],
+          "conversation_id": "conv_b4647cd8dbf44883b8a46091d6739956",
+          "output_modalities": [
+            "audio"
+          ],
+          "max_output_tokens": 256,
+          "audio": {
+            "output": {
+              "format": {
+                "type": "audio/pcm",
+                "rate": 24000
+              },
+              "voice": "John"
+            }
+          },
+          "usage": null,
+          "metadata": null
+        }
+      }
+    }
+  ]
+}

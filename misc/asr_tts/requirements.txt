@@ -1,0 +1,22 @@
+# Dependencies for the standalone ASR/TTS scripts in this folder.
+#
+# They are ALREADY INSTALLED in the repo virtualenv (../../.venv), which is the
+# supported way to run these scripts:
+#
+#     .venv/bin/python misc/asr_tts/asr_transcribe.py
+#
+# This file exists only for running them under a different interpreter:
+#
+#     python3 -m venv .asr-tts-venv
+#     .asr-tts-venv/bin/pip install -r misc/asr_tts/requirements.txt
+#     .asr-tts-venv/bin/python misc/asr_tts/asr_transcribe.py
+#
+# Constraints mirror the repo's pyproject.toml so the scripts behave the same as
+# the pipeline. Do not loosen nvidia-riva-client below 2.27.0 — pipecat's NVIDIA
+# services require it.
+
+nvidia-riva-client>=2.27.0,<3   # riva.client — gRPC speech client (ASR + TTS)
+grpcio>=1.67.0                  # gRPC transport and status codes
+protobuf>=6.33.6                # riva protobuf messages
+pyyaml>=6.0.3                   # reads services.cloud.yaml
+python-dotenv>=1.2.2            # reads the repo-root .env

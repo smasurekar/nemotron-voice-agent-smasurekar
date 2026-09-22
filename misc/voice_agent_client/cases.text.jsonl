@@ -1,0 +1,4 @@
+{"case_id": "text-greeting", "instructions": "Answer in one short sentence.", "text": "Say hello in one short sentence.", "output_modalities": ["text"], "notes": "Smallest possible round trip: text in, text out, TTS bypassed."}
+{"case_id": "text-arithmetic", "instructions": "Reply with only the number, no words.", "text": "What is two plus two?", "output_modalities": ["text"], "max_output_tokens": 16, "notes": "Deterministic answer, so a wrong reply means a wrong deployment or prompt."}
+{"case_id": "text-instruction-following", "instructions": "Answer in exactly three words.", "text": "Describe the color of a clear midday sky.", "output_modalities": ["text"], "notes": "Checks that session.instructions reach the model."}
+{"case_id": "text-to-speech", "instructions": "Answer in one short sentence.", "text": "Name one planet in our solar system.", "output_modalities": ["audio"], "notes": "Text in, audio out: exercises the TTS leg and writes a WAV artifact."}
