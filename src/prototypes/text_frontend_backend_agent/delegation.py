@@ -1,0 +1,54 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+"""The frontend's only tool: ``call_backend``.
+
+There is deliberately no cancel/discard tool. Under a turn-based API there is
+no reachable path on which the frontend could fire one: internal execution
+blocks until the backend turn completes, and in external execution a user
+message arriving while tool results are outstanding is intercepted by the
+driver-level ``on_user_message_while_pending`` policy before the frontend LLM
+is ever called.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+CALL_BACKEND = "call_backend"
+
+CALL_BACKEND_TOOL: dict[str, Any] = {
+    "type": "function",
+    "function": {
+        "name": CALL_BACKEND,
+        "description": (
+            "Send one detailed, self-contained natural-language request to the backend agent, which "
+            "owns all task execution. Do not write normal assistant text in the same turn as this call."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": (
+                        "The complete current request, restated so it stands alone: include every "
+                        "detail already established in the conversation plus the latest user turn. "
+                        "Never send only the change ('add a window seat'); send the whole request."
+                    ),
+                },
+                "filler_text": {
+                    "type": "string",
+                    "description": (
+                        "Optional short holding phrase. It is recorded internally and is never shown "
+                        "to the user in this text agent. Never put results or specifics in it."
+                    ),
+                },
+            },
+            "required": ["query"],
+            "additionalProperties": False,
+        },
+    },
+}
+
+#: The complete tool surface offered to the frontend LLM.
+FRONTEND_TOOLS: tuple[dict[str, Any], ...] = (CALL_BACKEND_TOOL,)

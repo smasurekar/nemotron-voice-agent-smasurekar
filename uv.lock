@@ -1431,6 +1431,12 @@ dependencies = [
     { name = "pyyaml" },
 ]
 
+[package.optional-dependencies]
+prototypes = [
+    { name = "openai" },
+    { name = "rich" },
+]
+
 [package.dev-dependencies]
 benchmark = [
     { name = "aiohttp" },
@@ -1445,6 +1451,7 @@ benchmark = [
     { name = "websockets" },
 ]
 dev = [
+    { name = "nemotron-voice-agent", extra = ["prototypes"] },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "ruff" },
@@ -1458,12 +1465,15 @@ requires-dist = [
     { name = "imageio-ffmpeg", specifier = ">=0.5.1" },
     { name = "langchain-nvidia-ai-endpoints", specifier = ">=1.2.1" },
     { name = "loguru", specifier = ">=0.7.3" },
+    { name = "openai", marker = "extra == 'prototypes'", specifier = ">=1.109.1" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = ">=1.40.0" },
     { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.40.0" },
     { name = "pipecat-ai", extras = ["nvidia", "silero", "runner", "webrtc", "websocket", "openai"], specifier = "==1.7.0" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "rich", marker = "extra == 'prototypes'", specifier = ">=13.9.4" },
 ]
+provides-extras = ["prototypes"]
 
 [package.metadata.requires-dev]
 benchmark = [
@@ -1479,6 +1489,7 @@ benchmark = [
     { name = "websockets", specifier = ">=14.0" },
 ]
 dev = [
+    { name = "nemotron-voice-agent", extras = ["prototypes"] },
     { name = "pre-commit", specifier = ">=4.0.0" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "ruff", specifier = ">=0.15.6" },

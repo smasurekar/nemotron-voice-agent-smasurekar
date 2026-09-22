@@ -15,6 +15,13 @@ dependencies = [
     "imageio-ffmpeg>=0.5.1",
 ]
 
+[project.optional-dependencies]
+# Direct dependency of `src/prototypes/` only. It must be a project extra, not a
+# dependency group: groups are not install metadata, so an external environment
+# doing `uv pip install -e <this repo>` would not get it. See
+# misc/prototypes/text-frontend-backend-agent-prototype-plan.md section 4.1.
+prototypes = ["openai>=1.109.1", "rich>=13.9.4"]
+
 # Force patched versions for known CVEs
 [tool.uv]
 override-dependencies = [
@@ -34,6 +41,7 @@ dev = [
     "ruff>=0.15.6",
     "pre-commit>=4.0.0",
     "pytest>=9.1.1",
+    "nemotron-voice-agent[prototypes]",
 ]
 eval = [
     "pipecat-ai[evals]==1.7.0",
