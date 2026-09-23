@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Backend-only mode: no frontend LLM, a single stateful backend with its own history.
+
+extends: ../voice_agent.yaml
+
+agent:
+  overrides:
+    agent: {mode: backend_only}

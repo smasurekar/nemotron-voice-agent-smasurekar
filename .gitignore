@@ -10,6 +10,7 @@ __pycache__/
 venv/
 .venv/
 .certs/
+logs/
 
 # Local models. Keep the speech bind-mount point tracked so `docker compose up`
 # does not create models/nemo-speech as root when the path is missing.

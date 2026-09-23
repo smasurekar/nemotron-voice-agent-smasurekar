@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# tau3-bench voice evaluation profile. Pins every eval-relevant key to its base
+# value explicitly, so a later edit to voice_agent.yaml cannot silently change
+# eval behaviour. Run tau2 with --max-concurrency 1 until max_sessions is measured.
+
+extends: ../voice_agent.yaml
+
+protocol:
+  greeting: {enabled: false, text: ""}
+  seed_history_with_client_greeting: "Hi! How can I help you today?"
+  auto_response: true
+  resume_on: response_create
+
+filler:
+  mode: log_only
+
+tools:
+  source: client
+
+instructions:
+  apply_to: [backend]
+  placement: policy_slot
+  frontend_capabilities: from_tools
+
+barge_in:
+  enabled: true
+  history: truncate_heard
+  interruption_marker: " [interrupted by the user]"
+  while_thinking: cancel_and_merge

@@ -58,6 +58,37 @@ class FrontendToolSurfaceTests(unittest.IsolatedAsyncioTestCase):
         discarded = [e for e in sink.of_kind(events.FRONTEND_CONTRACT_VIOLATION) if "discarded_text" in e.data]
         assert discarded and discarded[0].data["discarded_text"] == "Let me check that for you."
 
+    async def test_tool_call_typed_as_text_is_repaired_into_a_real_delegation(self) -> None:
+        typed = (
+            '{\n  "content": "",\n  "tool_calls": [{\n    "function": "call_backend",\n    "arguments": '
+            '{"query": "The user asks about order 5513.", "filler_text": "Let me check."}\n  }]\n}'
+        )
+        frontend = FakeChatClient([text_response(typed), delegate_response("The user asks about order 5513.")])
+        backend = FakeChatClient([text_response("Order 5513 has shipped.")])
+        agent, sink = make_agent(frontend=frontend, backend=backend)
+        turn, state = await agent.send("What is order 5513?", agent.new_session())
+        assert turn.final_text == "Order 5513 has shipped."
+        repairs = sink.of_kind(events.FRONTEND_REPAIR)
+        assert repairs and repairs[0].data["rejected_text"] == typed
+        assert all(typed != message.content for message in state.frontend_history.messages)
+
+    async def test_call_arguments_typed_as_text_are_repaired(self) -> None:
+        typed = '{\n  "query": "The user is asking about order 5513.",\n  "filler_text": "Let me look that up."\n}'
+        frontend = FakeChatClient([text_response(typed), delegate_response("The user is asking about order 5513.")])
+        backend = FakeChatClient([text_response("Order 5513 has shipped.")])
+        agent, sink = make_agent(frontend=frontend, backend=backend)
+        turn, _ = await agent.send("What is order 5513?", agent.new_session())
+        assert turn.final_text == "Order 5513 has shipped."
+        assert sink.of_kind(events.FRONTEND_REPAIR)
+
+    async def test_tool_call_markup_as_text_fails_closed(self) -> None:
+        markup = "<tool_call><function=call_backend><parameter=query>order 5513</parameter></function></tool_call>"
+        frontend = FakeChatClient([text_response(markup), text_response(markup)])
+        agent, _ = make_agent(frontend=frontend)
+        turn, _ = await agent.send("What is order 5513?", agent.new_session())
+        assert turn.final_text != markup
+        assert "call_backend" not in turn.final_text
+
     async def test_empty_query_is_a_violation(self) -> None:
         frontend = FakeChatClient([tool_response(("call_backend", {"query": "  "})), text_response("plain answer")])
         agent, sink = make_agent(frontend=frontend)

@@ -21,6 +21,24 @@ dependencies = [
 # doing `uv pip install -e <this repo>` would not get it. See
 # misc/prototypes/text-frontend-backend-agent-prototype-plan.md section 4.1.
 prototypes = ["openai>=1.109.1", "rich>=13.9.4"]
+# Every package `src/prototypes/voice_frontend_backend_agent/` imports directly, declared
+# instead of relied on transitively (plan section 5.1 in
+# misc/prototypes/voice-frontend-backend-agent-prototype-plan.md). All are already in
+# the image; the extra only declares them. Microphone I/O is a separate extra because
+# sounddevice needs the PortAudio system library.
+prototypes-voice = [
+    "nemotron-voice-agent[prototypes]",
+    "pipecat-ai[silero]==1.7.0",
+    "nvidia-riva-client>=2.27.0,<3",
+    "fastapi>=0.141.1",
+    "uvicorn>=0.52.0",
+    "websockets>=14.0",
+    "numpy>=2.0.0",
+    "soxr>=1.0.0",
+    "pyyaml>=6.0.3",
+    "loguru>=0.7.3",
+]
+prototypes-voice-mic = ["nemotron-voice-agent[prototypes-voice]", "sounddevice>=0.5"]
 
 # Force patched versions for known CVEs
 [tool.uv]
@@ -42,6 +60,7 @@ dev = [
     "pre-commit>=4.0.0",
     "pytest>=9.1.1",
     "nemotron-voice-agent[prototypes]",
+    "nemotron-voice-agent[prototypes-voice]",
 ]
 eval = [
     "pipecat-ai[evals]==1.7.0",

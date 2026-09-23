@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import unittest
 
-from _fakes import FakeChatClient, make_agent, text_response, tool_response
+from _fakes import FakeChatClient, delegate_response, make_agent, text_response, tool_response
 
+from prototypes.text_frontend_backend_agent import events
 from prototypes.text_frontend_backend_agent.delegation import CALL_BACKEND_TOOL, FRONTEND_TOOLS
 from prototypes.text_frontend_backend_agent.messages import ToolCall, canonical_json
 from prototypes.text_frontend_backend_agent.tools import decode_arguments
@@ -23,7 +24,9 @@ def test_only_delegation_tool_is_published() -> None:
 def test_schema_accepts_only_query_and_filler() -> None:
     properties = CALL_BACKEND_TOOL["function"]["parameters"]["properties"]
     assert set(properties) == {"query", "filler_text"}
-    assert CALL_BACKEND_TOOL["function"]["parameters"]["required"] == ["query"]
+    # Both are declared required so the frontend model reliably emits a filler phrase; the runtime
+    # still tolerates a missing filler_text (see test_delegation_without_filler_still_succeeds).
+    assert CALL_BACKEND_TOOL["function"]["parameters"]["required"] == ["query", "filler_text"]
     assert CALL_BACKEND_TOOL["function"]["parameters"]["additionalProperties"] is False
 
 
@@ -50,6 +53,15 @@ class DelegationArgumentTests(unittest.IsolatedAsyncioTestCase):
         turn, _ = await agent.send("go", agent.new_session())
         assert turn.final_text == "answered"
         assert [m.content for m in backend.last_messages if m.role == "user"] == ["wrapped request"]
+
+    async def test_delegation_without_filler_still_succeeds(self) -> None:
+        """filler_text is required in the schema to steer the model, not enforced at runtime."""
+        frontend = FakeChatClient([delegate_response("q")])
+        backend = FakeChatClient([text_response("answered")])
+        agent, sink = make_agent(frontend=frontend, backend=backend)
+        turn, _ = await agent.send("go", agent.new_session())
+        assert turn.final_text == "answered"
+        assert sink.of_kind(events.FILLER) == []
 
     async def test_extra_arguments_are_ignored(self) -> None:
         frontend = FakeChatClient([tool_response(("call_backend", {"query": "q", "origin_city": "X"}))])

@@ -39,12 +39,13 @@ CALL_BACKEND_TOOL: dict[str, Any] = {
                 "filler_text": {
                     "type": "string",
                     "description": (
-                        "Optional short holding phrase. It is recorded internally and is never shown "
-                        "to the user in this text agent. Never put results or specifics in it."
+                        "Always provide a short, generic holding phrase that would be safe to say "
+                        "aloud while the backend works, such as 'Let me take a look.' Never put "
+                        "results, identifiers, names, or guesses in it."
                     ),
                 },
             },
-            "required": ["query"],
+            "required": ["query", "filler_text"],
             "additionalProperties": False,
         },
     },

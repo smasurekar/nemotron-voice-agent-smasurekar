@@ -1436,6 +1436,33 @@ prototypes = [
     { name = "openai" },
     { name = "rich" },
 ]
+prototypes-voice = [
+    { name = "fastapi" },
+    { name = "loguru" },
+    { name = "numpy" },
+    { name = "nvidia-riva-client" },
+    { name = "openai" },
+    { name = "pipecat-ai" },
+    { name = "pyyaml" },
+    { name = "rich" },
+    { name = "soxr" },
+    { name = "uvicorn" },
+    { name = "websockets" },
+]
+prototypes-voice-mic = [
+    { name = "fastapi" },
+    { name = "loguru" },
+    { name = "numpy" },
+    { name = "nvidia-riva-client" },
+    { name = "openai" },
+    { name = "pipecat-ai" },
+    { name = "pyyaml" },
+    { name = "rich" },
+    { name = "sounddevice" },
+    { name = "soxr" },
+    { name = "uvicorn" },
+    { name = "websockets" },
+]
 
 [package.dev-dependencies]
 benchmark = [
@@ -1451,7 +1478,7 @@ benchmark = [
     { name = "websockets" },
 ]
 dev = [
-    { name = "nemotron-voice-agent", extra = ["prototypes"] },
+    { name = "nemotron-voice-agent", extra = ["prototypes", "prototypes-voice"] },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "ruff" },
@@ -1462,18 +1489,30 @@ eval = [
 
 [package.metadata]
 requires-dist = [
+    { name = "fastapi", marker = "extra == 'prototypes-voice'", specifier = ">=0.141.1" },
     { name = "imageio-ffmpeg", specifier = ">=0.5.1" },
     { name = "langchain-nvidia-ai-endpoints", specifier = ">=1.2.1" },
     { name = "loguru", specifier = ">=0.7.3" },
+    { name = "loguru", marker = "extra == 'prototypes-voice'", specifier = ">=0.7.3" },
+    { name = "nemotron-voice-agent", extras = ["prototypes"], marker = "extra == 'prototypes-voice'" },
+    { name = "nemotron-voice-agent", extras = ["prototypes-voice"], marker = "extra == 'prototypes-voice-mic'" },
+    { name = "numpy", marker = "extra == 'prototypes-voice'", specifier = ">=2.0.0" },
+    { name = "nvidia-riva-client", marker = "extra == 'prototypes-voice'", specifier = ">=2.27.0,<3" },
     { name = "openai", marker = "extra == 'prototypes'", specifier = ">=1.109.1" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = ">=1.40.0" },
     { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.40.0" },
     { name = "pipecat-ai", extras = ["nvidia", "silero", "runner", "webrtc", "websocket", "openai"], specifier = "==1.7.0" },
+    { name = "pipecat-ai", extras = ["silero"], marker = "extra == 'prototypes-voice'", specifier = "==1.7.0" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "pyyaml", marker = "extra == 'prototypes-voice'", specifier = ">=6.0.3" },
     { name = "rich", marker = "extra == 'prototypes'", specifier = ">=13.9.4" },
+    { name = "sounddevice", marker = "extra == 'prototypes-voice-mic'", specifier = ">=0.5" },
+    { name = "soxr", marker = "extra == 'prototypes-voice'", specifier = ">=1.0.0" },
+    { name = "uvicorn", marker = "extra == 'prototypes-voice'", specifier = ">=0.52.0" },
+    { name = "websockets", marker = "extra == 'prototypes-voice'", specifier = ">=14.0" },
 ]
-provides-extras = ["prototypes"]
+provides-extras = ["prototypes", "prototypes-voice", "prototypes-voice-mic"]
 
 [package.metadata.requires-dev]
 benchmark = [
@@ -1490,6 +1529,7 @@ benchmark = [
 ]
 dev = [
     { name = "nemotron-voice-agent", extras = ["prototypes"] },
+    { name = "nemotron-voice-agent", extras = ["prototypes-voice"] },
     { name = "pre-commit", specifier = ">=4.0.0" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "ruff", specifier = ">=0.15.6" },

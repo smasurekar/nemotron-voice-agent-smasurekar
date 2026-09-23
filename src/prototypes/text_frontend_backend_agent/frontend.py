@@ -28,6 +28,10 @@ _REPAIR_INSTRUCTION = (
     "whose 'query' states the complete current request. Never do both, and never write a tool call as text."
 )
 
+# Text containing any of these is a tool call (or just its arguments) typed out as prose: the
+# model imitating the prompt's examples, or a template that failed to parse. Never an answer.
+_TYPED_TOOL_CALL_MARKERS = (CALL_BACKEND, "filler_text", "tool_calls", "<tool_call", "<function=")
+
 
 @dataclass(frozen=True, slots=True)
 class DirectAnswer:
@@ -134,4 +138,6 @@ class FrontendAgent:
         text = (content or "").strip()
         if not text:
             return None, "returned neither text nor a tool call"
+        if any(marker in text for marker in _TYPED_TOOL_CALL_MARKERS):
+            return None, f"wrote a {CALL_BACKEND} tool call as text instead of emitting a real tool call"
         return DirectAnswer(text=text), ""
