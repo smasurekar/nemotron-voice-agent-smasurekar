@@ -21,13 +21,13 @@ from prototypes.text_frontend_backend_agent.agent import FrontendBackendAgent, a
 from prototypes.text_frontend_backend_agent.config import Config
 from prototypes.text_frontend_backend_agent.events import EventSink
 from prototypes.text_frontend_backend_agent.llm import ChatClient
-from prototypes.text_frontend_backend_agent.messages import AgentTurn, Message
+from prototypes.text_frontend_backend_agent.messages import AgentTurn, Message, RoleTotals
 from prototypes.text_frontend_backend_agent.prompts import load_catalog, render
 from prototypes.text_frontend_backend_agent.session import SessionState
 from prototypes.text_frontend_backend_agent.tools import ToolSpec
 from prototypes.voice_frontend_backend_agent.agent.history_repair import repair_interrupted_answer
 from prototypes.voice_frontend_backend_agent.agent.instructions import ResolvedInstructions, session_agent_config
-from prototypes.voice_frontend_backend_agent.agent.port import AgentReply, ReplyUsage
+from prototypes.voice_frontend_backend_agent.agent.port import AgentReply, ReplyUsage, RoleUsage
 from prototypes.voice_frontend_backend_agent.agent.tools import realtime_tools_to_specs, to_outgoing, to_results
 from prototypes.voice_frontend_backend_agent.config import InstructionsConfig, ToolsConfig
 
@@ -40,10 +40,26 @@ class AgentClients:
     frontend: ChatClient | None = None
 
 
+def _role_usage(totals: RoleTotals) -> RoleUsage:
+    usage = totals.usage
+    return RoleUsage(
+        calls=totals.calls,
+        prompt_tokens=usage.prompt_tokens,
+        completion_tokens=usage.completion_tokens,
+        cached_tokens=usage.cached_tokens,
+        total_tokens=usage.total_tokens or usage.prompt_tokens + usage.completion_tokens,
+        latency_ms=totals.latency_ms,
+    )
+
+
 def _reply(turn: AgentTurn) -> AgentReply:
     usage = turn.usage.usage
     reply_usage = ReplyUsage(
-        input_tokens=usage.prompt_tokens, output_tokens=usage.completion_tokens, cached_tokens=usage.cached_tokens
+        input_tokens=usage.prompt_tokens,
+        output_tokens=usage.completion_tokens,
+        cached_tokens=usage.cached_tokens,
+        frontend=_role_usage(turn.usage.frontend),
+        backend=_role_usage(turn.usage.backend),
     )
     if turn.tool_calls:
         return AgentReply(calls=to_outgoing(turn.tool_calls), usage=reply_usage)

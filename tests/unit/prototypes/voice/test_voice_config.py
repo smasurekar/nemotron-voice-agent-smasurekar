@@ -234,3 +234,14 @@ class LayeringTests(unittest.TestCase):
             used.update(name for name in _imports(path) if name.startswith("prototypes.text_frontend_backend_agent"))
         self.assertIn("prototypes.text_frontend_backend_agent.agent", used)
         self.assertIn("prototypes.text_frontend_backend_agent.session", used)
+
+
+class KeepaliveTests(unittest.TestCase):
+    def test_tau3_profiles_disable_the_websocket_keepalive(self) -> None:
+        for name in ("tau3_eval", "backend_only"):
+            config = load_voice_config(PACKAGE_DIR / "config" / "profiles" / f"{name}.yaml")
+            self.assertEqual(config.server.ws_ping_interval_s, 0.0, name)
+
+    def test_base_config_keeps_the_uvicorn_default(self) -> None:
+        config = load_voice_config(BASE_CONFIG)
+        self.assertEqual((config.server.ws_ping_interval_s, config.server.ws_ping_timeout_s), (20.0, 20.0))

@@ -391,6 +391,9 @@ class TurnManager:
             outcome="text" if reply.text is not None else "tool_calls",
             input_tokens=reply.usage.input_tokens,
             output_tokens=reply.usage.output_tokens,
+            step="respond" if outputs is None else "resume",
+            frontend=reply.usage.frontend.as_record(),
+            backend=reply.usage.backend.as_record(),
         )
         self._deliver(turn, reply)
 

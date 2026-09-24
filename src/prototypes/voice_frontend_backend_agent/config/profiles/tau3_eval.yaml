@@ -7,6 +7,13 @@
 
 extends: ../voice_agent.yaml
 
+server:
+  # tau2 freezes its tick loop for up to ~90 s at a time (synchronous user-simulator
+  # LLM and TTS calls) and stops reading the socket; the agent's streamed audio then
+  # fills the client's receive queue, so its pongs stop and a keepalive ping would
+  # close a healthy session mid-task. The eval client is local; keepalive is off.
+  ws_ping_interval_s: 0
+
 protocol:
   greeting: {enabled: false, text: ""}
   seed_history_with_client_greeting: "Hi! How can I help you today?"

@@ -101,7 +101,7 @@ Environment knobs:
 |---|---|---|
 | `FBA_VOICE_PORT` | `8765` | server port |
 | `FBA_ASR_SERVER`, `FBA_TTS_SERVER` | catalog | replace the catalog server, e.g. `localhost:50051` host-native |
-| `FBA_VOICE_EVENT_LOG` | off | JSONL event log (voice events, the text agent's internal events, timing) |
+| `FBA_VOICE_EVENT_LOG` | off | JSONL event log (voice events, the text agent's internal events, timing). Each `agent_turn_done` has `step` (`respond`/`resume`) and per-role `frontend`/`backend` usage: `calls`, `prompt_tokens`, `completion_tokens`, `cached_tokens`, `total_tokens`, `latency_ms` |
 | `FBA_FILLER_LOG` | off | JSONL filler timing records (always also in loguru and the event log) |
 | `FBA_VOICE_PROMPTS` | `prompts.voice.yaml` | voice prompt catalog |
 | `FBA_VOICE_TOKEN` | empty | bearer token when `server.require_bearer: true` |

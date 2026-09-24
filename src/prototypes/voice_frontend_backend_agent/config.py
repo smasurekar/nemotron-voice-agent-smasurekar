@@ -80,6 +80,8 @@ DEFAULTS: dict[str, Any] = {
         "max_sessions": 8,
         "session_update_timeout_s": 30.0,
         "warmup": True,
+        "ws_ping_interval_s": 20.0,
+        "ws_ping_timeout_s": 20.0,
     },
     "agent": {"config": "", "overrides": {}},
     "protocol": {
@@ -165,6 +167,8 @@ class ServerConfig:
     max_sessions: int
     session_update_timeout_s: float
     warmup: bool
+    ws_ping_interval_s: float = 20.0  # uvicorn WebSocket keepalive ping; 0 disables it
+    ws_ping_timeout_s: float = 20.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -625,6 +629,8 @@ def build_voice_config(merged: dict[str, Any], files: Sequence[Path] = ()) -> Vo
             max_sessions=reader.int("server.max_sessions", minimum=1),
             session_update_timeout_s=reader.float("server.session_update_timeout_s", minimum=0.1),
             warmup=reader.bool("server.warmup"),
+            ws_ping_interval_s=reader.float("server.ws_ping_interval_s", minimum=0.0),
+            ws_ping_timeout_s=reader.float("server.ws_ping_timeout_s", minimum=0.1),
         ),
         agent=text_config,
         agent_config_path=text_path,

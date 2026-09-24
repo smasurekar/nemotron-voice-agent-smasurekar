@@ -26,12 +26,37 @@ class OutgoingCall:
 
 
 @dataclass(frozen=True, slots=True)
+class RoleUsage:
+    """One LLM role's calls, tokens and summed call latency in one agent step."""
+
+    calls: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    cached_tokens: int = 0
+    total_tokens: int = 0
+    latency_ms: float = 0.0
+
+    def as_record(self) -> dict[str, int | float]:
+        """The event-log form."""
+        return {
+            "calls": self.calls,
+            "prompt_tokens": self.prompt_tokens,
+            "completion_tokens": self.completion_tokens,
+            "cached_tokens": self.cached_tokens,
+            "total_tokens": self.total_tokens,
+            "latency_ms": round(self.latency_ms, 1),
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class ReplyUsage:
-    """Token usage for ``response.done.usage``."""
+    """Token usage for ``response.done.usage``, plus the per-role split for the event log."""
 
     input_tokens: int = 0
     output_tokens: int = 0
     cached_tokens: int = 0
+    frontend: RoleUsage = field(default_factory=RoleUsage)
+    backend: RoleUsage = field(default_factory=RoleUsage)
 
 
 @dataclass(frozen=True, slots=True)

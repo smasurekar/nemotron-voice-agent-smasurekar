@@ -19,6 +19,8 @@ server:
   max_sessions: 8
   session_update_timeout_s: 30     # wall clock, before the first session.update
   warmup: true                     # probe ASR/TTS at startup; /health is 503 until it passes
+  ws_ping_interval_s: 20           # WebSocket keepalive ping (uvicorn); 0 disables it
+  ws_ping_timeout_s: 20            # close the socket when a ping gets no pong in this time
 
 agent:
   config: "../../text_frontend_backend_agent/config/agent.yaml"   # [in-path]

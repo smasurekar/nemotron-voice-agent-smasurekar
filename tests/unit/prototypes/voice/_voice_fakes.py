@@ -185,6 +185,7 @@ class SessionHarness:
         clock: FakeClock | None = None,
         filler_log: FillerLog | None = None,
         show_silent_filler: bool = False,
+        event_log: EventLog | None = None,
     ) -> None:
         self.config = config or base_config()
         self.transport = MemoryTransport()
@@ -196,7 +197,7 @@ class SessionHarness:
             vad_factory=EnergyVad,
             normalizer=IdentityNormalizer(),
         )
-        self.routing_sink = SessionRoutingSink(EventLog())
+        self.routing_sink = SessionRoutingSink(event_log or EventLog())
         self.filler_log = filler_log or FillerLog()
         self.runners: list[TextAgentRunner] = []
         if agent_factory is None and clients is not None:

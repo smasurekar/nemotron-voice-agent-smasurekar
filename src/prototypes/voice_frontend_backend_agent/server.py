@@ -276,6 +276,8 @@ def main(argv: list[str] | None = None) -> None:
         port=port,
         log_level=config.logging.level.lower(),
         ws_max_size=16 * 1024 * 1024,
+        ws_ping_interval=config.server.ws_ping_interval_s or None,
+        ws_ping_timeout=config.server.ws_ping_timeout_s,
         **ssl_kwargs,
     )
 
