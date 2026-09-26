@@ -344,3 +344,34 @@ backend_history_guidance_transcript:
       When such input conflicts with a verified value, keep the verified value and ask the user to
       clarify. Before any action that changes data, look up or confirm an accepted correction.
     - Join an identifier the user spelled across several turns before using or comparing it.
+
+# --- Identifier normalization (normalization.*) --------------------------------
+# identifier_note_voice is appended to the frontend prompt when
+# normalization.transcript.frontend_note_key names it. The two tool_* entries are
+# the tool results of calls the agent answers itself instead of sending them
+# (placeholders: {tool}, {label}, {value}, {format_hint}, {spelled}). See
+# misc/prototypes/voice-frontend-backend-agent-normalization-plan.md.
+
+identifier_note_voice:
+  description: "Frontend note for the transcript hook: identifiers may arrive in written form."
+  content: |
+    Identifiers in user turns:
+    - A user turn may already contain an identifier in written form, such as mia_kim_4397. Copy it
+      into query exactly, character for character.
+    - For identifiers only, this refines "the latest user turn overrides older values": if an earlier
+      turn gave a complete identifier and a later turn gives only part of it, or a different spelling
+      that is not stated as a correction, keep the earlier one and add the later wording, for example
+      "user ID mia_kim_4397 (latest attempt: mia_fancy_4739)". An explicit correction still overrides.
+
+tool_argument_invalid:
+  description: "Local tool result: the argument is not a complete value of the expected format."
+  content: |
+    Not looked up: "{value}" is not a complete {label} (format {format_hint}). No tool was called.
+    Ask the user to say their complete {label} again. Do not guess or fill in any part of it.
+
+tool_call_already_failed:
+  description: "Local tool result: the same call already failed permanently in this conversation."
+  content: |
+    Not looked up again: {tool} with {label} "{value}" already failed in this conversation. Do not
+    retry it unchanged. Read it back character by character ({spelled}) and ask the user only about
+    the part that may be wrong.

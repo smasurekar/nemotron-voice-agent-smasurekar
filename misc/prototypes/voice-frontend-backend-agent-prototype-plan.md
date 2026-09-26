@@ -1437,6 +1437,17 @@ prototype generates `call_<hex>`, which already matches.
 
 ## Revision log
 
+### Revision 7 — identifier normalization
+
+A new `normalization/` package adds two hooks in `agent/runner.py`, both off by default. The transcript hook
+writes spoken identifiers in written form for the agent only (the wire keeps the raw ASR text). The
+tool-argument hook (requires `tools.source: client`) canonicalizes configured tool arguments and answers a
+malformed call, or a repeat of a permanently failed one, with a local tool result instead of sending it. The
+voice layer adds the `normalization` config section, three prompt keys, `profiles/tau3_eval_normalization.yaml`,
+four event kinds (content fields redacted by `logging.redact_content`), `session_start.normalization`, and the
+offline `cli/normalization_replay.py`.
+Design, rules and tests: [`voice-frontend-backend-agent-normalization-plan.md`](voice-frontend-backend-agent-normalization-plan.md).
+
 ### Revision 6 — backend conversation history
 
 The paired backend is stateless **by default**. The text prototype's new `backend.conversation_history` flag

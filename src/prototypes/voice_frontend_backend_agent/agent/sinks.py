@@ -24,7 +24,24 @@ from loguru import logger
 from prototypes.text_frontend_backend_agent.events import InternalEvent
 
 #: Keys dropped from event-log records when ``logging.redact_content`` is on.
-_CONTENT_KEYS = frozenset({"text", "query", "transcript", "result", "arguments", "output", "calls", "rejected_text"})
+_CONTENT_KEYS = frozenset(
+    {
+        "text",
+        "query",
+        "transcript",
+        "result",
+        "arguments",
+        "output",
+        "calls",
+        "rejected_text",
+        # normalization events (identifiers are user content)
+        "raw",
+        "spans",
+        "before",
+        "after",
+        "value",
+    }
+)
 
 
 class EventListener(Protocol):

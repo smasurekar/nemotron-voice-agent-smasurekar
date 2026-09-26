@@ -23,8 +23,9 @@ from __future__ import annotations
 
 import copy
 import importlib
+import re
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -32,9 +33,20 @@ import yaml
 
 from prototypes.text_frontend_backend_agent.config import Config, build_config, interpolate_env
 from prototypes.text_frontend_backend_agent.errors import ConfigError
+from prototypes.text_frontend_backend_agent.prompts import load_catalog
 from prototypes.text_frontend_backend_agent.tools import ToolSpec
 from prototypes.voice_frontend_backend_agent.audio.formats import AudioFormat, parse_format
 from prototypes.voice_frontend_backend_agent.errors import VoiceConfigError
+from prototypes.voice_frontend_backend_agent.normalization import NormalizationSettings
+from prototypes.voice_frontend_backend_agent.normalization.arguments import (
+    GUARD_SCOPES,
+    ON_INVALID,
+    ArgumentRule,
+    RetryGuardSettings,
+    ToolArgumentSettings,
+)
+from prototypes.voice_frontend_backend_agent.normalization.rules import RULESETS
+from prototypes.voice_frontend_backend_agent.normalization.transcript import CASES, TranscriptSettings
 from prototypes.voice_frontend_backend_agent.speech.catalog import SpeechEndpoint, build_endpoint, load_catalog_entry
 
 PACKAGE_DIR = Path(__file__).resolve().parent
@@ -52,7 +64,7 @@ IN_PATH_KEYS: tuple[str, ...] = (
 #: Keys whose values are output paths, resolved against the working directory.
 OUT_PATH_KEYS: tuple[str, ...] = ("filler.log_path", "logging.event_log")
 #: Mappings whose keys are free-form (not checked against the schema).
-_FREE_FORM: frozenset[str] = frozenset({"agent.overrides", "tts.voice_map"})
+_FREE_FORM: frozenset[str] = frozenset({"agent.overrides", "tts.voice_map", "normalization.transcript.separator_words"})
 
 _SPEECH_DEFAULTS: dict[str, Any] = {
     "source": "catalog",
@@ -134,6 +146,46 @@ DEFAULTS: dict[str, Any] = {
         "frontend_capabilities": "from_tools",
     },
     "logging": {"level": "INFO", "event_log": "", "log_wire": False, "redact_content": False},
+    "normalization": {
+        "transcript": {
+            "enabled": False,
+            "separator_words": {"underscore": "_"},
+            "ruleset": "en",
+            "number_words": True,
+            "compound_numbers": True,
+            "extra_filler_words": [],
+            "extra_stop_words": [],
+            "max_part_tokens": 6,
+            "case": "keep",
+            "frontend_note_key": "",
+        },
+        "tool_arguments": {
+            "enabled": False,
+            "rules": [],
+            "invalid_message_key": "tool_argument_invalid",
+            "max_local_rounds": 3,
+            "retry_guard": {
+                "enabled": False,
+                "scope": "rules",
+                "permanent_failure_pattern": "",
+                "message_key": "tool_call_already_failed",
+            },
+        },
+    },
+}
+
+#: Keys of one ``normalization.tool_arguments.rules`` entry, with their defaults.
+_ARGUMENT_RULE_DEFAULTS: dict[str, Any] = {
+    "tool": "",
+    "argument": "",
+    "label": "",
+    "format_hint": "",
+    "spoken_form": False,
+    "strip": "",
+    "collapse_separators": "",
+    "case": "keep",
+    "pattern": "",
+    "on_invalid": "answer_locally",
 }
 
 _ENUMS: dict[str, tuple[str, ...]] = {
@@ -149,6 +201,8 @@ _ENUMS: dict[str, tuple[str, ...]] = {
     "tools.source": ("client", "config"),
     "instructions.placement": ("policy_slot", "replace_prompt", "append"),
     "instructions.frontend_capabilities": ("from_tools", "static", "none"),
+    "normalization.transcript.case": CASES,
+    "normalization.tool_arguments.retry_guard.scope": GUARD_SCOPES,
 }
 
 
@@ -291,6 +345,7 @@ class VoiceConfig:
     tools: ToolsConfig
     instructions: InstructionsConfig
     logging: LoggingConfig
+    normalization: NormalizationSettings = field(default_factory=NormalizationSettings)
     source_files: tuple[Path, ...] = ()
     resolved_in_paths: dict[str, str] = field(default_factory=dict)
     warnings: tuple[str, ...] = ()
@@ -588,6 +643,115 @@ def _instructions(reader: _Reader) -> InstructionsConfig:
     )
 
 
+def _regex(key: str, pattern: str) -> str:
+    try:
+        re.compile(pattern)
+    except re.error as exc:
+        raise VoiceConfigError(f"{key}: invalid regular expression {pattern!r}: {exc}") from None
+    return pattern
+
+
+def _argument_rule(index: int, raw: Any) -> ArgumentRule:
+    key = f"normalization.tool_arguments.rules[{index}]"
+    if not isinstance(raw, dict):
+        raise VoiceConfigError(f"{key} must be a mapping")
+    if unknown := sorted(set(raw) - set(_ARGUMENT_RULE_DEFAULTS)):
+        raise VoiceConfigError(f"{key}: unknown keys {unknown}")
+    values = {**_ARGUMENT_RULE_DEFAULTS, **{k: v for k, v in raw.items() if v is not None}}
+    for name, default in _ARGUMENT_RULE_DEFAULTS.items():
+        if not isinstance(values[name], type(default)):
+            raise VoiceConfigError(f"{key}.{name} must be a {type(default).__name__}, got {values[name]!r}")
+    for name in ("tool", "argument"):
+        values[name] = values[name].strip()
+        if not values[name]:
+            raise VoiceConfigError(f"{key}.{name} is required")
+    if values["case"] not in CASES:
+        raise VoiceConfigError(f"{key}.case must be one of {CASES}, got {values['case']!r}")
+    if values["on_invalid"] not in ON_INVALID:
+        raise VoiceConfigError(f"{key}.on_invalid must be one of {ON_INVALID}, got {values['on_invalid']!r}")
+    _regex(f"{key}.pattern", values["pattern"])
+    return ArgumentRule(**values)
+
+
+def _normalization(reader: _Reader, tools: ToolsConfig, warnings: list[str]) -> NormalizationSettings:
+    prefix = "normalization.transcript"
+    separators = reader.mapping(f"{prefix}.separator_words")
+    if not all(isinstance(k, str) and isinstance(v, str) and k.strip() and v for k, v in separators.items()):
+        raise VoiceConfigError(f"{prefix}.separator_words must map non-empty words to non-empty strings")
+    ruleset = reader.str(f"{prefix}.ruleset").strip()
+    if ruleset not in RULESETS:
+        raise VoiceConfigError(f"{prefix}.ruleset: unknown ruleset {ruleset!r}; known: {sorted(RULESETS)}")
+    transcript = TranscriptSettings(
+        enabled=reader.bool(f"{prefix}.enabled"),
+        separator_words={k.strip().lower(): v for k, v in separators.items()},
+        ruleset=ruleset,
+        number_words=reader.bool(f"{prefix}.number_words"),
+        compound_numbers=reader.bool(f"{prefix}.compound_numbers"),
+        extra_filler_words=reader.str_list(f"{prefix}.extra_filler_words"),
+        extra_stop_words=reader.str_list(f"{prefix}.extra_stop_words"),
+        max_part_tokens=reader.int(f"{prefix}.max_part_tokens", minimum=1),
+        case=reader.enum(f"{prefix}.case"),
+        frontend_note_key=reader.str(f"{prefix}.frontend_note_key").strip(),
+    )
+    prefix = "normalization.tool_arguments"
+    raw_rules = reader.raw(f"{prefix}.rules")
+    if not isinstance(raw_rules, list):
+        raise VoiceConfigError(f"{prefix}.rules must be a list")
+    guard = RetryGuardSettings(
+        enabled=reader.bool(f"{prefix}.retry_guard.enabled"),
+        scope=reader.enum(f"{prefix}.retry_guard.scope"),
+        permanent_failure_pattern=_regex(
+            f"{prefix}.retry_guard.permanent_failure_pattern",
+            reader.str(f"{prefix}.retry_guard.permanent_failure_pattern").strip(),
+        ),
+        message_key=reader.str(f"{prefix}.retry_guard.message_key").strip(),
+    )
+    arguments = ToolArgumentSettings(
+        enabled=reader.bool(f"{prefix}.enabled"),
+        rules=tuple(_argument_rule(index, raw) for index, raw in enumerate(raw_rules)),
+        invalid_message_key=reader.str(f"{prefix}.invalid_message_key").strip(),
+        max_local_rounds=reader.int(f"{prefix}.max_local_rounds", minimum=1),
+        retry_guard=guard,
+    )
+    if arguments.enabled:
+        if tools.source != "client":
+            raise VoiceConfigError(
+                f"{prefix}.enabled requires tools.source: client (the hook screens calls handed to the client; "
+                "with tools.source: config the text agent executes tools itself)"
+            )
+        if guard.enabled and not guard.permanent_failure_pattern:
+            raise VoiceConfigError(
+                f"{prefix}.retry_guard.permanent_failure_pattern is required when the retry guard is enabled"
+            )
+        if not arguments.rules and not (guard.enabled and guard.scope == "all"):
+            warnings.append(f"{prefix}.enabled has no effect without rules (or retry_guard.scope: all)")
+    return NormalizationSettings(transcript=transcript, tool_arguments=arguments)
+
+
+def _check_normalization_prompts(config: VoiceConfig) -> None:
+    settings = config.normalization
+    keys: list[tuple[str, str]] = []
+    if settings.transcript.enabled and settings.transcript.frontend_note_key:
+        keys.append(("normalization.transcript.frontend_note_key", settings.transcript.frontend_note_key))
+    if settings.tool_arguments.enabled:
+        keys.append(("normalization.tool_arguments.invalid_message_key", settings.tool_arguments.invalid_message_key))
+        if settings.tool_arguments.retry_guard.enabled:
+            keys.append(
+                (
+                    "normalization.tool_arguments.retry_guard.message_key",
+                    settings.tool_arguments.retry_guard.message_key,
+                )
+            )
+    if not keys:
+        return
+    catalog = load_catalog(config.agent.prompts_path, config.agent.prompts.inline)
+    for name, key in keys:
+        try:
+            catalog.get(key)
+        except ConfigError as exc:
+            raise VoiceConfigError(f"{name}: prompt {key!r} is not in the catalog ({exc})") from None
+
+
 def _text_agent_config(reader: _Reader, tools: ToolsConfig) -> tuple[Config, Path]:
     config_path = reader.str("agent.config").strip()
     if not config_path:
@@ -681,10 +845,23 @@ def build_voice_config(merged: dict[str, Any], files: Sequence[Path] = ()) -> Vo
             log_wire=reader.bool("logging.log_wire"),
             redact_content=reader.bool("logging.redact_content"),
         ),
+        normalization=_normalization(reader, tools, warnings),
         source_files=tuple(files),
         resolved_in_paths={key: str(_get(merged, key) or "") for key in IN_PATH_KEYS if key != "extends"},
         warnings=tuple(warnings),
     )
+    _check_normalization_prompts(config)
+    transcript = config.normalization.transcript
+    language = RULESETS[transcript.ruleset].language
+    if transcript.enabled and not config.asr.endpoint.language_code.lower().startswith(language):
+        config = replace(
+            config,
+            warnings=(
+                *config.warnings,
+                f"normalization.transcript.ruleset {transcript.ruleset!r} is for {language!r}, but the ASR "
+                f"language_code is {config.asr.endpoint.language_code!r}; its word lists will not match",
+            ),
+        )
     return config
 
 

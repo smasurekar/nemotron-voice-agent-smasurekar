@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# tau3-bench voice evaluation, identifier-normalization arm. Identical to
+# tau3_eval.yaml (backend history stays pinned off) except for the normalization
+# section: the transcript hook writes spoken user IDs in lower-case written form,
+# and the tool-argument hook canonicalizes get_user_details.user_id, answers a
+# malformed or already-failed ID locally instead of sending it to tau2. See
+# misc/prototypes/voice-frontend-backend-agent-normalization-plan.md.
+
+extends: tau3_eval.yaml
+
+normalization:
+  transcript:
+    enabled: true
+    case: lower
+    frontend_note_key: identifier_note_voice
+  tool_arguments:
+    enabled: true
+    rules:
+      - tool: get_user_details
+        argument: user_id
+        label: user ID
+        format_hint: firstname_lastname_1234
+        spoken_form: true
+        strip: " .-"
+        collapse_separators: "_"
+        case: lower
+        pattern: '^[a-z]+_[a-z]+_\d{4}$'
+        on_invalid: answer_locally
+    retry_guard:
+      enabled: true
+      scope: rules
+      # tau2's lookup error ("Error: User mia_kim_4397 not found"); transient errors never match.
+      permanent_failure_pattern: '^Error: .*\bnot found\b'

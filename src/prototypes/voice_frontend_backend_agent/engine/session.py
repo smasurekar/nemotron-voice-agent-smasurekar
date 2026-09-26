@@ -138,6 +138,7 @@ class RealtimeSession:
             model=self.view.model,
             backend_history=history.effective_include,
             backend_history_guidance=history.resolved_guidance_key,
+            normalization=self.config.normalization.summary(),
         )
         logger.info(f"[{self.session_id}] session started (model={self.view.model or '-'})")
         timeout = self.config.server.session_update_timeout_s

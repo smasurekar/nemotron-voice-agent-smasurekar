@@ -101,6 +101,7 @@ def _agent_factory(state: _AppState) -> Any:
             sink=state.routing_sink,
             session_id=session_id,
             seed_greeting=config.protocol.seed_history_with_client_greeting,
+            normalization=config.normalization,
         )
 
     return factory

@@ -114,3 +114,30 @@ logging:
   event_log: "${FBA_VOICE_EVENT_LOG:-}"    # [out-path] JSONL of internal + voice + timing events
   log_wire: false                           # log every wire event type (debug; never logs audio)
   redact_content: false                     # true: omit transcripts/tool payloads from the event log
+
+# Identifier normalization between speech and the agent (all off by default). See
+# misc/prototypes/voice-frontend-backend-agent-normalization-plan.md; the tau3 arm is
+# profiles/tau3_eval_normalization.yaml.
+normalization:
+  transcript:                       # ASR hook: spoken identifiers -> written form, for the agent only
+    enabled: false                  # the wire keeps the raw transcript
+    separator_words: {underscore: "_"}   # spoken word -> character; a separator word anchors a span
+    ruleset: en                     # language word lists (digits, fillers, stop words); en is the only one
+    number_words: true              # "four three" -> 43 inside a span
+    compound_numbers: true          # "forty three" -> 43, "nineteen" -> 19
+    extra_filler_words: []          # added to the ruleset's fillers
+    extra_stop_words: []            # added to the ruleset's stop words
+    max_part_tokens: 6              # more tokens between two separators: they are separate spans
+    case: keep                      # keep | lower | upper (written spans only)
+    frontend_note_key: ""           # prompt catalog key appended to the frontend prompt ("" = none)
+  tool_arguments:                   # tool-argument hook (requires tools.source: client)
+    enabled: false
+    rules: []                       # {tool, argument, label, format_hint, spoken_form, strip,
+                                    #  collapse_separators, case, pattern, on_invalid: answer_locally | send}
+    invalid_message_key: tool_argument_invalid
+    max_local_rounds: 3             # consecutive all-local rounds; then the canonical calls go out
+    retry_guard:                    # answer a repeat of a permanently failed call locally
+      enabled: false
+      scope: rules                  # rules (tools with a rule) | all
+      permanent_failure_pattern: "" # regex searched in the client's output; required when enabled
+      message_key: tool_call_already_failed

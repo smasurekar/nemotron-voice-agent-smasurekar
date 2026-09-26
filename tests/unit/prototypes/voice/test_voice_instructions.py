@@ -172,7 +172,10 @@ class VoiceCatalogTests(unittest.TestCase):
                 for include in ("full", "backend_turns", "transcript")
             ),
         }
-        self.assertEqual(set(catalog), {"frontend", "backend", "cascade_voice_addendum", *history_keys})
+        normalization_keys = {"identifier_note_voice", "tool_argument_invalid", "tool_call_already_failed"}
+        self.assertEqual(
+            set(catalog), {"frontend", "backend", "cascade_voice_addendum", *history_keys, *normalization_keys}
+        )
         frontend, backend = catalog["frontend"]["content"], catalog["backend"]["content"]
         for placeholder in ("{persona}", "{capabilities}", "{unsupported_reply}", "{agent_name}"):
             self.assertIn(placeholder, frontend)

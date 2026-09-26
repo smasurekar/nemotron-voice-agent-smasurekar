@@ -211,6 +211,7 @@ class SessionHarness:
                     sink=self.routing_sink,
                     session_id=session_id,
                     seed_greeting=self.config.protocol.seed_history_with_client_greeting,
+                    normalization=self.config.normalization,
                 )
                 self.runners.append(runner)
                 return runner

@@ -161,17 +161,30 @@ Speech endpoints come from `src/examples/frontend_backend_agent/services.local.y
 | tau3, paired frontend + backend (default) | `src/prototypes/voice_frontend_backend_agent/config/profiles/tau3_eval.yaml` |
 | tau3, paired, backend keeps the conversation history (`include: full`) | `src/prototypes/voice_frontend_backend_agent/config/profiles/tau3_eval_backend_history.yaml` |
 | tau3, paired, backend history without the behavioural guidance (ablation) | `src/prototypes/voice_frontend_backend_agent/config/profiles/tau3_eval_backend_history_noguide.yaml` |
+| tau3, paired, identifier normalization (written user IDs for the agent, local answers for malformed or already-failed IDs) | `src/prototypes/voice_frontend_backend_agent/config/profiles/tau3_eval_normalization.yaml` |
 | tau3, backend only (no frontend LLM; the `FRONTEND_*` lines are then unused) | `src/prototypes/voice_frontend_backend_agent/config/profiles/backend_only.yaml` |
 | live demo (audible filler, greeting, internal demo tools) | `src/prototypes/voice_frontend_backend_agent/config/profiles/live_demo.yaml` |
 
-The tau3 paired profiles differ only in `backend.conversation_history` and pin it, so
-`FBA_BACKEND_HISTORY` has no effect on them. For other paired configs, `-e FBA_BACKEND_HISTORY=true` turns the
-history on. To run the arms side by side, start one container per arm with its own name, host port and log
+Every tau3 paired profile pins `backend.conversation_history`, and the two history profiles differ from
+`tau3_eval.yaml` only in it, so `FBA_BACKEND_HISTORY` has no effect on them. For other paired configs,
+`-e FBA_BACKEND_HISTORY=true` turns the history on. To run the arms side by side, start one container per arm with its own name, host port and log
 paths: `fba-voice-hist` on port 8769 and `fba-voice-histng` on port 8770, logging to
 `logs/fba_voice_<arm>_{events,filler}.jsonl`. The τ³ runbook
 (`tau2-bench-smasurekar/misc/prototypes/voice-frontend-backend-agent-tau3-runbook.md`, §4.1) has the commands.
 The event log records the arm in `session_start.backend_history` / `backend_history_guidance`, and in one
 `backend_context` event per delegated turn.
+
+`tau3_eval_normalization.yaml` is `tau3_eval.yaml` (history off) plus the `normalization` section. Run it as
+the `norm` arm: container `fba-voice-norm` on port 8771, logging to `logs/fba_voice_norm_{events,filler}.jsonl`
+(τ³ runbook §4.2). The event log records it in `session_start.normalization`. Before a τ³ run, replay the
+profile offline over the unredacted event log of an earlier paired run (no ASR, no LLM):
+
+```bash
+PYTHONPATH=src uv run python -m prototypes.voice_frontend_backend_agent.cli.normalization_replay \
+  --events logs/fba_voice_events.jsonl \
+  --config src/prototypes/voice_frontend_backend_agent/config/profiles/tau3_eval_normalization.yaml \
+  --model pine-fba-voice-paired-airline-regular --out /tmp/norm_replay.jsonl   # summary on stderr
+```
 
 **Host-native equivalent** (server on the host, speech still in Docker on `localhost:50051`), run from [repo]
 after `uv sync --dev`:

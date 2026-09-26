@@ -40,7 +40,7 @@ class ShippedConfigTests(unittest.TestCase):
         self.addCleanup(patcher.stop)
 
     def test_every_shipped_file_loads_identically_from_two_working_directories(self) -> None:
-        self.assertEqual(len(SHIPPED), 8)
+        self.assertEqual(len(SHIPPED), 9)
         with tempfile.TemporaryDirectory() as elsewhere:
             for path in SHIPPED:
                 with self.subTest(path=path.name):

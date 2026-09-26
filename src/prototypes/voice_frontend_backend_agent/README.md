@@ -28,6 +28,9 @@ client ─► function_call_output + response.create ─► send_tool_results() 
   `agent.overrides.backend.conversation_history` (profile `profiles/tau3_eval_backend_history.yaml`), gives the
   paired backend the conversation history. Refer to the
   [text prototype](../text_frontend_backend_agent/README.md#backend-conversation-history) for the `include` modes.
+- **Identifier normalization (off by default).** The `normalization` section (profile
+  `profiles/tau3_eval_normalization.yaml`) writes spoken identifiers in written form for the agent and screens
+  the backend's tool arguments before they reach the client. Refer to [Identifier normalization](#identifier-normalization).
 - **External tools.** Tools from `session.update.tools` are executed by the **client**. They surface as Realtime
   `function_call` items with the backend's own `call_id`. The backend resumes on `function_call_output` plus
   `response.create`.
@@ -90,6 +93,7 @@ Filler that the server generates but does not speak (`filler.mode: log_only`) is
 | `tau3_eval.yaml` | pins every eval-relevant key to its base value, including the backend history (off) |
 | `tau3_eval_backend_history.yaml` | extends `tau3_eval.yaml`; only change: backend history on, `include: full` |
 | `tau3_eval_backend_history_noguide.yaml` | extends `tau3_eval_backend_history.yaml`; only change: no behavioural guidance (`guidance_key: ""`), the ablation arm |
+| `tau3_eval_normalization.yaml` | extends `tau3_eval.yaml` (backend history off); only change: `normalization` on, with a lower-case `get_user_details.user_id` rule and the retry guard |
 | `backend_only.yaml` | `agent.overrides.agent.mode: backend_only`; backend history flag pinned off |
 | `cloud_speech.yaml` | ASR and TTS through NVCF (`NVIDIA_API_KEY` required, checked at load time) |
 | `live_demo.yaml` | audible filler, greeting, internal demo tools, real-time output pacing |
@@ -108,11 +112,61 @@ Environment knobs:
 |---|---|---|
 | `FBA_VOICE_PORT` | `8765` | server port |
 | `FBA_ASR_SERVER`, `FBA_TTS_SERVER` | catalog | replace the catalog server, e.g. `localhost:50051` host-native |
-| `FBA_VOICE_EVENT_LOG` | off | JSONL event log (voice events, the text agent's internal events, timing). Each `agent_turn_done` has `step` (`respond`/`resume`) and per-role `frontend`/`backend` usage: `calls`, `prompt_tokens`, `completion_tokens`, `cached_tokens`, `total_tokens`, `latency_ms`. `session_start` has `backend_history` (`off` or the `include` value) and `backend_history_guidance` (the guidance key, or empty). Each delegated turn has a `backend_context` event: `enabled`, `include`, `guidance`, `history_groups`, `history_messages`, `earlier_turns`, `request_chars` |
+| `FBA_VOICE_EVENT_LOG` | off | JSONL event log (voice events, the text agent's internal events, timing). Each `agent_turn_done` has `step` (`respond`/`resume`) and per-role `frontend`/`backend` usage: `calls`, `prompt_tokens`, `completion_tokens`, `cached_tokens`, `total_tokens`, `latency_ms`. `session_start` has `backend_history` (`off` or the `include` value), `backend_history_guidance` (the guidance key, or empty) and `normalization` (`transcript`, `tool_arguments`, `retry_guard`). Each delegated turn has a `backend_context` event: `enabled`, `include`, `guidance`, `history_groups`, `history_messages`, `earlier_turns`, `request_chars` |
 | `FBA_BACKEND_HISTORY` | `false` | paired backend conversation history (text `agent.yaml`); profiles that pin it ignore this |
 | `FBA_FILLER_LOG` | off | JSONL filler timing records (always also in loguru and the event log) |
 | `FBA_VOICE_PROMPTS` | `prompts.voice.yaml` | voice prompt catalog |
 | `FBA_VOICE_TOKEN` | empty | bearer token when `server.require_bearer: true` |
+
+### Identifier normalization
+
+`normalization` in `config/voice_agent.yaml` has two hooks. Both are off by default and run in `agent/runner.py`.
+
+- **Transcript hook** (`normalization.transcript`). It rewrites a spoken identifier in the text of each agent turn
+  into its written form, for example `Mia underscore Kim underscore four three nine seven` → `mia_kim_4397`
+  with `case: lower`. Only spans anchored by a separator word (`separator_words`, default `underscore`) change.
+  The word lists come from the `ruleset` (`en`, the only one shipped). Loading warns when the ASR
+  `language_code` does not match the ruleset's language. The wire keeps the raw ASR text; only the agent sees
+  the written form. With backend history on, the backend's user message also contains the written form.
+  `frontend_note_key` appends a catalog prompt to the frontend prompt.
+- **Tool-argument hook** (`normalization.tool_arguments`, requires `tools.source: client`). Per `rules` entry
+  (`tool`, `argument`), it canonicalizes the value (`strip`, `collapse_separators`, `case`) before the call goes
+  out, and stores the same value in the backend's history. A value that fails `pattern` is answered locally with
+  `on_invalid: answer_locally`: the call never reaches the client, and the agent gets a local tool result. After
+  `max_local_rounds` all-local rounds, the calls go out with their canonical arguments.
+- **Retry guard** (`tool_arguments.retry_guard`). A repeat of a call whose client output matched
+  `permanent_failure_pattern` (required when enabled) is answered locally. Transient errors and timed-out calls
+  never block a retry.
+
+The local results and the frontend note are prompt catalog keys in `prompts.voice.yaml`:
+`tool_argument_invalid`, `tool_call_already_failed` and `identifier_note_voice`. A configured key that is
+missing from the catalog, an unknown ruleset, or `tool_arguments` with `tools.source: config` fails at load time.
+
+The hooks log these events:
+
+| Event | Fields |
+|---|---|
+| `transcript_normalized` | `raw`, `text`, `spans` (`spoken`, `written`) |
+| `argument_normalized` | `call_id`, `tool`, `argument`, `before`, `after` |
+| `call_answered_locally` | `call_id`, `tool`, `argument`, `value`, `reason` (`invalid`, `already_failed`), `local_round` |
+| `local_rounds_exhausted` | `tools`, `rounds` |
+
+`logging.redact_content: true` drops `raw`, `text`, `spans`, `before`, `after` and `value`. The text agent's
+`backend_tool_calls` event keeps the model's original arguments, so count lookups from the wire calls or apply
+`argument_normalized`.
+
+To replay a profile over a recorded, unredacted event log (no ASR, no LLM), run the following command. It writes
+the normalized transcripts and each tool call's decision (`sent`, `invalid`, `already_failed`) as JSONL, and
+prints a summary to stderr. The replay is first-order: it cannot show what a local answer would change next.
+
+```bash
+PYTHONPATH=src uv run python -m prototypes.voice_frontend_backend_agent.cli.normalization_replay \
+  --events logs/fba_voice_events.jsonl \
+  --config src/prototypes/voice_frontend_backend_agent/config/profiles/tau3_eval_normalization.yaml \
+  --model pine-fba-voice-paired-airline-regular --out /tmp/norm_replay.jsonl
+```
+
+Design and rules: [`misc/prototypes/voice-frontend-backend-agent-normalization-plan.md`](../../../misc/prototypes/voice-frontend-backend-agent-normalization-plan.md).
 
 ## Protocol differences from OpenAI
 
@@ -147,7 +201,8 @@ a JSONL file.
 | `speech/` | ports plus Riva ASR/TTS, Silero/energy VAD, the catalog resolver, stubs |
 | `engine/` | input path, segmenter, output path, playback tracker, turn manager, session |
 | `agent/` | runner over `assemble_agent`, tool mapping, instructions, filler tap, history repair, sinks |
-| `cli/` | `voice_chat`, `tau2_replay`, and `tau2_gates/` (manual tau3 gates, run with tau2's interpreter) |
+| `normalization/` | identifier rules (`en` ruleset), transcript and tool-argument normalizers, frontend prompt note |
+| `cli/` | `voice_chat`, `tau2_replay`, `normalization_replay`, and `tau2_gates/` (manual tau3 gates, run with tau2's interpreter) |
 
 `wire/`, `agent/`, `audio/` and the engine state machines import no Pipecat, Riva or FastAPI (a test enforces
 this). The text prototype is imported and never modified.
