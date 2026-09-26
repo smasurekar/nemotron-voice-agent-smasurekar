@@ -164,7 +164,15 @@ class ScriptedDelegationTests(unittest.IsolatedAsyncioTestCase):
 class VoiceCatalogTests(unittest.TestCase):
     def test_voice_catalog_keeps_the_text_contract_and_stays_domain_neutral(self) -> None:
         catalog = yaml.safe_load((PACKAGE_DIR / "config" / "prompts.voice.yaml").read_text())
-        self.assertEqual(set(catalog), {"frontend", "backend", "cascade_voice_addendum"})
+        history_keys = {
+            "backend_history_request",
+            *(
+                f"backend_history_{kind}_{include}"
+                for kind in ("context", "guidance")
+                for include in ("full", "backend_turns", "transcript")
+            ),
+        }
+        self.assertEqual(set(catalog), {"frontend", "backend", "cascade_voice_addendum", *history_keys})
         frontend, backend = catalog["frontend"]["content"], catalog["backend"]["content"]
         for placeholder in ("{persona}", "{capabilities}", "{unsupported_reply}", "{agent_name}"):
             self.assertIn(placeholder, frontend)

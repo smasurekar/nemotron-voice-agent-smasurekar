@@ -15,3 +15,7 @@ server:
 agent:
   overrides:
     agent: {mode: backend_only}
+    # backend_only already keeps the full backend history. Pinned off so that
+    # FBA_BACKEND_HISTORY=true cannot make this profile fail validation.
+    backend:
+      conversation_history: {enabled: false}

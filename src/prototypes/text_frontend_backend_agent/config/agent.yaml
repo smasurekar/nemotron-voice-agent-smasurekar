@@ -43,7 +43,13 @@ frontend:
 
 backend:
   prompt_key: backend
-  stateful: auto                # auto -> false when paired, true when backend_only
+  stateful: auto                # derived: true for backend_only, or paired with conversation_history full/backend_turns
+  conversation_history:         # paired mode only; see misc/prototypes/frontend-backend-agent-backend-history-plan.md
+    enabled: ${FBA_BACKEND_HISTORY:-false}   # give the backend the conversation history
+    include: full               # full | backend_turns | transcript
+    guidance_key: auto          # auto -> catalog key "backend_history_guidance_<include>"; "" -> no guidance
+                                # (the context note "backend_history_context_<include>" is always added when enabled)
+    request_key: backend_history_request     # catalog template for the per-turn backend request
   llm:
     model: "${BACKEND_LLM_MODEL:-nvidia/nvidia/nemotron-3-ultra}"
     base_url: "${BACKEND_LLM_BASE_URL:-https://inference-api.nvidia.com/v1}"
@@ -66,7 +72,7 @@ backend:
     on_incomplete_results: error          # error | synthesize_error_result
     on_user_message_while_pending: error  # error | discard_pending
   history:
-    max_groups: 40              # used only when stateful
+    max_groups: 40              # used whenever the backend keeps history (stateful)
 
 domain:
   policy: ""

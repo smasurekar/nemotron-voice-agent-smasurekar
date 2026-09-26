@@ -394,9 +394,9 @@ even belongs to.
 | user message | appended to `frontend_history` |
 | assistant message with text | appended to `frontend_history` (it is what the user saw) |
 | assistant message with tool calls | **not** replayed — those were backend calls, invisible to the frontend |
-| tool result | **not** replayed — it belongs to a delegation that is stateless by design |
+| tool result | **not** replayed — it belongs to a delegation that is stateless by default |
 | — | `frontend_history` is a plain user/assistant alternation; no `call_backend` turns are fabricated |
-| — | `backend_history` is empty (per-delegation, stateless) |
+| — | `backend_history` is empty (per-delegation, stateless by default; with `backend.conversation_history` on, this replay is lossy) |
 
 `mode: backend_only`:
 
@@ -670,7 +670,7 @@ tool calling, which is what τ² domains expect.
 | 3 | Frontend returning content **and** a tool call → tool call wins, content goes to the sink | `test_frontend.py::test_content_plus_tool_call` |
 | 4 | `filler_text` never reachable from `AgentTurn`; present in the sink | `test_no_filler_leak.py` |
 | 5 | Delegation query reaches the backend verbatim, not merged with frontend history | `test_backend.py::test_query_is_self_contained` |
-| 6 | Paired backend is stateless per delegation (fresh context each delegation) | `test_backend.py::test_stateless_paired` |
+| 6 | Paired backend is stateless per delegation by default (fresh context each delegation), unless `backend.conversation_history.enabled` | `test_backend.py::test_stateless_paired` |
 | 7 | A delegated turn appends a complete 4-message group to frontend history; the synthetic assistant continuation equals the returned `final_text` | `test_frontend.py::test_delegated_group_is_complete` |
 | 8 | `backend_only` keeps full history across `send()` calls | `test_frontend_disabled.py` |
 | 9 | `execution: external` surfaces `NeedsTools` as `AgentTurn.tool_calls` and resumes on results | `test_external_tools.py` |
@@ -802,6 +802,13 @@ parser test suite — the `ChatClient` protocol is already the seam for it.
 ---
 
 ## 20. Revision log
+
+### Revision 7 — backend conversation history
+
+The paired backend is stateless **by default**, no longer by design. The new
+`backend.conversation_history` flag (off by default) gives it the conversation history, and
+`backend.stateful: auto` is now derived from `agent.mode` and that flag. Design, rules and tests:
+[`frontend-backend-agent-backend-history-plan.md`](frontend-backend-agent-backend-history-plan.md).
 
 ### Revision 4 — third review round
 

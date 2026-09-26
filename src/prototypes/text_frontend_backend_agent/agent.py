@@ -26,6 +26,13 @@ from prototypes.text_frontend_backend_agent.backend import (
     ToolResults,
     outstanding_ids,
 )
+from prototypes.text_frontend_backend_agent.backend_context import (
+    BackendRequest,
+    backend_system_prompt,
+    build_request,
+    close_discarded_turn,
+    request_template,
+)
 from prototypes.text_frontend_backend_agent.config import Config, load_config
 from prototypes.text_frontend_backend_agent.errors import ToolProtocolError
 from prototypes.text_frontend_backend_agent.events import EventSink, InternalEvent, build_sink
@@ -55,9 +62,11 @@ class FrontendBackendAgent:
         registry: ToolRegistry,
         sink: EventSink,
         frontend: FrontendAgent | None = None,
+        backend_request_template: str = "",
     ) -> None:
         """Wire the immutable parts of one agent."""
         self._config = config
+        self._request_template = backend_request_template
         self._backend = backend
         self._frontend = frontend
         self._registry = registry
@@ -112,9 +121,18 @@ class FrontendBackendAgent:
         if isinstance(decision, ContractFallback):
             return self._finish_direct(decision.text, text, session, totals)
         self._emit_delegation(decision, session.session_id)
+        request = build_request(
+            self._config,
+            template=self._request_template,
+            query=decision.query,
+            user_message=text,
+            frontend_history=session.frontend_history,
+            backend_history=session.backend_history,
+        )
+        self._emit_backend_context(request, session.session_id)
         return await self._drive(
-            Query(text=decision.query),
-            History(),
+            Query(text=request.text),
+            request.history,
             session,
             user_message=text,
             delegation_query=decision.query,
@@ -214,14 +232,11 @@ class FrontendBackendAgent:
         backend_history: History,
         totals: UsageTotals,
     ) -> tuple[AgentTurn, SessionState]:
-        """Close a backend-completed turn in whichever history owns it."""
+        """Close a backend-completed turn in whichever histories own it."""
+        if self._config.backend.stateful:
+            session = replace(session, backend_history=backend_history.prune(self._config.backend.history.max_groups))
         if not self._config.frontend_enabled:
-            session = replace(
-                session,
-                backend_history=backend_history.prune(self._config.backend.history.max_groups),
-                pending=None,
-                usage=session.usage.merge(totals),
-            )
+            session = replace(session, pending=None, usage=session.usage.merge(totals))
             self._emit_usage(session, totals)
             return AgentTurn(final_text=text, usage=totals), session
 
@@ -248,12 +263,20 @@ class FrontendBackendAgent:
                 f"tool results are outstanding for {sorted(session.pending.outstanding)}; "
                 "call send_tool_results() or set on_user_message_while_pending: discard_pending"
             )
+        pending = session.pending
+        close = self._config.frontend_enabled and self._config.backend.conversation_history.keeps_backend_turns
         self._sink.emit(
             InternalEvent(
-                events.PENDING_DISCARDED, session.session_id, {"outstanding": list(session.pending.outstanding)}
+                events.PENDING_DISCARDED,
+                session.session_id,
+                {"outstanding": list(pending.outstanding), "closed_in_backend_history": close},
             )
         )
-        return replace(session, pending=None)
+        if not close:
+            return replace(session, pending=None)
+        # The caller may already have run these calls (writes included): keep them visible.
+        closed = close_discarded_turn(pending.backend_history, pending.outstanding)
+        return replace(session, pending=None, backend_history=closed.prune(self._config.backend.history.max_groups))
 
     def _emit_delegation(self, decision: Delegate, session_id: str) -> None:
         logging_config = self._config.logging
@@ -261,6 +284,24 @@ class FrontendBackendAgent:
             self._sink.emit(InternalEvent(events.DELEGATION, session_id, {"query": decision.query}))
         if decision.filler_text and logging_config.log_filler_text:
             self._sink.emit(InternalEvent(events.FILLER, session_id, {"text": decision.filler_text}))
+
+    def _emit_backend_context(self, request: BackendRequest, session_id: str) -> None:
+        history_cfg = self._config.backend.conversation_history
+        self._sink.emit(
+            InternalEvent(
+                events.BACKEND_CONTEXT,
+                session_id,
+                {
+                    "enabled": history_cfg.enabled,
+                    "include": history_cfg.effective_include,
+                    "guidance": history_cfg.resolved_guidance_key,
+                    "history_groups": len(request.history.groups()),
+                    "history_messages": len(request.history),
+                    "earlier_turns": request.earlier_turns,
+                    "request_chars": len(request.text),
+                },
+            )
+        )
 
     def _emit_usage(self, session: SessionState, totals: UsageTotals) -> None:
         self._sink.emit(
@@ -319,7 +360,7 @@ def assemble_agent(
     registry = ToolRegistry(tools, max_result_chars=config.backend.tools.max_result_chars)
     backend = BackendAgent(
         client=backend_client,
-        system_prompt=render(catalog.get(config.backend.prompt_key), config),
+        system_prompt=backend_system_prompt(catalog, config),
         registry=registry,
         sink=sink,
     )
@@ -333,4 +374,11 @@ def assemble_agent(
             config=config,
             sink=sink,
         )
-    return FrontendBackendAgent(config=config, backend=backend, registry=registry, sink=sink, frontend=frontend)
+    return FrontendBackendAgent(
+        config=config,
+        backend=backend,
+        registry=registry,
+        sink=sink,
+        frontend=frontend,
+        backend_request_template=request_template(catalog, config),
+    )

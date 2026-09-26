@@ -767,7 +767,7 @@ all of them in one new `SessionState` (the state is immutable, so no mutation is
 |---|---|---|
 | paired, delegated turn | last `frontend_history` group: `tool` message for `call_backend` (content = backend final text, `agent.py` `_finish_backend`) **and** the synthetic assistant continuation | **both** |
 | paired, direct answer / fallback | last `frontend_history` group: the assistant message | the assistant message |
-| paired, backend state | none: a paired backend is stateless per delegation, and its working history is discarded when the turn finishes | nothing to do |
+| paired, backend state | none by default: a paired backend is stateless per delegation, and its working history is discarded when the turn finishes. With `backend.conversation_history` on (`full` or `backend_turns`), the backend's final assistant message | nothing to do by default; with the history on, the backend's final message, atomically with the frontend copies |
 | `backend_only` | last `backend_history` group: the final assistant message (earlier tool-call/tool-result messages in the group are not spoken text and stay intact) | the final assistant message |
 
 The target group is located structurally (last group, expected shape per the table) **and** verified by exact
@@ -1436,6 +1436,14 @@ prototype generates `call_<hex>`, which already matches.
 ---
 
 ## Revision log
+
+### Revision 6 — backend conversation history
+
+The paired backend is stateless **by default**. The text prototype's new `backend.conversation_history` flag
+(off by default) gives it the conversation history. The voice layer wires it through `agent.overrides`, adds
+`profiles/tau3_eval_backend_history.yaml`, pins the flag off in `tau3_eval.yaml` and `backend_only.yaml`,
+repairs interrupted answers in both histories (both or neither), and reports the arm in `session_start`.
+Design, rules and tests: [`frontend-backend-agent-backend-history-plan.md`](frontend-backend-agent-backend-history-plan.md).
 
 ### Revision 5 — implementation notes
 

@@ -18,6 +18,7 @@ from dataclasses import dataclass, replace
 from typing import Any
 
 from prototypes.text_frontend_backend_agent.agent import FrontendBackendAgent, assemble_agent
+from prototypes.text_frontend_backend_agent.backend_context import backend_system_prompt
 from prototypes.text_frontend_backend_agent.config import Config
 from prototypes.text_frontend_backend_agent.events import EventSink
 from prototypes.text_frontend_backend_agent.llm import ChatClient
@@ -144,7 +145,11 @@ class TextAgentRunner:
     def repair_last_answer(self, full_text: str, replacement: str) -> None:
         """Rewrite every stored copy of the interrupted answer."""
         self._state = repair_interrupted_answer(
-            self._state, full_text=full_text, replacement=replacement, frontend_enabled=self._base.frontend_enabled
+            self._state,
+            full_text=full_text,
+            replacement=replacement,
+            frontend_enabled=self._base.frontend_enabled,
+            backend_history=self._base.backend.conversation_history.keeps_backend_turns,
         )
 
     def seed_assistant(self, text: str) -> None:
@@ -160,7 +165,7 @@ class TextAgentRunner:
     def rendered_prompts(self) -> dict[str, str]:
         """The exact system prompts this session's agent sends."""
         catalog = load_catalog(self.config.prompts_path, self.config.prompts.inline)
-        prompts = {"backend": render(catalog.get(self.config.backend.prompt_key), self.config)}
+        prompts = {"backend": backend_system_prompt(catalog, self.config)}
         if self.config.frontend_enabled:
             prompts["frontend"] = render(catalog.get(self.config.frontend.prompt_key), self.config)
         return prompts

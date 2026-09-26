@@ -14,6 +14,19 @@ server:
   # close a healthy session mid-task. The eval client is local; keepalive is off.
   ws_ping_interval_s: 0
 
+agent:
+  overrides:
+    backend:
+      # Pinned off: FBA_BACKEND_HISTORY must not change eval behaviour. The history
+      # arm is tau3_eval_backend_history.yaml.
+      conversation_history: {enabled: false}
+
+turn_detection:
+  # tau2 sends silence_duration_ms 500, which splits spelled-out IDs into several
+  # turns; the agent's own values win. threshold and prefix equal tau2's (0.5, 300 ms).
+  silence_duration_ms: 800
+  honor_client_values: false
+
 protocol:
   greeting: {enabled: false, text: ""}
   seed_history_with_client_greeting: "Hi! How can I help you today?"

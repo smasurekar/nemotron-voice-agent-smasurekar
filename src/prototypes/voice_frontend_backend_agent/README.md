@@ -24,6 +24,10 @@ client ─► function_call_output + response.create ─► send_tool_results() 
   time-logged** (`filler.mode: log_only`); `filler.mode: speak` makes it audible, concurrently with the backend.
 - **Backend-only mode.** `agent.mode: backend_only` (profile `profiles/backend_only.yaml`): one stateful backend
   with its own history and no frontend LLM.
+- **Backend conversation history (paired, off by default).** `FBA_BACKEND_HISTORY=true`, or
+  `agent.overrides.backend.conversation_history` (profile `profiles/tau3_eval_backend_history.yaml`), gives the
+  paired backend the conversation history. Refer to the
+  [text prototype](../text_frontend_backend_agent/README.md#backend-conversation-history) for the `include` modes.
 - **External tools.** Tools from `session.update.tools` are executed by the **client**. They surface as Realtime
   `function_call` items with the backend's own `call_id`. The backend resumes on `function_call_output` plus
   `response.create`.
@@ -32,7 +36,8 @@ client ─► function_call_output + response.create ─► send_tool_results() 
 - **Audio clock.** All turn timing counts input samples, not wall time, so tau2's wall-clock pauses change nothing.
 - **Barge-in.** Confirmed user speech while a response is active cancels generation, even when nothing
   unplayed is buffered. Every stored copy of the answer is cut to what the user heard, plus
-  `" [interrupted by the user]"`.
+  `" [interrupted by the user]"`. With the backend history on, the backend's copy is repaired too: both
+  histories are rewritten, or neither is.
 
 ## Run it (host-native, from the repository root)
 
@@ -82,8 +87,10 @@ Filler that the server generates but does not speak (`filler.mode: log_only`) is
 
 | Profile | Changes |
 |---|---|
-| `tau3_eval.yaml` | pins every eval-relevant key to its base value |
-| `backend_only.yaml` | `agent.overrides.agent.mode: backend_only` |
+| `tau3_eval.yaml` | pins every eval-relevant key to its base value, including the backend history (off) |
+| `tau3_eval_backend_history.yaml` | extends `tau3_eval.yaml`; only change: backend history on, `include: full` |
+| `tau3_eval_backend_history_noguide.yaml` | extends `tau3_eval_backend_history.yaml`; only change: no behavioural guidance (`guidance_key: ""`), the ablation arm |
+| `backend_only.yaml` | `agent.overrides.agent.mode: backend_only`; backend history flag pinned off |
 | `cloud_speech.yaml` | ASR and TTS through NVCF (`NVIDIA_API_KEY` required, checked at load time) |
 | `live_demo.yaml` | audible filler, greeting, internal demo tools, real-time output pacing |
 
@@ -101,7 +108,8 @@ Environment knobs:
 |---|---|---|
 | `FBA_VOICE_PORT` | `8765` | server port |
 | `FBA_ASR_SERVER`, `FBA_TTS_SERVER` | catalog | replace the catalog server, e.g. `localhost:50051` host-native |
-| `FBA_VOICE_EVENT_LOG` | off | JSONL event log (voice events, the text agent's internal events, timing). Each `agent_turn_done` has `step` (`respond`/`resume`) and per-role `frontend`/`backend` usage: `calls`, `prompt_tokens`, `completion_tokens`, `cached_tokens`, `total_tokens`, `latency_ms` |
+| `FBA_VOICE_EVENT_LOG` | off | JSONL event log (voice events, the text agent's internal events, timing). Each `agent_turn_done` has `step` (`respond`/`resume`) and per-role `frontend`/`backend` usage: `calls`, `prompt_tokens`, `completion_tokens`, `cached_tokens`, `total_tokens`, `latency_ms`. `session_start` has `backend_history` (`off` or the `include` value) and `backend_history_guidance` (the guidance key, or empty). Each delegated turn has a `backend_context` event: `enabled`, `include`, `guidance`, `history_groups`, `history_messages`, `earlier_turns`, `request_chars` |
+| `FBA_BACKEND_HISTORY` | `false` | paired backend conversation history (text `agent.yaml`); profiles that pin it ignore this |
 | `FBA_FILLER_LOG` | off | JSONL filler timing records (always also in loguru and the event log) |
 | `FBA_VOICE_PROMPTS` | `prompts.voice.yaml` | voice prompt catalog |
 | `FBA_VOICE_TOKEN` | empty | bearer token when `server.require_bearer: true` |

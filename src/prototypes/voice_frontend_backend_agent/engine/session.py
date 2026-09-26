@@ -132,7 +132,13 @@ class RealtimeSession:
         self._routing_sink.register(self.session_id, FillerTap(loop, self.turns.on_filler, clock=self._clock))
         self.writer.start()
         self.writer.emit(ev.session_created(self.view.public()))
-        self._log("session_start", model=self.view.model)
+        history = self.config.agent.backend.conversation_history
+        self._log(
+            "session_start",
+            model=self.view.model,
+            backend_history=history.effective_include,
+            backend_history_guidance=history.resolved_guidance_key,
+        )
         logger.info(f"[{self.session_id}] session started (model={self.view.model or '-'})")
         timeout = self.config.server.session_update_timeout_s
         try:

@@ -10,10 +10,12 @@ The text prototype stores a spoken answer in more than one place (plan section
 
 so both the tool message and the assistant continuation hold the full answer.
 A direct answer is ``user, assistant(<answer>)``; ``backend_only`` keeps the
-answer as the final assistant message of the last backend group. The target is
-located structurally *and* verified by exact text equality; a mismatch raises
-instead of rewriting a different message. ``SessionState`` is immutable, so the
-repair returns a new state.
+answer as the final assistant message of the last backend group. With the paired
+backend history on (``backend.conversation_history``), a delegated answer is also
+the backend's final message, and both histories are repaired or neither is. The
+target is located structurally *and* verified by exact text equality; a mismatch
+raises instead of rewriting a different message. ``SessionState`` is immutable, so
+the repair returns a new state.
 """
 
 from __future__ import annotations
@@ -42,13 +44,14 @@ def _replace_content(message: Message, full_text: str, replacement: str, where: 
     return replace(message, content=replacement)
 
 
-def _repair_frontend(history: History, full_text: str, replacement: str) -> History:
+def _repair_frontend(history: History, full_text: str, replacement: str) -> tuple[History, bool]:
+    """Return the repaired history and whether the last group was a delegated turn."""
     messages = list(history.messages)
     start, end = _last_group_bounds(history)
     group = messages[start:end]
     if len(group) == 2 and group[0].role == "user" and group[1].role == "assistant" and not group[1].tool_calls:
         messages[start + 1] = _replace_content(group[1], full_text, replacement, "direct answer")
-        return History(tuple(messages))
+        return History(tuple(messages)), False
     if (
         len(group) == 4
         and group[0].role == "user"
@@ -62,7 +65,7 @@ def _repair_frontend(history: History, full_text: str, replacement: str) -> Hist
     ):
         messages[start + 2] = _replace_content(group[2], full_text, replacement, "call_backend tool result")
         messages[start + 3] = _replace_content(group[3], full_text, replacement, "assistant continuation")
-        return History(tuple(messages))
+        return History(tuple(messages)), True
     raise HistoryRepairError(f"unexpected shape of the last frontend group: {[m.role for m in group]}")
 
 
@@ -78,9 +81,23 @@ def _repair_backend(history: History, full_text: str, replacement: str) -> Histo
 
 
 def repair_interrupted_answer(
-    state: SessionState, *, full_text: str, replacement: str, frontend_enabled: bool
+    state: SessionState,
+    *,
+    full_text: str,
+    replacement: str,
+    frontend_enabled: bool,
+    backend_history: bool = False,
 ) -> SessionState:
-    """Return ``state`` with every copy of ``full_text`` in the last group replaced by ``replacement``."""
-    if frontend_enabled:
-        return replace(state, frontend_history=_repair_frontend(state.frontend_history, full_text, replacement))
-    return replace(state, backend_history=_repair_backend(state.backend_history, full_text, replacement))
+    """Return ``state`` with every copy of ``full_text`` in the last group replaced by ``replacement``.
+
+    ``backend_history`` (paired mode with the backend history on) also repairs
+    the backend's copy of a delegated answer. Both repairs are computed before
+    either is applied, so a failure leaves both histories unchanged.
+    """
+    if not frontend_enabled:
+        return replace(state, backend_history=_repair_backend(state.backend_history, full_text, replacement))
+    frontend, delegated = _repair_frontend(state.frontend_history, full_text, replacement)
+    if not (backend_history and delegated):
+        return replace(state, frontend_history=frontend)
+    backend = _repair_backend(state.backend_history, full_text, replacement)
+    return replace(state, frontend_history=frontend, backend_history=backend)

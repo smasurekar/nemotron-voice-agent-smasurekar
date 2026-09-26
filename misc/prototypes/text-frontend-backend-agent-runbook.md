@@ -104,6 +104,20 @@ PYTHONPATH=src uv run python -m prototypes.text_frontend_backend_agent.cli.chat 
   --tools prototypes.text_frontend_backend_agent.demo_tools:TOOLS
 ```
 
+**Backend conversation history** — paired mode, but the backend keeps the conversation history
+across delegated turns (`include: full`; plan
+[`frontend-backend-agent-backend-history-plan.md`](frontend-backend-agent-backend-history-plan.md)):
+
+```bash
+PYTHONPATH=src uv run python -m prototypes.text_frontend_backend_agent.cli.chat \
+  --config src/prototypes/text_frontend_backend_agent/config/examples/backend_history.yaml \
+  --tools prototypes.text_frontend_backend_agent.demo_tools:TOOLS
+```
+
+With `config/agent.yaml`, `FBA_BACKEND_HISTORY=true` turns it on. The example configs are
+standalone and do not read that variable; set `backend.conversation_history.enabled` in them. Each delegated turn logs a `backend_context` event
+with the effective `include` (`off` when disabled) and the history size.
+
 ## 4. Smoke-test without a key
 
 A scripted OpenAI-compatible endpoint ships with the package, so the whole loop — real HTTP client,

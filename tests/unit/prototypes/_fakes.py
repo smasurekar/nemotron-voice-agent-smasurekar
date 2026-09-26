@@ -20,6 +20,19 @@ from prototypes.text_frontend_backend_agent.tools import ToolSpec
 FRONTEND_PROMPT = "You are the frontend. {persona} {capabilities} {unsupported_reply}"
 BACKEND_PROMPT = "You are the backend. {domain_policy}"
 
+#: Inline stand-ins for the backend-history catalog keys (unused unless the flag is on).
+HISTORY_PROMPTS = {
+    "backend_history_request": "{earlier_turns}USER SAID:\n{user_message}\n\nFRONTEND ASKS:\n{query}",
+    **{
+        f"backend_history_context_{include}": f"CONTEXT {include}"
+        for include in ("full", "backend_turns", "transcript")
+    },
+    **{
+        f"backend_history_guidance_{include}": f"GUIDANCE {include}"
+        for include in ("full", "backend_turns", "transcript")
+    },
+}
+
 
 class FakeChatClient:
     """Replays scripted responses and records every request it was given."""
@@ -95,7 +108,7 @@ def make_config(**overrides: Any) -> Config:
         "agent": {"name": "Tester", "persona": "You are a tester.", "mode": overrides.pop("mode", "frontend_backend")},
         "prompts": {
             "path": "does-not-exist.yaml",
-            "inline": {"frontend": FRONTEND_PROMPT, "backend": BACKEND_PROMPT},
+            "inline": {"frontend": FRONTEND_PROMPT, "backend": BACKEND_PROMPT, **HISTORY_PROMPTS},
         },
         "frontend": {
             "llm": {"model": "fake-frontend"},
@@ -106,6 +119,7 @@ def make_config(**overrides: Any) -> Config:
             "llm": {"model": "fake-backend"},
             "tools": overrides.pop("tools_config", {}),
             "history": overrides.pop("backend_history", {}),
+            "conversation_history": overrides.pop("conversation_history", {}),
         },
         "domain": overrides.pop("domain", {"policy": "Be helpful.", "capabilities": ["testing"]}),
         "logging": {"event_sink": "none"},

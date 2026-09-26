@@ -33,6 +33,7 @@ PENDING_DISCARDED = "pending_discarded"
 ITERATION_CAP = "iteration_cap"
 BACKEND_ERROR = "backend_error"
 STEP_USAGE = "step_usage"
+BACKEND_CONTEXT = "backend_context"
 
 
 @dataclass(frozen=True, slots=True)

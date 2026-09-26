@@ -33,6 +33,14 @@ _INCOMPLETE_POLICIES = ("error", "synthesize_error_result")
 _PENDING_POLICIES = ("error", "discard_pending")
 _VIOLATION_POLICIES = ("fallback_text", "error")
 
+HISTORY_FULL = "full"
+HISTORY_BACKEND_TURNS = "backend_turns"
+HISTORY_TRANSCRIPT = "transcript"
+_HISTORY_INCLUDES = (HISTORY_FULL, HISTORY_BACKEND_TURNS, HISTORY_TRANSCRIPT)
+
+_TRUE_STRINGS = frozenset({"true", "1", "yes", "on"})
+_FALSE_STRINGS = frozenset({"false", "0", "no", "off", ""})
+
 
 def interpolate_env(value: Any) -> Any:
     """Recursively resolve ``${VAR}`` / ``${VAR:-default}`` inside ``value``."""
@@ -97,6 +105,42 @@ class BackendToolsConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class ConversationHistoryConfig:
+    """Paired mode only: what of the conversation the backend sees.
+
+    ``include`` is meaningful only when ``enabled``; :attr:`effective_include`
+    is what actually runs, and is ``"off"`` for a disabled flag.
+    """
+
+    enabled: bool = False
+    include: str = HISTORY_FULL
+    guidance_key: str = "auto"
+    request_key: str = "backend_history_request"
+
+    @property
+    def effective_include(self) -> str:
+        """``include`` when enabled, else ``"off"``."""
+        return self.include if self.enabled else "off"
+
+    @property
+    def keeps_backend_turns(self) -> bool:
+        """Whether the backend's own turns persist across delegations."""
+        return self.enabled and self.include != HISTORY_TRANSCRIPT
+
+    @property
+    def context_key(self) -> str:
+        """Catalog key of the always-on context note."""
+        return f"backend_history_context_{self.include}"
+
+    @property
+    def resolved_guidance_key(self) -> str:
+        """Catalog key of the behavioural guidance, or ``""`` when disabled."""
+        if not self.enabled or not self.guidance_key:
+            return ""
+        return f"backend_history_guidance_{self.include}" if self.guidance_key == "auto" else self.guidance_key
+
+
+@dataclass(frozen=True, slots=True)
 class BackendConfig:
     """Backend agent configuration."""
 
@@ -105,6 +149,7 @@ class BackendConfig:
     llm: LLMConfig = field(default_factory=lambda: LLMConfig(model=""))
     tools: BackendToolsConfig = field(default_factory=BackendToolsConfig)
     history: HistoryConfig = field(default_factory=lambda: HistoryConfig(max_groups=40))
+    conversation_history: ConversationHistoryConfig = field(default_factory=ConversationHistoryConfig)
 
 
 @dataclass(frozen=True, slots=True)
@@ -192,26 +237,68 @@ def _one_of(value: Any, allowed: tuple[str, ...], *, name: str, default: str) ->
     return resolved
 
 
-def resolve_runtime_modes(mode: str, stateful_raw: Any) -> tuple[str, bool]:
-    """Reconcile ``agent.mode`` with ``backend.stateful``.
+def parse_bool(value: Any, *, name: str) -> bool:
+    """Parse a YAML or environment boolean strictly (``"false"`` is false)."""
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    if isinstance(value, int):
+        if value in (0, 1):
+            return bool(value)
+    elif isinstance(value, str):
+        text = value.strip().lower()
+        if text in _TRUE_STRINGS:
+            return True
+        if text in _FALSE_STRINGS:
+            return False
+    raise ConfigError(f"{name} must be a boolean, got {value!r}")
 
-    The backend keeps its own history exactly when it runs without a frontend;
-    in paired mode each delegation is stateless by design. ``auto`` derives
-    that, and an explicit value is honoured but never allowed to contradict the
-    mode silently.
+
+def _conversation_history(raw: dict[str, Any]) -> ConversationHistoryConfig:
+    name = "backend.conversation_history"
+    return ConversationHistoryConfig(
+        enabled=parse_bool(raw.get("enabled", False), name=f"{name}.enabled"),
+        include=_one_of(raw.get("include"), _HISTORY_INCLUDES, name=f"{name}.include", default=HISTORY_FULL),
+        guidance_key=str(raw.get("guidance_key", "auto") or "").strip(),
+        request_key=str(raw.get("request_key") or "backend_history_request").strip(),
+    )
+
+
+def resolve_runtime_modes(
+    mode: str, stateful_raw: Any, history: ConversationHistoryConfig | None = None
+) -> tuple[str, bool]:
+    """Reconcile ``agent.mode``, ``backend.stateful`` and ``backend.conversation_history``.
+
+    ``stateful`` means "the backend history persists across turns". It holds
+    for ``backend_only``, and for paired mode when the conversation history is
+    enabled with the backend's own turns (``full`` or ``backend_turns``).
+    Otherwise a paired backend is stateless per delegation. ``auto`` derives
+    that; an explicit value is honoured but never allowed to contradict it.
     """
+    history = history or ConversationHistoryConfig()
     resolved_mode = _one_of(mode, _MODES, name="agent.mode", default=MODE_FRONTEND_BACKEND)
     backend_only = resolved_mode == MODE_BACKEND_ONLY
+    if backend_only and history.enabled:
+        raise ConfigError(
+            "backend.conversation_history is for agent.mode: frontend_backend; "
+            "backend_only already keeps the full backend history"
+        )
+    derived = backend_only or history.keeps_backend_turns
     if stateful_raw in (None, "", "auto"):
-        return resolved_mode, backend_only
-    stateful = bool(stateful_raw)
-    if stateful and not backend_only:
+        return resolved_mode, derived
+    stateful = parse_bool(stateful_raw, name="backend.stateful")
+    if stateful and not backend_only and not derived:
         raise ConfigError(
             "backend.stateful: true is incompatible with agent.mode: frontend_backend "
-            "(a paired backend is stateless per delegation)"
+            "(a paired backend is stateless per delegation); "
+            "set backend.conversation_history.enabled: true to give it the conversation history"
         )
-    if not stateful and backend_only:
-        raise ConfigError("backend.stateful: false is incompatible with agent.mode: backend_only")
+    if stateful != derived:
+        raise ConfigError(
+            f"backend.stateful: {str(stateful).lower()} contradicts agent.mode: {resolved_mode} "
+            f"with backend.conversation_history: {history.effective_include}; leave it on auto"
+        )
     return resolved_mode, stateful
 
 
@@ -232,7 +319,10 @@ def build_config(raw: dict[str, Any], *, source_dir: Path | None = None) -> Conf
     agent_raw = dict(raw.get("agent") or {})
     backend_raw = dict(raw.get("backend") or {})
     frontend_raw = dict(raw.get("frontend") or {})
-    mode, stateful = resolve_runtime_modes(agent_raw.get("mode", MODE_FRONTEND_BACKEND), backend_raw.get("stateful"))
+    history = _conversation_history(dict(backend_raw.get("conversation_history") or {}))
+    mode, stateful = resolve_runtime_modes(
+        agent_raw.get("mode", MODE_FRONTEND_BACKEND), backend_raw.get("stateful"), history
+    )
 
     prompts_raw = dict(raw.get("prompts") or {})
     tools_raw = dict(backend_raw.get("tools") or {})
@@ -286,6 +376,7 @@ def build_config(raw: dict[str, Any], *, source_dir: Path | None = None) -> Conf
             ),
         ),
         history=HistoryConfig(max_groups=int(dict(backend_raw.get("history") or {}).get("max_groups", 40))),
+        conversation_history=history,
     )
 
     return Config(

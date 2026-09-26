@@ -49,6 +49,7 @@ EVENT_STYLE: dict[str, tuple[str, str]] = {
     event_kinds.ITERATION_CAP: ("iteration cap hit", "red"),
     event_kinds.BACKEND_ERROR: ("backend error", "red"),
     event_kinds.STEP_USAGE: ("usage", "bright_black"),
+    event_kinds.BACKEND_CONTEXT: ("backend context", "bright_black"),
 }
 
 _HELP_ROWS = (
