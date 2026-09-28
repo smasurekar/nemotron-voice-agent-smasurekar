@@ -43,7 +43,7 @@ rebuild.
 | 1 | Start the Realtime server | [repo] | `docker compose --profile frontend-backend-agent/single-gpu run --rm -d --name fba-voice -p 8765:7860 ... frontend-backend-agent-single-gpu uv run python -m prototypes.voice_frontend_backend_agent.server ...` (full command in §1) |
 | 2 | Check it | [repo] | `curl -s localhost:8765/health` and `docker logs -f fba-voice` |
 | 3 | Talk to it (text) | [repo] | `PYTHONPATH=src uv run python -m prototypes.voice_frontend_backend_agent.cli.voice_chat --io text` |
-| 3B | Talk to it from a browser (microphone, speaker) | [repo] | start `fba-voice-web` (§3B), then open **https://10.176.172.158:8766/** (the IP, not the hostname) |
+| 3B | Talk to it from a browser (microphone, speaker) | [repo] | start `fba-voice-web` (§3B), then open **https://10.176.172.158:8766/** (the IP, not the hostname); for the frontend barge-in verdict, use `browser_demo_frontend_verdict.yaml` (§3B) |
 | 4 | Run tau3 | [tau2] | `uv run tau2 run --domain mock --audio-native --audio-native-provider openai --audio-native-model pine-nemotron-fba ...` (§4) |
 | 5 | Stop | [repo] | `docker stop fba-voice fba-voice-web`, then `docker compose --profile frontend-backend-agent/single-gpu stop nemo-speech` |
 
@@ -164,6 +164,10 @@ Speech endpoints come from `src/examples/frontend_backend_agent/services.local.y
 | tau3, paired, identifier normalization (written user IDs for the agent, local answers for malformed or already-failed IDs) | `src/prototypes/voice_frontend_backend_agent/config/profiles/tau3_eval_normalization.yaml` |
 | tau3, backend only (no frontend LLM; the `FRONTEND_*` lines are then unused) | `src/prototypes/voice_frontend_backend_agent/config/profiles/backend_only.yaml` |
 | live demo (audible filler, greeting, internal demo tools) | `src/prototypes/voice_frontend_backend_agent/config/profiles/live_demo.yaml` |
+| browser page, audible filler, simulated slow backend (§3B only) | `src/prototypes/voice_frontend_backend_agent/config/profiles/browser_demo_slow_backend.yaml` |
+| browser page, as above plus the frontend barge-in verdict (§3B only) | `src/prototypes/voice_frontend_backend_agent/config/profiles/browser_demo_frontend_verdict.yaml` |
+| tau3, paired, frontend barge-in verdict (speech while the agent thinks no longer cancels it at once) | `src/prototypes/voice_frontend_backend_agent/config/profiles/tau3_eval_frontend_verdict.yaml` |
+| tau3, as above with the filler spoken (arm `verdictspk`, port 8773; not comparable for Pass^1) | `src/prototypes/voice_frontend_backend_agent/config/profiles/tau3_eval_frontend_verdict_speak.yaml` |
 
 Every tau3 paired profile pins `backend.conversation_history`, and the two history profiles differ from
 `tau3_eval.yaml` only in it, so `FBA_BACKEND_HISTORY` has no effect on them. For other paired configs,
@@ -185,6 +189,14 @@ PYTHONPATH=src uv run python -m prototypes.voice_frontend_backend_agent.cli.norm
   --config src/prototypes/voice_frontend_backend_agent/config/profiles/tau3_eval_normalization.yaml \
   --model pine-fba-voice-paired-airline-regular --out /tmp/norm_replay.jsonl   # summary on stderr
 ```
+
+`tau3_eval_frontend_verdict.yaml` is `tau3_eval.yaml` plus one key, `barge_in.while_thinking: frontend_verdict`.
+Run it as the `verdict` arm: container `fba-voice-verdict` on port 8772, logging to
+`logs/fba_voice_verdict_{events,filler}.jsonl`. Use `--speech-complexity regular`, because under `control` the
+user seldom speaks while the agent is thinking. Compare it only with a `paired` run on the same agent commit,
+domain and task set. The flow and the events are in the package README's
+[Barge-in while thinking](../../src/prototypes/voice_frontend_backend_agent/README.md#barge-in-while-thinking)
+section.
 
 **Host-native equivalent** (server on the host, speech still in Docker on `localhost:50051`), run from [repo]
 after `uv sync --dev`:
@@ -237,6 +249,21 @@ server from §1 can keep running on 8765. It differs from §1 in three ways:
   the server. The agent greets you. The filler stays **silent** (logged, and shown in gray on the page).
 - The page itself is served by the server at `/` (`src/prototypes/voice_frontend_backend_agent/web/index.html`).
 
+**Audible frontend and a slow backend (optional).** Pass
+`--config src/prototypes/voice_frontend_backend_agent/config/profiles/browser_demo_slow_backend.yaml` instead
+of `browser_demo.yaml`. It is `browser_demo.yaml` plus two changes:
+
+- `filler.mode: speak`: the frontend's filler is spoken, and the page shows it as an `agent` line.
+- `backend.simulated_delay_s`: the backend sleeps before each delegated turn, so you hear the filler while it
+  works. The default is 5 s. Set it with `-e FBA_BACKEND_DELAY_S=<seconds>`, and use `0` to turn it off. The
+  sleep happens once per delegation, not once per tool call. No other profile sets this key, and the
+  `agent.yaml` default is `0`.
+
+> **Agents deploying the web version:** always ask the user whether they need the 5 s simulated backend delay
+> before you start `fba-voice-web`. The answer decides between `browser_demo.yaml` (no delay, silent filler)
+> and `browser_demo_slow_backend.yaml` (audible filler, delay). The answer also sets `FBA_BACKEND_DELAY_S`.
+> Do not choose on the user's behalf.
+
 Needs nemo-speech (P3). Start it from [repo]:
 
 ```bash
@@ -276,7 +303,7 @@ Then, in Chrome or Edge on your laptop:
 4. **Use headphones.** Without them the agent can hear itself and interrupt its own answer.
 
 The page shows what ASR heard (`you`), the agent's spoken answer (`agent`), and the silent filler in gray
-(`filler … (silent)`). The level bar shows that the microphone is live. Speaking while the agent talks
+(`filler … (silent)`). With `browser_demo_slow_backend.yaml`, the filler is spoken and appears as an `agent` line. The level bar shows that the microphone is live. Speaking while the agent talks
 interrupts it (barge-in). Try: "What is the status of order 5513?", then "Please cancel it." (Order 5512 has shipped and cannot be cancelled.)
 
 If port 8766 is not reachable from your laptop (firewall), tunnel it and open **https://localhost:8766/**
@@ -285,6 +312,46 @@ instead:
 ```bash
 ssh -N -L 8766:localhost:8766 ipp2-0543.ipp2a1.colossus.nvidia.com      # on your laptop
 ```
+
+**Browser demo with the frontend barge-in verdict (optional).** In the command above, pass
+`--config src/prototypes/voice_frontend_backend_agent/config/profiles/browser_demo_frontend_verdict.yaml`
+instead of `browser_demo.yaml`, and keep the same log files. The profile is `browser_demo_slow_backend.yaml`
+(audible filler, 5 s simulated backend delay) plus `barge_in.while_thinking: frontend_verdict`. Speech while
+the backend works on a delegated request then no longer cancels it at once. After the transcript, the frontend decides:
+
+- `continue` for an acknowledgement or a restatement: the running request goes on, the filler is not repeated,
+  and the answer is spoken once.
+- `new` for a real change: the running request is cancelled and the changed request starts, as with the
+  default `cancel_and_merge`.
+
+Try: "Can you please check on order one one five one", then, while it works, "Yes, please do that", "Okay"
+and "Why are you telling me?". Each should give `continue`, and the answer should arrive about one backend run
+after the request. Then say "Actually, order one one five two", which should give `new`. Check one session
+(`S` is the `session_id` of its `session_start` record):
+
+```bash
+S=<session id from session_start>
+grep $S logs/fba_voice_web_events.jsonl | jq -c 'select(.kind|test("barge_in|thinking_cancelled|delegation|staged")) | {kind, turn_id, verdict, reason, model_task, utterance, running_query, probe_query, query}'
+```
+
+Expect one `delegation` for the acknowledgements, `barge_in_verdict` with `verdict: "continue"` for each of
+them, and for the correction `verdict: "new"`, `thinking_cancelled` with `reason: "frontend_verdict_new"` and
+one new `delegation`. A `continue` can have `reason: "same_query"`: the frontend sent the running query
+unchanged, so the guard (`barge_in.frontend_verdict.same_query_guard`, on by default) kept the request going
+whatever `task` said. `model_task` shows the model's own choice.
+
+To measure a prompt change in `prompts.voice.yaml` before you restart `fba-voice-web`, replay the recorded
+verdicts against the live frontend model. The log must not be redacted. The summary (accuracy, guard
+overrides, and probe latency p50 and p95) goes to stderr:
+
+```bash
+PYTHONPATH=src uv run python -m prototypes.voice_frontend_backend_agent.cli.verdict_replay \
+  --events logs/fba_voice_web_events.jsonl \
+  --config src/prototypes/voice_frontend_backend_agent/config/profiles/browser_demo_frontend_verdict.yaml \
+  [--model pine-browser] [--cases misc/prototypes/verdict_cases.jsonl] [--guard off] --out /tmp/verdict_replay.jsonl
+```
+
+The source is bind-mounted, so a restart of `fba-voice-web` picks up the prompt change without a rebuild.
 
 ## 4. Run tau3-bench against it [tau2]
 
@@ -313,7 +380,9 @@ uv run tau2 run --domain airline --audio-native --audio-native-provider openai \
 - The tau2 side needs its own user-simulator keys (LLM and ElevenLabs), as for any tau3 voice run.
 - Results are under `data/simulations/<run>/` [tau2]. Server-side traces are in [repo] `logs/`:
   `fba_voice_events.jsonl` (turns, ASR latency, barge-ins, tool calls, per-turn latency) and `fba_filler.jsonl`
-  (one timing record per delegation).
+  (one timing record per delegation). With `tau3_eval_frontend_verdict.yaml`, the `barge_in_*`,
+  `probe_discarded` and `turn_staged` / `staged_committed` / `staged_discarded` events trace each barge-in
+  while the agent is thinking.
 
 ## 5. Stop [repo]
 
@@ -403,3 +472,6 @@ A missing key or `function_id` fails at startup, not on the first turn.
 | Chrome: `ERR_CERT_AUTHORITY_INVALID` "because the website uses HSTS", no Proceed link | you used the `*.nvidia.com` hostname: open `https://10.176.172.158:8766/` (the IP) or use the `ssh -L` tunnel |
 | Browser page loads nothing / times out | port 8766 is not reachable from the laptop: use the `ssh -L` tunnel in §3B |
 | The agent keeps interrupting itself | its own voice reaches the microphone: use headphones |
+| `frontend_verdict` profile: the answer is never spoken after you talked while the agent was thinking | grep the session's `barge_in_awaiting` and `barge_in_closed` events: every `barge_in_review` should end in one `barge_in_closed`, and a verdict waits while `awaiting` is above 0 |
+| `frontend_verdict` profile: every barge-in restarts the request | check `barge_in_verdict.reason`: `timeout` or `error` means the frontend missed `barge_in.frontend_verdict.timeout_ms`; `task_invalid` means it omitted `task` |
+| Startup error naming `barge_in.frontend_verdict` or `while_thinking` | `frontend_verdict` needs paired mode, a `note_key` present in `prompts.voice.yaml`, and `timeout_ms` above 0 |

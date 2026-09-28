@@ -1,18 +1,28 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Prompt catalog loading and placeholder rendering.
+"""Prompt catalog loading and rendering.
 
-Placeholders are substituted by literal replacement rather than ``str.format``:
-the prompts contain JSON examples full of braces, and ``format`` would either
-choke on them or require escaping every one.
+A prompt is rendered in two passes. First it is a Jinja 2 template: ``{% if %}``
+blocks and ``{{ variables }}`` from a caller's context, and ``{% include "<key>" %}``
+of another catalog entry. A prompt without Jinja syntax renders unchanged. Then
+the domain placeholders (``{persona}`` ...) are substituted by literal
+replacement rather than ``str.format``: the prompts contain JSON examples full
+of single braces, and ``format`` would choke on them.
+
+Text that is not a template (a client's policy spliced into a prompt) must go
+through :func:`literal` first, so that braces in it render verbatim.
 """
 
 from __future__ import annotations
 
+import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
+import jinja2
 import yaml
 
 from prototypes.text_frontend_backend_agent.config import Config
@@ -59,7 +69,58 @@ def load_catalog(path: str | Path, inline: dict[str, str] | None = None) -> Prom
     return PromptCatalog(prompts=prompts)
 
 
-def render(template: str, config: Config) -> str:
+_JINJA_START = re.compile(r"\{[{%#]")
+
+
+def literal(text: str) -> str:
+    """``text`` escaped for splicing into a template: it renders back to exactly ``text``."""
+    return _JINJA_START.sub(lambda match: "{{ '" + match.group(0) + "' }}", text)
+
+
+def environment(catalog: PromptCatalog | None = None) -> jinja2.Environment:
+    """The Jinja environment for prompts; ``{% include %}`` resolves keys of ``catalog``."""
+    return jinja2.Environment(
+        loader=jinja2.DictLoader(dict(catalog.prompts)) if catalog is not None else None,
+        undefined=jinja2.StrictUndefined,
+        autoescape=False,
+        keep_trailing_newline=True,
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+
+
+def compile_template(template: str, catalog: PromptCatalog | None = None, *, key: str = "") -> jinja2.Template:
+    """Compile a prompt template (raises ``ConfigError`` naming ``key`` on a syntax error)."""
+    try:
+        return environment(catalog).from_string(template)
+    except jinja2.TemplateError as exc:
+        raise ConfigError(f"prompt {key or '<inline>'!r} is not a valid template: {exc}") from None
+
+
+def render_template(
+    template: jinja2.Template, config: Config, context: Mapping[str, Any] | None = None, *, key: str = ""
+) -> str:
+    """Render a compiled prompt template with ``context``, then substitute the domain placeholders."""
+    try:
+        rendered = template.render(**dict(context or {}))
+    except jinja2.TemplateError as exc:
+        raise ConfigError(f"prompt {key or '<inline>'!r} failed to render: {exc}") from None
+    return substitute(rendered, config)
+
+
+def render(
+    template: str,
+    config: Config,
+    context: Mapping[str, Any] | None = None,
+    *,
+    catalog: PromptCatalog | None = None,
+    key: str = "",
+) -> str:
+    """Render ``template`` (Jinja with ``context``, then the domain placeholders)."""
+    return render_template(compile_template(template, catalog, key=key), config, context, key=key)
+
+
+def substitute(template: str, config: Config) -> str:
     """Substitute the domain placeholders in ``template``."""
     capabilities = "\n".join(f"- {item}" for item in config.domain.capabilities)
     replacements = {

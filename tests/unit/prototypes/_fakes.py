@@ -95,10 +95,12 @@ def tool_response(
     )
 
 
-def delegate_response(query: str, filler: str = "", **kwargs: Any) -> ChatResponse:
+def delegate_response(query: str, filler: str = "", *, task: str | None = None, **kwargs: Any) -> ChatResponse:
     arguments: dict[str, Any] = {"query": query}
     if filler:
         arguments["filler_text"] = filler
+    if task is not None:
+        arguments["task"] = task
     return tool_response(("call_backend", arguments), ids=["call_delegate"], **kwargs)
 
 

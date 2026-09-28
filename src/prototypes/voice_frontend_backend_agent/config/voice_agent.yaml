@@ -62,7 +62,11 @@ barge_in:
   enabled: true
   history: truncate_heard           # truncate_heard | keep_full
   interruption_marker: " [interrupted by the user]"   # appended to the heard prefix; "" for none
-  while_thinking: cancel_and_merge  # cancel_and_merge | ignore (never cancels after tool calls went out)
+  while_thinking: cancel_and_merge  # cancel_and_merge | ignore | frontend_verdict (never cancels after tool calls went out)
+  frontend_verdict:                 # used only with while_thinking: frontend_verdict
+    note_key: frontend_task_in_progress   # prompt catalog key: the in-progress note given to the frontend
+    timeout_ms: 4000                # deadline for the frontend's verdict; on timeout, cancel_and_merge applies
+    same_query_guard: true          # a probe query equal to the running one counts as continue (reason same_query)
 
 asr:
   source: catalog                   # catalog | inline

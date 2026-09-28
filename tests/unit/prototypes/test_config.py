@@ -11,8 +11,14 @@ import ast
 from pathlib import Path
 
 import pytest
+from _fakes import make_config
 
-from prototypes.text_frontend_backend_agent.config import interpolate_env, load_config, resolve_runtime_modes
+from prototypes.text_frontend_backend_agent.config import (
+    build_config,
+    interpolate_env,
+    load_config,
+    resolve_runtime_modes,
+)
 from prototypes.text_frontend_backend_agent.errors import ConfigError
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[3] / "src" / "prototypes" / "text_frontend_backend_agent"
@@ -71,3 +77,9 @@ def test_no_pipecat_import() -> None:
             if any(name.split(".")[0] in FORBIDDEN_IMPORT_ROOTS for name in names):
                 offenders.append(f"{path.name}:{node.lineno}")
     assert offenders == []
+
+
+def test_simulated_delay_defaults_off_and_rejects_negatives() -> None:
+    assert make_config().backend.simulated_delay_s == 0.0
+    with pytest.raises(ConfigError, match="simulated_delay_s"):
+        build_config({"agent": {"mode": "backend_only"}, "backend": {"llm": {"model": "m"}, "simulated_delay_s": -1}})

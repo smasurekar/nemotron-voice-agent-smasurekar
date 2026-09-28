@@ -27,7 +27,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, replace
 
 from prototypes.text_frontend_backend_agent.config import Config
-from prototypes.text_frontend_backend_agent.prompts import load_catalog
+from prototypes.text_frontend_backend_agent.prompts import literal, load_catalog
 from prototypes.text_frontend_backend_agent.tools import ToolSpec
 from prototypes.voice_frontend_backend_agent.agent.tools import capability_lines
 from prototypes.voice_frontend_backend_agent.config import InstructionsConfig
@@ -73,18 +73,22 @@ def session_agent_config(
 
     inline = dict(base.prompts.inline)
     policy = base.domain.policy
+    # The client's text is spliced into prompt templates: escape it so that braces in it (some
+    # tau2 policies contain Jinja-like "{{ ... }}") render verbatim. {domain_policy} needs no
+    # escaping: placeholders are substituted after the template is rendered.
+    text = literal(resolved.text)
     if "backend" in cfg.apply_to and received:
         template = catalog.get(base.backend.prompt_key)
         if cfg.placement == "policy_slot":
             policy = resolved.text
             inline[base.backend.prompt_key] = template + addendum
         elif cfg.placement == "replace_prompt":
-            inline[base.backend.prompt_key] = resolved.text + addendum
+            inline[base.backend.prompt_key] = text + addendum
         else:
-            inline[base.backend.prompt_key] = f"{template.rstrip()}\n\n{resolved.text}{addendum}"
+            inline[base.backend.prompt_key] = f"{template.rstrip()}\n\n{text}{addendum}"
     if "frontend" in cfg.apply_to and received and base.frontend_enabled:
         template = catalog.get(base.frontend.prompt_key)
-        inline[base.frontend.prompt_key] = f"{template.rstrip()}\n\n{POLICY_HEADING}\n{resolved.text}{addendum}"
+        inline[base.frontend.prompt_key] = f"{template.rstrip()}\n\n{POLICY_HEADING}\n{text}{addendum}"
 
     if cfg.frontend_capabilities == "from_tools":
         capabilities = capability_lines(tools)

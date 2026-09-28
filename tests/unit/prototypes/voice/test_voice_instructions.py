@@ -173,8 +173,10 @@ class VoiceCatalogTests(unittest.TestCase):
             ),
         }
         normalization_keys = {"identifier_note_voice", "tool_argument_invalid", "tool_call_already_failed"}
+        barge_in_keys = {"frontend_task_in_progress"}
         self.assertEqual(
-            set(catalog), {"frontend", "backend", "cascade_voice_addendum", *history_keys, *normalization_keys}
+            set(catalog),
+            {"frontend", "backend", "cascade_voice_addendum", *history_keys, *normalization_keys, *barge_in_keys},
         )
         frontend, backend = catalog["frontend"]["content"], catalog["backend"]["content"]
         for placeholder in ("{persona}", "{capabilities}", "{unsupported_reply}", "{agent_name}"):

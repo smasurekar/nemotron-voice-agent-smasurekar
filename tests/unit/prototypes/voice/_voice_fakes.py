@@ -24,11 +24,15 @@ from prototypes.text_frontend_backend_agent.llm import ChatResponse
 from prototypes.text_frontend_backend_agent.messages import Message, ToolCall, Usage, canonical_json
 from prototypes.voice_frontend_backend_agent.agent.filler import FillerLog
 from prototypes.voice_frontend_backend_agent.agent.port import AgentPort
-from prototypes.voice_frontend_backend_agent.agent.runner import AgentClients, TextAgentRunner
+from prototypes.voice_frontend_backend_agent.agent.runner import (
+    AgentClients,
+    TextAgentRunner,
+    frontend_verdict_settings,
+)
 from prototypes.voice_frontend_backend_agent.agent.sinks import EventLog, SessionRoutingSink
 from prototypes.voice_frontend_backend_agent.audio.formats import AudioFormat
 from prototypes.voice_frontend_backend_agent.audio.pcm import silence, tone
-from prototypes.voice_frontend_backend_agent.config import VoiceConfig, load_voice_config
+from prototypes.voice_frontend_backend_agent.config import VoiceConfig, load_voice_config, prompt_context
 from prototypes.voice_frontend_backend_agent.engine.session import RealtimeSession
 from prototypes.voice_frontend_backend_agent.speech.ports import IdentityNormalizer, SpeechServices
 from prototypes.voice_frontend_backend_agent.speech.stubs import StubRecognizer, ToneSynthesizer
@@ -72,11 +76,15 @@ def voice_config(**sections: Any) -> VoiceConfig:
 
 
 class FakeChatClient:
-    """Scripted responses; an optional gate per response blocks it until set (tests of concurrency)."""
+    """Scripted responses; an optional gate per call blocks it until set (tests of concurrency).
+
+    ``failures`` maps a call index to an exception raised (after its gate) instead of a response.
+    """
 
     def __init__(self, responses: Sequence[ChatResponse] = ()) -> None:
         self.responses: list[ChatResponse] = list(responses)
         self.gates: dict[int, asyncio.Event] = {}
+        self.failures: dict[int, BaseException] = {}
         self.calls: list[dict[str, Any]] = []
 
     def queue(self, *responses: ChatResponse) -> FakeChatClient:
@@ -89,6 +97,8 @@ class FakeChatClient:
         gate = self.gates.get(index)
         if gate is not None:
             await gate.wait()
+        if index in self.failures:
+            raise self.failures[index]
         if not self.responses:
             raise AssertionError("FakeChatClient ran out of scripted responses")
         return self.responses.pop(0)
@@ -113,10 +123,12 @@ def tool_response(*calls: tuple[str, dict[str, Any]], ids: Sequence[str] | None 
     )
 
 
-def delegate_response(query: str, filler: str = "Let me check.") -> ChatResponse:
+def delegate_response(query: str, filler: str = "Let me check.", *, task: str | None = None) -> ChatResponse:
     arguments = {"query": query}
     if filler:
         arguments["filler_text"] = filler
+    if task is not None:
+        arguments["task"] = task
     return tool_response(("call_backend", arguments), ids=["fcall_1"])
 
 
@@ -212,6 +224,8 @@ class SessionHarness:
                     session_id=session_id,
                     seed_greeting=self.config.protocol.seed_history_with_client_greeting,
                     normalization=self.config.normalization,
+                    barge_in=frontend_verdict_settings(self.config),
+                    prompt_context=prompt_context(self.config),
                 )
                 self.runners.append(runner)
                 return runner

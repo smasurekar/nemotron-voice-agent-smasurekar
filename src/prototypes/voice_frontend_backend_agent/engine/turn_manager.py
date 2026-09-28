@@ -19,6 +19,16 @@ Rules, all on the audio clock except the two timeouts:
   agent task and merges the next transcript onto this one (``cancel_and_merge``).
   The runner's state is immutable, so the cancelled turn leaves no trace. After
   a tool call has left, the turn is never cancelled; new input is queued.
+* With ``frontend_verdict`` instead, confirmed speech while THINKING after the
+  frontend delegated opens a **review**: the filler audio stops, the agent task
+  keeps running, and a text result is staged (held). Each transcript starts a
+  frontend **probe** on the merged text; its verdict applies only when no
+  utterance still awaits its transcript. ``continue`` drops the new words and
+  keeps the running turn; ``new`` cancels it and carries the probe out (no second
+  frontend call); a probe timeout or error falls back to cancel-and-merge. Every
+  review closes: verdict, no transcript, automatic responses off, agent failure,
+  client cancel or session close. Speech before the delegation keeps
+  ``cancel_and_merge``.
 * Speech during a tool-call response in ``filler.mode: speak`` cancels only the
   filler's audio; the function calls are still emitted.
 * One response at a time; its jobs (filler item, answer item, function calls,
@@ -30,19 +40,25 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from loguru import logger
 
 from prototypes.voice_frontend_backend_agent.agent.filler import FillerLog, FillerTimingRecord, Stamp
-from prototypes.voice_frontend_backend_agent.agent.port import AgentPort, AgentReply, OutgoingCall
+from prototypes.voice_frontend_backend_agent.agent.port import (
+    VERDICT_CONTINUE,
+    AgentPort,
+    AgentReply,
+    OutgoingCall,
+    Probe,
+)
 from prototypes.voice_frontend_backend_agent.agent.sinks import EventLog
 from prototypes.voice_frontend_backend_agent.clock import WallClock
 from prototypes.voice_frontend_backend_agent.config import VoiceConfig
 from prototypes.voice_frontend_backend_agent.engine.output_path import OutputPath, PreparedSpeech
 from prototypes.voice_frontend_backend_agent.engine.playback import ResponseProgress
-from prototypes.voice_frontend_backend_agent.errors import HistoryRepairError, WireProtocolError
+from prototypes.voice_frontend_backend_agent.errors import HistoryRepairError, ProbeStateError, WireProtocolError
 from prototypes.voice_frontend_backend_agent.wire import server_events as ev
 from prototypes.voice_frontend_backend_agent.wire.response_writer import (
     ConversationOrder,
@@ -68,6 +84,35 @@ class UserTurn:
     filler: FillerTimingRecord | None = None
     filler_task: asyncio.Task[None] | None = None
     filler_shown: bool = False
+    #: The open barge-in review (``frontend_verdict``), if any.
+    review: _Review | None = None
+    #: Whether a review was ever opened for this turn (its filler is never spoken after that).
+    reviewed: bool = False
+
+
+@dataclass(slots=True)
+class _ProbeOutcome:
+    """A finished probe (``probe``), or why there is none (``fallback``: timeout / error)."""
+
+    text: str
+    basis: int
+    probe: Probe | None = None
+    fallback: str = ""
+    ready_mono: float = 0.0
+
+
+@dataclass(slots=True)
+class _Review:
+    """Speech during a delegated turn, waiting for the frontend's verdict (``frontend_verdict``)."""
+
+    opened: Stamp
+    filler_spoken: bool
+    #: Utterances started (``speech_started``) whose transcript has not arrived yet.
+    awaiting: int = 1
+    utterances: list[UserInput] = field(default_factory=list)
+    probe_task: asyncio.Task[None] | None = None
+    ready: _ProbeOutcome | None = None
+    staged: AgentReply | None = None
 
 
 @dataclass(slots=True)
@@ -184,6 +229,8 @@ class TurnManager:
             return "THINKING"
         if self._wait is not None:
             return "AWAITING_TOOLS"
+        if self._reviewing():
+            return "THINKING"
         if self.progress.active:
             return "SPEAKING"
         return "IDLE"
@@ -194,7 +241,13 @@ class TurnManager:
         return self._agent_task is not None and not self._agent_task.done()
 
     def _busy(self) -> bool:
-        return self.thinking or self._wait is not None or self.progress.generating
+        return self.thinking or self._wait is not None or self.progress.generating or self._reviewing()
+
+    def _reviewing(self) -> bool:
+        return self._turn is not None and self._turn.review is not None
+
+    def _auto_response(self) -> bool:
+        return self._config.protocol.auto_response and self._settings().turn_detection.create_response
 
     # -- inputs from the session ----------------------------------------------------
 
@@ -208,8 +261,19 @@ class TurnManager:
         if not self._config.barge_in.enabled or not settings.turn_detection.interrupt_response:
             return
         turn = self._turn
+        if turn is not None and turn.review is not None:
+            turn.review.awaiting += 1
+            self._log_awaiting(turn, "speech_started")
+            return
         if self.thinking and turn is not None and not turn.tools_out:
-            if self._config.barge_in.while_thinking == "cancel_and_merge":
+            mode = self._config.barge_in.while_thinking
+            if mode == "frontend_verdict":
+                if self._agent.in_flight is not None and self._auto_response():
+                    await self._open_review(turn)
+                else:
+                    # Before the delegation (or with automatic responses off): today's behaviour.
+                    await self._cancel_thinking(turn, merge=True)
+            elif mode == "cancel_and_merge":
                 await self._cancel_thinking(turn, merge=True)
             return
         if self.progress.active:
@@ -218,6 +282,10 @@ class TurnManager:
     def on_user_input(self, user_input: UserInput, *, from_audio: bool) -> None:
         """A committed utterance (ASR final) or a user text item."""
         text = user_input.text.strip()
+        turn = self._turn
+        if from_audio and turn is not None and turn.review is not None:
+            self._review_input(turn, turn.review, user_input, text)
+            return
         if self._merge_prefix:
             user_input.text = f"{self._merge_prefix} {text}".strip()
             self._merge_prefix = ""
@@ -297,6 +365,10 @@ class TurnManager:
     async def on_response_cancel(self) -> None:
         """Client ``response.cancel``: stop the active response (no-op when idle)."""
         turn = self._turn
+        if turn is not None and turn.review is not None and not turn.tools_out:
+            review = self._close_review(turn, "client_cancelled")
+            self._abandon_turn(turn, reason="client_cancelled", review=review)
+            return
         if self.thinking and turn is not None and not turn.tools_out:
             await self._cancel_thinking(turn, merge=False, reason="client_cancelled")
             return
@@ -342,6 +414,9 @@ class TurnManager:
         tasks = [self._agent_task]
         if self._turn is not None:
             tasks.append(self._turn.filler_task)
+            if self._turn.review is not None:
+                review = self._close_review(self._turn, "session_closed")
+                tasks.append(review.probe_task)
         if self._response is not None:
             tasks.extend([self._response.speak_task, self._response.task])
         for task in tasks:
@@ -357,7 +432,7 @@ class TurnManager:
 
     # -- turns ------------------------------------------------------------------------
 
-    def _start_turn(self, user_input: UserInput) -> None:
+    def _start_turn(self, user_input: UserInput, probe: Probe | None = None) -> None:
         self._turn_counter += 1
         turn = UserTurn(
             turn_id=self._turn_counter,
@@ -369,15 +444,19 @@ class TurnManager:
         )
         self._turn = turn
         self._log("agent_turn_start", turn_id=turn.turn_id, text=turn.text)
-        self._agent_task = asyncio.create_task(self._run_agent(turn, None), name=f"agent-turn-{turn.turn_id}")
+        self._agent_task = asyncio.create_task(
+            self._run_agent(turn, None, probe=probe), name=f"agent-turn-{turn.turn_id}"
+        )
 
-    async def _run_agent(self, turn: UserTurn, outputs: dict[str, str] | None) -> None:
+    async def _run_agent(self, turn: UserTurn, outputs: dict[str, str] | None, *, probe: Probe | None = None) -> None:
         started = self._clock.monotonic()
         try:
-            if outputs is None:
-                reply = await self._agent.respond(turn.text)
-            else:
+            if outputs is not None:
                 reply = await self._agent.resume(outputs)
+            elif probe is not None:
+                reply = await self._proceed(turn, probe)
+            else:
+                reply = await self._agent.respond(turn.text)
         except asyncio.CancelledError:
             raise
         except Exception as exc:  # noqa: BLE001 - an agent failure fails the response, not the session
@@ -394,8 +473,28 @@ class TurnManager:
             step="respond" if outputs is None else "resume",
             frontend=reply.usage.frontend.as_record(),
             backend=reply.usage.backend.as_record(),
+            **({"staged": True} if reply.staged else {}),
         )
+        if reply.staged:
+            review = turn.review
+            if review is None or self._turn is not turn:
+                # Staging always ends with the review; commit defensively rather than lose the answer.
+                self._agent.end_staging(commit=True)
+                self._deliver(turn, replace(reply, staged=False))
+                return
+            review.staged = reply
+            self._log("turn_staged", turn_id=turn.turn_id, chars=len(reply.text or ""))
+            self._maybe_settle_review(turn)
+            return
         self._deliver(turn, reply)
+
+    async def _proceed(self, turn: UserTurn, probe: Probe) -> AgentReply:
+        """Carry out a NEW verdict's probe; if the state moved on, answer the merged text normally."""
+        try:
+            return await self._agent.proceed(probe)
+        except ProbeStateError as exc:
+            self._log("barge_in_fallback", turn_id=turn.turn_id, reason="state_mismatch", error=str(exc))
+            return await self._agent.respond(turn.text)
 
     def _deliver(self, turn: UserTurn, reply: AgentReply) -> None:
         usage = self._usage(reply)
@@ -427,6 +526,12 @@ class TurnManager:
         response.jobs.put_nowait(_FinishJob(usage=usage, on_done=lambda: self._tool_response_done(wait)))
 
     def _fail_turn(self, turn: UserTurn, exc: BaseException) -> None:
+        if turn.review is not None:
+            review = self._close_review(turn, "agent_failed")
+            self._agent.end_staging(commit=False)
+            self._hand_on_utterances(turn, review)
+            # This runs inside the failing agent task: start the next turn once it is done.
+            asyncio.get_running_loop().call_soon(self._maybe_start_next)
         self._emit(
             ev.error(f"agent failed: {type(exc).__name__}: {exc}", code="agent_error", error_type="server_error")
         )
@@ -456,6 +561,201 @@ class TurnManager:
         self._log("thinking_cancelled", turn_id=turn.turn_id, merge=merge, reason=reason)
         if self._response is not None and not self._response.writer.done:
             await self._cancel_response(self._response, reason=reason)
+
+    # -- barge-in review (frontend_verdict) -------------------------------------------------
+
+    def on_utterance_dropped(self, item_id: str, *, reason: str) -> None:
+        """An utterance ended without a transcript (ASR failure, ``input_audio_buffer.clear``)."""
+        turn = self._turn
+        if turn is None or turn.review is None:
+            return
+        turn.review.awaiting = max(0, turn.review.awaiting - 1)
+        self._log_awaiting(turn, reason, item_id=item_id)
+        self._maybe_settle_review(turn)
+
+    async def _open_review(self, turn: UserTurn) -> None:
+        record = turn.filler
+        review = _Review(
+            opened=Stamp.now(self._clock, self._audio_now()),
+            filler_spoken=bool(record is not None and record.spoken),
+        )
+        turn.review = review
+        turn.reviewed = True
+        self._agent.begin_staging()
+        self._log("barge_in_review", turn_id=turn.turn_id, filler_spoken=review.filler_spoken, backend_running=True)
+        self._log_awaiting(turn, "speech_started")
+        if self.progress.active or (self._response is not None and not self._response.writer.done):
+            # Only the filler can be playing: the answer is never queued before the turn finishes.
+            await self._interrupt_output(reason="turn_detected")
+
+    def _review_input(self, turn: UserTurn, review: _Review, user_input: UserInput, text: str) -> None:
+        review.awaiting = max(0, review.awaiting - 1)
+        if not self._auto_response():
+            self._log_awaiting(turn, "transcript")
+            # No point to ask the frontend at: today's cancel-and-merge; the client's response.create
+            # then starts the merged turn.
+            review = self._close_review(turn, "auto_response_off")
+            prefix = self._review_text(turn, review)
+            self._abandon_turn(turn, reason="auto_response_off", review=review)
+            user_input.text = f"{prefix} {text}".strip()
+            self._pending_inputs.append(user_input)
+            return
+        if len(text) < max(1, self._config.turn_detection.min_transcript_chars):
+            self._log_awaiting(turn, "empty_transcript")
+            self._maybe_settle_review(turn)
+            return
+        user_input.text = text
+        review.utterances.append(user_input)
+        self._log_awaiting(turn, "transcript")
+        if review.probe_task is not None and not review.probe_task.done():
+            review.probe_task.cancel()
+            self._log("probe_discarded", turn_id=turn.turn_id, reason="superseded")
+        if review.ready is not None:
+            review.ready = None
+            self._log("probe_discarded", turn_id=turn.turn_id, reason="stale")
+        merged = self._review_text(turn, review)
+        review.probe_task = asyncio.create_task(
+            self._run_probe(turn, review, merged, len(review.utterances)), name=f"barge-in-probe-{turn.turn_id}"
+        )
+
+    async def _run_probe(self, turn: UserTurn, review: _Review, text: str, basis: int) -> None:
+        outcome = _ProbeOutcome(text=text, basis=basis)
+        timeout_s = self._config.barge_in.frontend_verdict.timeout_ms / 1000.0
+        try:
+            new_words = " ".join(item.text for item in review.utterances[:basis])
+            outcome.probe = await asyncio.wait_for(
+                self._agent.probe(text, new_words=new_words, filler_spoken=review.filler_spoken), timeout=timeout_s
+            )
+        except asyncio.CancelledError:
+            raise
+        except TimeoutError:
+            outcome.fallback = "timeout"
+        except Exception as exc:  # noqa: BLE001 - a failed probe falls back to cancel-and-merge
+            logger.warning(f"[{self._session_id}] barge-in probe failed: {type(exc).__name__}: {exc}")
+            outcome.fallback = "error"
+        outcome.ready_mono = self._clock.monotonic()
+        if turn.review is not review:
+            return
+        review.ready = outcome
+        self._maybe_settle_review(turn)
+
+    def _maybe_settle_review(self, turn: UserTurn) -> None:
+        """Apply the ready verdict once no utterance awaits its transcript (rule R3)."""
+        review = turn.review
+        if review is None or self._turn is not turn or review.awaiting > 0:
+            return
+        if not review.utterances:
+            probe_running = review.probe_task is not None and not review.probe_task.done()
+            if not probe_running:
+                self._apply_verdict(turn, review, None)
+            return
+        ready = review.ready
+        if ready is not None and ready.basis == len(review.utterances):
+            self._apply_verdict(turn, review, ready)
+
+    def _apply_verdict(self, turn: UserTurn, review: _Review, outcome: _ProbeOutcome | None) -> None:
+        probe = outcome.probe if outcome is not None else None
+        if outcome is None:
+            verdict, reason = VERDICT_CONTINUE, "no_transcript"
+        elif probe is not None:
+            verdict, reason = probe.verdict, probe.reason
+        else:
+            verdict, reason = "new_fallback", outcome.fallback
+        if turn.tools_out:
+            task_state = "tools_out"
+        elif review.staged is not None:
+            task_state = "staged"
+        else:
+            task_state = "running"
+        self._log(
+            "barge_in_verdict",
+            turn_id=turn.turn_id,
+            utterance=" ".join(item.text for item in review.utterances),
+            merged_text=outcome.text if outcome is not None else "",
+            verdict=verdict,
+            reason=reason,
+            running_query=probe.running_query if probe is not None else self._running_query(),
+            probe_query=probe.probe_query if probe is not None else "",
+            model_task=probe.model_task if probe is not None else None,
+            latency_ms=int(probe.latency_ms) if probe is not None else None,
+            held_ms=int(round((self._clock.monotonic() - outcome.ready_mono) * 1000)) if outcome else None,
+            frontend=probe.frontend.as_record() if probe is not None else None,
+            task_state=task_state,
+        )
+        self._close_review(turn, "no_transcript" if outcome is None else "verdict")
+        if verdict == VERDICT_CONTINUE:
+            self._agent.end_staging(commit=True)
+            if review.staged is not None:
+                self._log("staged_committed", turn_id=turn.turn_id, chars=len(review.staged.text or ""))
+                self._deliver(turn, replace(review.staged, staged=False))
+            elif not self.thinking and self._wait is None and not self.progress.active:
+                self._turn = None
+                self._maybe_start_next()
+            return
+        assert outcome is not None  # noqa: S101 - "continue" covers the no-transcript case
+        if turn.tools_out:
+            # The calls already went out and the turn is uncancellable: queue the new words, as today.
+            self._queued.append(self._joined_input(review, " ".join(item.text for item in review.utterances)))
+            self._maybe_start_next()
+            return
+        reason_key = "frontend_verdict_new" if probe is not None else "frontend_verdict_fallback"
+        self._abandon_turn(turn, reason=reason_key, review=review)
+        self._start_turn(self._joined_input(review, outcome.text), probe=probe)
+
+    def _close_review(self, turn: UserTurn, reason: str) -> _Review:
+        """Detach the open review (its probe is cancelled) and log why it closed."""
+        review = turn.review
+        assert review is not None  # noqa: S101 - callers check
+        turn.review = None
+        if review.probe_task is not None and not review.probe_task.done():
+            review.probe_task.cancel()
+        self._log("barge_in_closed", turn_id=turn.turn_id, reason=reason, awaiting=review.awaiting)
+        return review
+
+    def _abandon_turn(self, turn: UserTurn, *, reason: str, review: _Review) -> None:
+        """Drop a reviewed turn as a cancel would: task cancelled, staged result discarded, no trace."""
+        self._agent.end_staging(commit=False)
+        if review.staged is not None:
+            self._log("staged_discarded", turn_id=turn.turn_id, chars=len(review.staged.text or ""))
+        task = self._agent_task
+        if task is not None and not task.done():
+            task.cancel()
+        self._agent_task = None
+        if turn.filler_task is not None and not turn.filler_task.done():
+            turn.filler_task.cancel()
+        if turn.filler is not None and not turn.filler.emitted:
+            turn.filler.outcome = "cancelled"
+            self._emit_filler_record(turn.filler)
+        if self._turn is turn:
+            self._turn = None
+        self._log("thinking_cancelled", turn_id=turn.turn_id, merge=True, reason=reason)
+        response = self._response
+        if response is not None and not response.writer.done:
+            asyncio.create_task(self._cancel_response(response, reason="turn_detected"))  # noqa: RUF006
+
+    def _hand_on_utterances(self, turn: UserTurn, review: _Review) -> None:
+        """After an agent failure: the merged words start the next turn (as cancel-and-merge would)."""
+        merged = self._review_text(turn, review)
+        if review.awaiting > 0:
+            self._merge_prefix = merged
+        elif review.utterances:
+            self._queued.append(self._joined_input(review, merged))
+
+    def _review_text(self, turn: UserTurn, review: _Review) -> str:
+        return " ".join([turn.text, *(item.text for item in review.utterances)]).strip()
+
+    @staticmethod
+    def _joined_input(review: _Review, text: str) -> UserInput:
+        first, last = review.utterances[0], review.utterances[-1]
+        return UserInput(text=text, turn_start=first.turn_start, turn_end=last.turn_end, asr_final=last.asr_final)
+
+    def _running_query(self) -> str:
+        in_flight = self._agent.in_flight
+        return in_flight.query if in_flight is not None else ""
+
+    def _log_awaiting(self, turn: UserTurn, change: str, **extra: Any) -> None:
+        awaiting = turn.review.awaiting if turn.review is not None else 0
+        self._log("barge_in_awaiting", turn_id=turn.turn_id, awaiting=awaiting, change=change, **extra)
 
     # -- tools ------------------------------------------------------------------------
 
@@ -546,6 +846,9 @@ class TurnManager:
             self._log("filler_skipped", turn_id=turn.turn_id, reason="skipped_backend_fast")
             return
         record.would_have_spoken = True
+        if turn.reviewed:
+            self._log("filler_skipped", turn_id=turn.turn_id, reason="barge_in_review")
+            return
         if self._config.filler.mode != "speak" or not record.text.strip() or self._turn is not turn:
             return
         response = self._ensure_response()
@@ -671,7 +974,7 @@ class TurnManager:
             sent_ms=int(self.progress.sent_ms),
             heard_ms=int(self.progress.heard_ms),
         )
-        if not self.thinking and self._wait is None:
+        if not self.thinking and self._wait is None and not self._reviewing():
             self._turn = None
         self._maybe_start_next()
 
@@ -732,7 +1035,7 @@ class TurnManager:
         if self._response is response:
             self._response = None
         self.progress.generating = False
-        if self._wait is None and not self.thinking:
+        if self._wait is None and not self.thinking and not self._reviewing():
             self._turn = None
 
     def _repair(self, item_id: str) -> None:

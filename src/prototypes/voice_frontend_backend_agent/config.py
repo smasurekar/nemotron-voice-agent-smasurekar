@@ -33,7 +33,7 @@ import yaml
 
 from prototypes.text_frontend_backend_agent.config import Config, build_config, interpolate_env
 from prototypes.text_frontend_backend_agent.errors import ConfigError
-from prototypes.text_frontend_backend_agent.prompts import load_catalog
+from prototypes.text_frontend_backend_agent.prompts import load_catalog, render
 from prototypes.text_frontend_backend_agent.tools import ToolSpec
 from prototypes.voice_frontend_backend_agent.audio.formats import AudioFormat, parse_format
 from prototypes.voice_frontend_backend_agent.errors import VoiceConfigError
@@ -126,6 +126,7 @@ DEFAULTS: dict[str, Any] = {
         "history": "truncate_heard",
         "interruption_marker": " [interrupted by the user]",
         "while_thinking": "cancel_and_merge",
+        "frontend_verdict": {"note_key": "frontend_task_in_progress", "timeout_ms": 4000, "same_query_guard": True},
     },
     "asr": {**copy.deepcopy(_SPEECH_DEFAULTS), "interim_results": True},
     "tts": {
@@ -192,7 +193,7 @@ _ENUMS: dict[str, tuple[str, ...]] = {
     "protocol.resume_on": ("response_create", "last_function_output"),
     "turn_detection.vad": ("silero", "energy"),
     "barge_in.history": ("truncate_heard", "keep_full"),
-    "barge_in.while_thinking": ("cancel_and_merge", "ignore"),
+    "barge_in.while_thinking": ("cancel_and_merge", "ignore", "frontend_verdict"),
     "asr.source": ("catalog", "inline"),
     "tts.source": ("catalog", "inline"),
     "asr.catalog.services": ("local", "cloud"),
@@ -264,6 +265,16 @@ class TurnDetectionConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class FrontendVerdictConfig:
+    """``barge_in.frontend_verdict``: the frontend decides whether speech continues the running request."""
+
+    note_key: str = "frontend_task_in_progress"
+    timeout_ms: int = 4000
+    #: A probe delegation with the running request's query is ``continue``, whatever its ``task``.
+    same_query_guard: bool = True
+
+
+@dataclass(frozen=True, slots=True)
 class BargeInConfig:
     """What happens when the user talks over the agent."""
 
@@ -271,6 +282,12 @@ class BargeInConfig:
     history: str
     interruption_marker: str
     while_thinking: str
+    frontend_verdict: FrontendVerdictConfig = field(default_factory=FrontendVerdictConfig)
+
+    @property
+    def uses_frontend_verdict(self) -> bool:
+        """Whether speech during a delegated turn is judged by the frontend (``frontend_verdict``)."""
+        return self.enabled and self.while_thinking == "frontend_verdict"
 
 
 @dataclass(frozen=True, slots=True)
@@ -752,6 +769,65 @@ def _check_normalization_prompts(config: VoiceConfig) -> None:
             raise VoiceConfigError(f"{name}: prompt {key!r} is not in the catalog ({exc})") from None
 
 
+def prompt_context(config: VoiceConfig) -> dict[str, Any]:
+    """The Jinja variables of the prompt templates (``in_progress`` is added per frontend call)."""
+    return {
+        "barge_in": {
+            "while_thinking": config.barge_in.while_thinking,
+            "note_key": config.barge_in.frontend_verdict.note_key,
+        },
+        "filler": {"mode": config.filler.mode},
+    }
+
+
+#: A representative ``in_progress`` for the load-time template check.
+SAMPLE_IN_PROGRESS: dict[str, Any] = {
+    "query": "Check the status of the user's request.",
+    "filler": "One moment.",
+    "filler_heard": True,
+    "new_words": "okay",
+}
+
+
+def _check_prompt_templates(config: VoiceConfig) -> None:
+    """Render the frontend (and backend) templates once, so a broken template fails at load time."""
+    agent = config.agent
+    catalog = load_catalog(agent.prompts_path, agent.prompts.inline)
+    where = ", ".join(str(item) for item in config.source_files)
+    base = prompt_context(config)
+    samples: list[tuple[str, dict[str, Any]]] = [(agent.backend.prompt_key, base)]
+    if agent.frontend_enabled:
+        samples.append((agent.frontend.prompt_key, {**base, "in_progress": None}))
+        if config.barge_in.while_thinking == "frontend_verdict":
+            samples.append((agent.frontend.prompt_key, {**base, "in_progress": SAMPLE_IN_PROGRESS}))
+    for key, context in samples:
+        try:
+            render(catalog.get(key), agent, context, catalog=catalog, key=key)
+        except ConfigError as exc:
+            raise VoiceConfigError(f"{exc} (loaded from {where})") from None
+
+
+def _check_frontend_verdict(config: VoiceConfig) -> None:
+    if config.barge_in.while_thinking != "frontend_verdict":
+        return
+    where = ", ".join(str(item) for item in config.source_files)
+    if not config.agent.frontend_enabled:
+        raise VoiceConfigError(
+            "barge_in.while_thinking: frontend_verdict needs the frontend; it is not available with "
+            f"agent.mode: backend_only (loaded from {where})"
+        )
+    key = config.barge_in.frontend_verdict.note_key
+    if not key:
+        raise VoiceConfigError(f"barge_in.frontend_verdict.note_key must not be empty (loaded from {where})")
+    catalog = load_catalog(config.agent.prompts_path, config.agent.prompts.inline)
+    try:
+        catalog.get(key)
+    except ConfigError as exc:
+        raise VoiceConfigError(
+            f"barge_in.frontend_verdict.note_key: prompt {key!r} is not in the catalog ({exc}) (loaded from {where})"
+        ) from None
+
+
 def _text_agent_config(reader: _Reader, tools: ToolsConfig) -> tuple[Config, Path]:
     config_path = reader.str("agent.config").strip()
     if not config_path:
@@ -829,6 +905,11 @@ def build_voice_config(merged: dict[str, Any], files: Sequence[Path] = ()) -> Vo
             history=reader.enum("barge_in.history"),
             interruption_marker=reader.str("barge_in.interruption_marker"),
             while_thinking=reader.enum("barge_in.while_thinking"),
+            frontend_verdict=FrontendVerdictConfig(
+                note_key=reader.str("barge_in.frontend_verdict.note_key").strip(),
+                timeout_ms=reader.int("barge_in.frontend_verdict.timeout_ms", minimum=1),
+                same_query_guard=reader.bool("barge_in.frontend_verdict.same_query_guard"),
+            ),
         ),
         asr=_speech(reader, "asr"),
         tts=_speech(reader, "tts"),
@@ -851,6 +932,8 @@ def build_voice_config(merged: dict[str, Any], files: Sequence[Path] = ()) -> Vo
         warnings=tuple(warnings),
     )
     _check_normalization_prompts(config)
+    _check_frontend_verdict(config)
+    _check_prompt_templates(config)
     transcript = config.normalization.transcript
     language = RULESETS[transcript.ruleset].language
     if transcript.enabled and not config.asr.endpoint.language_code.lower().startswith(language):

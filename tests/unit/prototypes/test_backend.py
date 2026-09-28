@@ -7,9 +7,19 @@
 
 from __future__ import annotations
 
+import dataclasses
 import unittest
+from unittest import mock
 
-from _fakes import FakeChatClient, delegate_response, echo_tool, make_agent, text_response, tool_response
+from _fakes import (
+    FakeChatClient,
+    delegate_response,
+    echo_tool,
+    make_agent,
+    make_config,
+    text_response,
+    tool_response,
+)
 
 from prototypes.text_frontend_backend_agent import events
 from prototypes.text_frontend_backend_agent.backend import ERROR_TEXT, ITERATION_CAP_TEXT
@@ -43,6 +53,17 @@ class BackendTests(unittest.IsolatedAsyncioTestCase):
         _, session = await agent.send("b", session)
         assert [m.content for m in backend.last_messages if m.role == "user"] == ["second request"]
         assert len(session.backend_history) == 0
+
+    async def test_simulated_delay_sleeps_once_per_delegation(self) -> None:
+        config = make_config()
+        config = dataclasses.replace(config, backend=dataclasses.replace(config.backend, simulated_delay_s=2.0))
+        frontend = FakeChatClient([delegate_response("look it up")])
+        backend = FakeChatClient([tool_response(("lookup", {"value": "x"})), text_response("done")])
+        agent, _ = make_agent(frontend=frontend, backend=backend, tools=[echo_tool()], config=config)
+        with mock.patch("prototypes.text_frontend_backend_agent.agent.asyncio.sleep") as sleep:
+            turn, _ = await agent.send("find x", agent.new_session())
+        assert turn.final_text == "done"
+        sleep.assert_awaited_once_with(2.0)
 
     async def test_iteration_cap(self) -> None:
         backend = FakeChatClient([tool_response(("lookup", {"value": "x"})) for _ in range(5)])

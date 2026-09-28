@@ -12,9 +12,11 @@ never the filler in between.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from dataclasses import replace
+import asyncio
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, replace
 from pathlib import Path
+from typing import Any
 
 from prototypes.text_frontend_backend_agent import events
 from prototypes.text_frontend_backend_agent.backend import (
@@ -38,6 +40,7 @@ from prototypes.text_frontend_backend_agent.errors import ToolProtocolError
 from prototypes.text_frontend_backend_agent.events import EventSink, InternalEvent, build_sink
 from prototypes.text_frontend_backend_agent.frontend import (
     ContractFallback,
+    Decision,
     Delegate,
     DirectAnswer,
     FrontendAgent,
@@ -45,10 +48,24 @@ from prototypes.text_frontend_backend_agent.frontend import (
 from prototypes.text_frontend_backend_agent.history import History
 from prototypes.text_frontend_backend_agent.llm import ChatClient, OpenAIChatClient
 from prototypes.text_frontend_backend_agent.messages import AgentTurn, Message, ToolResult, UsageTotals
-from prototypes.text_frontend_backend_agent.prompts import load_catalog, render
+from prototypes.text_frontend_backend_agent.prompts import load_catalog
 from prototypes.text_frontend_backend_agent.protocol import validate_tool_results
 from prototypes.text_frontend_backend_agent.session import PendingTurn, SessionState
 from prototypes.text_frontend_backend_agent.tools import InternalToolDriver, ToolRegistry, ToolSpec
+
+
+@dataclass(frozen=True, slots=True)
+class FrontendStep:
+    """The frontend's decision for one user message, not yet carried out.
+
+    ``session`` is the state the decision was made on; :meth:`FrontendBackendAgent.continue_turn`
+    carries the decision out on exactly that state.
+    """
+
+    user_text: str
+    session: SessionState
+    decision: Decision
+    totals: UsageTotals
 
 
 class FrontendBackendAgent:
@@ -84,37 +101,31 @@ class FrontendBackendAgent:
 
     async def send(self, text: str, session: SessionState) -> tuple[AgentTurn, SessionState]:
         """Process one user message and return the single outward payload."""
-        session = self._resolve_pending_before_user_message(session)
         if not self._config.frontend_enabled:
+            session = self._resolve_pending_before_user_message(session)
             return await self._run_backend_only(text, session)
-        return await self._run_paired(text, session)
+        return await self.continue_turn(await self.decide_turn(text, session))
 
-    async def send_tool_results(
-        self, results: Sequence[ToolResult], session: SessionState
-    ) -> tuple[AgentTurn, SessionState]:
-        """Resume a suspended turn with caller-executed tool results."""
-        pending = session.pending
-        if pending is None:
-            raise ToolProtocolError("no tool calls are outstanding")
-        ordered = validate_tool_results(
-            pending.outstanding, results, on_incomplete=self._config.backend.tools.on_incomplete_results
-        )
-        return await self._drive(
-            ToolResults(results=ordered),
-            pending.backend_history,
-            session,
-            user_message=pending.user_message,
-            delegation_query=pending.delegation_query,
-            frontend_assistant=pending.frontend_assistant,
-            totals=UsageTotals(),
-            iterations=pending.iterations,
-        )
+    async def decide_turn(
+        self, text: str, session: SessionState, *, in_progress: Mapping[str, Any] | None = None
+    ) -> FrontendStep:
+        """Run only the frontend for one user message (paired mode).
 
-    # -- turn routing -----------------------------------------------------
-
-    async def _run_paired(self, text: str, session: SessionState) -> tuple[AgentTurn, SessionState]:
+        The session is not changed and no delegation, filler or backend event is
+        emitted; :meth:`continue_turn` does both. ``in_progress`` is passed to
+        :meth:`FrontendAgent.decide`; without it the request is exactly the one
+        :meth:`send` makes.
+        """
         assert self._frontend is not None  # noqa: S101 - guaranteed by build_agent for this mode
-        decision, totals = await self._frontend.decide(text, session.frontend_history, session_id=session.session_id)
+        session = self._resolve_pending_before_user_message(session)
+        decision, totals = await self._frontend.decide(
+            text, session.frontend_history, session_id=session.session_id, in_progress=in_progress
+        )
+        return FrontendStep(user_text=text, session=session, decision=decision, totals=totals)
+
+    async def continue_turn(self, step: FrontendStep) -> tuple[AgentTurn, SessionState]:
+        """Carry out a frontend decision: finish a direct answer, or delegate and run the backend."""
+        text, session, decision, totals = step.user_text, step.session, step.decision, step.totals
         if isinstance(decision, DirectAnswer):
             self._sink.emit(InternalEvent(events.DIRECT_ANSWER, session.session_id, {"text": decision.text}))
             return self._finish_direct(decision.text, text, session, totals)
@@ -140,6 +151,29 @@ class FrontendBackendAgent:
             totals=totals,
             iterations=0,
         )
+
+    async def send_tool_results(
+        self, results: Sequence[ToolResult], session: SessionState
+    ) -> tuple[AgentTurn, SessionState]:
+        """Resume a suspended turn with caller-executed tool results."""
+        pending = session.pending
+        if pending is None:
+            raise ToolProtocolError("no tool calls are outstanding")
+        ordered = validate_tool_results(
+            pending.outstanding, results, on_incomplete=self._config.backend.tools.on_incomplete_results
+        )
+        return await self._drive(
+            ToolResults(results=ordered),
+            pending.backend_history,
+            session,
+            user_message=pending.user_message,
+            delegation_query=pending.delegation_query,
+            frontend_assistant=pending.frontend_assistant,
+            totals=UsageTotals(),
+            iterations=pending.iterations,
+        )
+
+    # -- turn routing -----------------------------------------------------
 
     async def _run_backend_only(self, text: str, session: SessionState) -> tuple[AgentTurn, SessionState]:
         return await self._drive(
@@ -167,6 +201,9 @@ class FrontendBackendAgent:
     ) -> tuple[AgentTurn, SessionState]:
         """Run the backend to a final answer, or suspend for the caller."""
         tools_config = self._config.backend.tools
+        delay_s = self._config.backend.simulated_delay_s
+        if delay_s > 0 and isinstance(first_input, Query):
+            await asyncio.sleep(delay_s)  # testing aid: simulate a slow backend once per delegation
         current: BackendInput = first_input
         while True:
             step, history, step_totals = await self._backend.step(current, history, session_id=session.session_id)
@@ -347,11 +384,14 @@ def assemble_agent(
     event_sink: EventSink | None = None,
     frontend_client: ChatClient | None = None,
     backend_client: ChatClient | None = None,
+    prompt_context: Mapping[str, Any] | None = None,
 ) -> FrontendBackendAgent:
     """Assemble an agent from an already-loaded config and injected clients.
 
     This is the seam tests and the future tau2-bench adapter use: swap the chat
-    clients, keep every rule in the scaffold identical.
+    clients, keep every rule in the scaffold identical. ``prompt_context`` holds
+    the Jinja variables of the prompt templates (the voice agent passes its
+    configuration); the frontend template also always gets ``in_progress``.
     """
     if backend_client is None:
         raise ValueError("assemble_agent requires a backend chat client")
@@ -360,7 +400,7 @@ def assemble_agent(
     registry = ToolRegistry(tools, max_result_chars=config.backend.tools.max_result_chars)
     backend = BackendAgent(
         client=backend_client,
-        system_prompt=backend_system_prompt(catalog, config),
+        system_prompt=backend_system_prompt(catalog, config, prompt_context),
         registry=registry,
         sink=sink,
     )
@@ -370,9 +410,12 @@ def assemble_agent(
             raise ValueError("frontend_backend mode requires a frontend chat client")
         frontend = FrontendAgent(
             client=frontend_client,
-            system_prompt=render(catalog.get(config.frontend.prompt_key), config),
+            template=catalog.get(config.frontend.prompt_key),
             config=config,
             sink=sink,
+            catalog=catalog,
+            base_context=prompt_context,
+            prompt_key=config.frontend.prompt_key,
         )
     return FrontendBackendAgent(
         config=config,

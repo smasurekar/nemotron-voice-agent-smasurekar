@@ -32,10 +32,19 @@ from loguru import logger
 from prototypes.text_frontend_backend_agent.llm import OpenAIChatClient
 from prototypes.voice_frontend_backend_agent.agent.filler import FillerLog
 from prototypes.voice_frontend_backend_agent.agent.port import AgentPort
-from prototypes.voice_frontend_backend_agent.agent.runner import AgentClients, TextAgentRunner
+from prototypes.voice_frontend_backend_agent.agent.runner import (
+    AgentClients,
+    TextAgentRunner,
+    frontend_verdict_settings,
+)
 from prototypes.voice_frontend_backend_agent.agent.scripted import ScriptedAgentPort
 from prototypes.voice_frontend_backend_agent.agent.sinks import EventLog, SessionRoutingSink
-from prototypes.voice_frontend_backend_agent.config import DEFAULT_CONFIG_PATH, VoiceConfig, load_voice_config
+from prototypes.voice_frontend_backend_agent.config import (
+    DEFAULT_CONFIG_PATH,
+    VoiceConfig,
+    load_voice_config,
+    prompt_context,
+)
 from prototypes.voice_frontend_backend_agent.engine.session import RealtimeSession
 from prototypes.voice_frontend_backend_agent.speech.factory import build_speech_services
 from prototypes.voice_frontend_backend_agent.speech.ports import SpeechServices
@@ -83,6 +92,7 @@ def build_clients(config: VoiceConfig) -> AgentClients:
 
 def _agent_factory(state: _AppState) -> Any:
     config, options = state.config, state.options
+    barge_in = frontend_verdict_settings(config)
 
     def factory(session_id: str) -> AgentPort:
         if options.stub_agent == "scripted":
@@ -102,6 +112,8 @@ def _agent_factory(state: _AppState) -> Any:
             session_id=session_id,
             seed_greeting=config.protocol.seed_history_with_client_greeting,
             normalization=config.normalization,
+            barge_in=barge_in,
+            prompt_context=prompt_context(config),
         )
 
     return factory
@@ -152,6 +164,7 @@ def build_app(
         logger.info(
             f"voice agent ready: {ws_scheme}://{config.server.host}:{config.server.port}{config.server.path} "
             f"(mode={mode}, filler={config.filler.mode}, tools={config.tools.source}, "
+            f"barge_in={config.barge_in.while_thinking}, "
             f"stub_speech={state.options.stub_speech}, stub_agent={state.options.stub_agent or '-'})"
         )
         try:

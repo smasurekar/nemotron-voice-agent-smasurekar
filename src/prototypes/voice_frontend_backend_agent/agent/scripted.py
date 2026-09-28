@@ -8,6 +8,9 @@ client tool and then answers, turn 2 answers, and turn 3 transfers the call by
 calling ``transfer_to_human_agents`` when the client offered it. A JSON script
 can replace the default; each step is ``{"say": "..."}`` or
 ``{"call": "<tool>", "arguments": {...}, "then_say": "..."}``.
+
+It never delegates, so it has no ``in_flight`` turn and a barge-in review
+(``barge_in.while_thinking: frontend_verdict``) never opens for it.
 """
 
 from __future__ import annotations
@@ -18,7 +21,8 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from prototypes.voice_frontend_backend_agent.agent.port import AgentReply, OutgoingCall
+from prototypes.voice_frontend_backend_agent.agent.port import AgentReply, InFlight, OutgoingCall, Probe
+from prototypes.voice_frontend_backend_agent.errors import ProbeStateError
 
 TRANSFER_TOOL = "transfer_to_human_agents"
 
@@ -117,3 +121,22 @@ class ScriptedAgentPort:
     def seed_assistant(self, text: str) -> None:
         """Record a greeting."""
         self.history.append(("assistant", text))
+
+    @property
+    def in_flight(self) -> InFlight | None:
+        """Never delegates."""
+        return None
+
+    async def probe(self, text: str, *, new_words: str, filler_spoken: bool) -> Probe:
+        """Unreachable: a review needs a delegated turn."""
+        raise ProbeStateError("the scripted agent never delegates, so there is nothing to probe")
+
+    async def proceed(self, probe: Probe) -> AgentReply:
+        """Unreachable: see :meth:`probe`."""
+        raise ProbeStateError("the scripted agent never delegates, so there is nothing to proceed with")
+
+    def begin_staging(self) -> None:
+        """Nothing is ever staged."""
+
+    def end_staging(self, *, commit: bool) -> None:
+        """Nothing is ever staged."""

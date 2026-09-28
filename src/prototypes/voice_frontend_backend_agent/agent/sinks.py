@@ -34,6 +34,11 @@ _CONTENT_KEYS = frozenset(
         "output",
         "calls",
         "rejected_text",
+        # barge-in frontend verdict (user speech and the running/probe queries)
+        "utterance",
+        "merged_text",
+        "running_query",
+        "probe_query",
         # normalization events (identifiers are user content)
         "raw",
         "spans",

@@ -40,7 +40,7 @@ class ShippedConfigTests(unittest.TestCase):
         self.addCleanup(patcher.stop)
 
     def test_every_shipped_file_loads_identically_from_two_working_directories(self) -> None:
-        self.assertEqual(len(SHIPPED), 9)
+        self.assertEqual(len(SHIPPED), 13)
         with tempfile.TemporaryDirectory() as elsewhere:
             for path in SHIPPED:
                 with self.subTest(path=path.name):
@@ -81,6 +81,10 @@ class ShippedConfigTests(unittest.TestCase):
         self.assertEqual(browser.tools.source, "config")  # a browser cannot execute tools
         self.assertTrue(browser.protocol.greeting_enabled)
         self.assertTrue(browser.audio.pace_output)
+        slow = load_voice_config(profiles / "browser_demo_slow_backend.yaml")
+        self.assertEqual(slow.filler.mode, "speak")  # the frontend's filler is heard
+        self.assertEqual(slow.agent.backend.simulated_delay_s, 5.0)
+        self.assertEqual(browser.agent.backend.simulated_delay_s, 0.0)
 
     def test_nvcf_without_api_key_fails_at_load_time(self) -> None:
         with (

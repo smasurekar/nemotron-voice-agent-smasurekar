@@ -33,3 +33,7 @@ class SpeechServiceError(VoiceAgentError):
 
 class HistoryRepairError(VoiceAgentError):
     """The stored history does not have the shape or text a barge-in repair expects."""
+
+
+class ProbeStateError(VoiceAgentError):
+    """A barge-in probe cannot run or be carried out (no delegated turn, or the state changed since)."""

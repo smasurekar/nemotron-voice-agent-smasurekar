@@ -50,6 +50,7 @@ backend:
     guidance_key: auto          # auto -> catalog key "backend_history_guidance_<include>"; "" -> no guidance
                                 # (the context note "backend_history_context_<include>" is always added when enabled)
     request_key: backend_history_request     # catalog template for the per-turn backend request
+  simulated_delay_s: 0          # testing aid: sleep this long before each delegated backend turn (0 = off)
   llm:
     model: "${BACKEND_LLM_MODEL:-nvidia/nvidia/nemotron-3-ultra}"
     base_url: "${BACKEND_LLM_BASE_URL:-https://inference-api.nvidia.com/v1}"

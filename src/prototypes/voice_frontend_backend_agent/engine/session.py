@@ -207,8 +207,10 @@ class RealtimeSession:
         elif isinstance(command, ce.AudioCommit):
             await self._on_commit()
         elif isinstance(command, ce.AudioClear):
-            await self._cancel_utterance()
+            cleared = await self._cancel_utterance()
             self.input.clear()
+            if cleared is not None:
+                self.turns.on_utterance_dropped(cleared, reason="audio_cleared")
             self.writer.emit(ev.audio_cleared())
         elif isinstance(command, ce.ItemTruncate):
             self.turns.on_truncate(command.item_id, command.content_index, command.audio_end_ms)
@@ -344,6 +346,7 @@ class RealtimeSession:
         except Exception as exc:  # noqa: BLE001 - one failed utterance must not end the session
             logger.error(f"[{self.session_id}] ASR failed for {utterance.item_id}: {exc}")
             self.writer.emit(ev.input_transcription_failed(utterance.item_id, str(exc)))
+            self.turns.on_utterance_dropped(utterance.item_id, reason="asr_failed")
             return
         asr_final = Stamp.now(self._clock, self.input.clock.now_ms)
         self._log(
@@ -385,11 +388,15 @@ class RealtimeSession:
             if isinstance(event, SpeechEnd):
                 self._on_speech_end(event.end_ms)
 
-    async def _cancel_utterance(self) -> None:
-        if self._utterance is not None:
-            with contextlib.suppress(Exception):
-                await self._utterance.stream.cancel()
-            self._utterance = None
+    async def _cancel_utterance(self) -> str | None:
+        """Cancel the open utterance; its ``item_id``, or ``None`` when there was none."""
+        utterance = self._utterance
+        if utterance is None:
+            return None
+        with contextlib.suppress(Exception):
+            await utterance.stream.cancel()
+        self._utterance = None
+        return utterance.item_id
 
     # -- helpers --------------------------------------------------------------------------
 

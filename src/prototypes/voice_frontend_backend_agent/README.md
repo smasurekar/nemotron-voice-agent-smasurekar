@@ -40,7 +40,8 @@ client ─► function_call_output + response.create ─► send_tool_results() 
 - **Barge-in.** Confirmed user speech while a response is active cancels generation, even when nothing
   unplayed is buffered. Every stored copy of the answer is cut to what the user heard, plus
   `" [interrupted by the user]"`. With the backend history on, the backend's copy is repaired too: both
-  histories are rewritten, or neither is.
+  histories are rewritten, or neither is. Speech while the agent is still thinking follows
+  `barge_in.while_thinking`. Refer to [Barge-in while thinking](#barge-in-while-thinking).
 
 ## Run it (host-native, from the repository root)
 
@@ -97,6 +98,10 @@ Filler that the server generates but does not speak (`filler.mode: log_only`) is
 | `backend_only.yaml` | `agent.overrides.agent.mode: backend_only`; backend history flag pinned off |
 | `cloud_speech.yaml` | ASR and TTS through NVCF (`NVIDIA_API_KEY` required, checked at load time) |
 | `live_demo.yaml` | audible filler, greeting, internal demo tools, real-time output pacing |
+| `browser_demo_slow_backend.yaml` | `browser_demo.yaml` plus audible filler and a simulated slow backend (`FBA_BACKEND_DELAY_S`, default 5 s) |
+| `browser_demo_frontend_verdict.yaml` | extends `browser_demo_slow_backend.yaml`; only change: `barge_in.while_thinking: frontend_verdict` |
+| `tau3_eval_frontend_verdict.yaml` | extends `tau3_eval.yaml`; only change: `barge_in.while_thinking: frontend_verdict` |
+| `tau3_eval_frontend_verdict_speak.yaml` | extends `tau3_eval_frontend_verdict.yaml`; only change: `filler.mode: speak` (the τ³ user hears the filler; not comparable with the silent arms for Pass^1) |
 
 Loading rules:
 
@@ -114,6 +119,7 @@ Environment knobs:
 | `FBA_ASR_SERVER`, `FBA_TTS_SERVER` | catalog | replace the catalog server, e.g. `localhost:50051` host-native |
 | `FBA_VOICE_EVENT_LOG` | off | JSONL event log (voice events, the text agent's internal events, timing). Each `agent_turn_done` has `step` (`respond`/`resume`) and per-role `frontend`/`backend` usage: `calls`, `prompt_tokens`, `completion_tokens`, `cached_tokens`, `total_tokens`, `latency_ms`. `session_start` has `backend_history` (`off` or the `include` value), `backend_history_guidance` (the guidance key, or empty) and `normalization` (`transcript`, `tool_arguments`, `retry_guard`). Each delegated turn has a `backend_context` event: `enabled`, `include`, `guidance`, `history_groups`, `history_messages`, `earlier_turns`, `request_chars` |
 | `FBA_BACKEND_HISTORY` | `false` | paired backend conversation history (text `agent.yaml`); profiles that pin it ignore this |
+| `FBA_BACKEND_DELAY_S` | `5` | `browser_demo_slow_backend.yaml` only: seconds the backend sleeps before each delegated turn (`backend.simulated_delay_s`, default `0` elsewhere); `0` turns it off |
 | `FBA_FILLER_LOG` | off | JSONL filler timing records (always also in loguru and the event log) |
 | `FBA_VOICE_PROMPTS` | `prompts.voice.yaml` | voice prompt catalog |
 | `FBA_VOICE_TOKEN` | empty | bearer token when `server.require_bearer: true` |
@@ -168,6 +174,106 @@ PYTHONPATH=src uv run python -m prototypes.voice_frontend_backend_agent.cli.norm
 
 Design and rules: [`misc/prototypes/voice-frontend-backend-agent-normalization-plan.md`](../../../misc/prototypes/voice-frontend-backend-agent-normalization-plan.md).
 
+### Barge-in while thinking
+
+`barge_in.while_thinking` decides what user speech does while a turn is still thinking and no tool call has
+gone out yet. After a tool call has gone out, the turn is never cancelled and new input is queued.
+
+| Value | Behaviour |
+|---|---|
+| `cancel_and_merge` (default) | cancels the running turn at `speech_started` and merges the next transcript onto its text |
+| `ignore` | never cancels the running turn |
+| `frontend_verdict` | keeps the running turn going and lets the frontend decide from the transcript (opt-in) |
+
+With `frontend_verdict`, speech after the frontend has delegated opens a review. At `speech_started`, only the
+filler audio stops; the backend keeps working. After the transcript arrives, the frontend is asked again, with
+the running turn's text plus the new words and a note describing the running request. Its `call_backend` then
+also carries `task`:
+
+- `continue`: the words only acknowledge or restate the running request. Nothing changes: the running answer
+  is spoken once, the filler is not repeated, and the new words are not added to the history.
+- `new`: the words add, change, or replace something. The running turn is cancelled, and the frontend's
+  decision is carried out on the merged text. The result equals `cancel_and_merge`, without an extra frontend
+  call.
+
+A direct answer, a contract fallback, or a missing or invalid `task` counts as `new`. With `same_query_guard`
+on (the default), a `call_backend` whose `query` equals the running query counts as `continue` with reason
+`same_query`, whatever `task` says. The comparison ignores case, punctuation, and extra whitespace. A timeout
+or error falls back to the `cancel_and_merge` path. No verdict is applied while another utterance still awaits its
+transcript. A text answer that finishes during the review is held until the verdict. Tool calls are never held.
+Speech before the frontend has delegated keeps the `cancel_and_merge` behaviour.
+
+The settings are in `config/voice_agent.yaml`:
+
+```yaml
+barge_in:
+  while_thinking: frontend_verdict
+  frontend_verdict:                         # used only with while_thinking: frontend_verdict
+    note_key: frontend_task_in_progress     # prompt catalog key (prompts.voice.yaml)
+    timeout_ms: 4000                        # frontend deadline; on timeout, the cancel-and-merge path
+    same_query_guard: true                  # an unchanged query counts as continue (reason same_query)
+```
+
+`frontend_verdict` with `agent.mode: backend_only`, a `note_key` missing from the prompt catalog, or
+`timeout_ms` of 0 or less fails at load time. `profiles/browser_demo_frontend_verdict.yaml` and
+`profiles/tau3_eval_frontend_verdict.yaml` turn it on.
+
+Voice prompts are Jinja 2 templates, rendered by the text package before the `{persona}`-style placeholders.
+`{% include "<key>" %}` includes another prompt catalog key. The voice runner provides these template
+variables:
+
+| Variable | Value |
+|---|---|
+| `barge_in.while_thinking` | `cancel_and_merge`, `ignore`, or `frontend_verdict` |
+| `barge_in.note_key` | the catalog key of the in-progress note |
+| `filler.mode` | `speak` or `log_only` |
+| `in_progress` | `None` on normal turns; on a review's frontend call, a mapping with `query`, `filler`, `filler_heard`, and `new_words` |
+
+The `frontend` prompt in `prompts.voice.yaml` changes only when `in_progress` is set: it describes the
+three-field `call_backend`, excludes thanks and acknowledgements from Direct mode, and includes the note. The
+note quotes the new words, and tells the frontend to copy the running query word for word and use `task:
+continue` when nothing changed. Undefined variables are errors. With `frontend_verdict`, the frontend template
+is rendered at load time with and without `in_progress`, so a broken template fails at startup.
+
+The review logs these events:
+
+| Event | When |
+|---|---|
+| `barge_in_review` | a review opens (`filler_spoken`, `backend_running`) |
+| `barge_in_awaiting` | the count of utterances without a transcript changes (`awaiting`, `change`) |
+| `barge_in_verdict` | a verdict is applied: `verdict` (`continue`, `new`, `new_fallback`), `reason`, `utterance`, `merged_text`, `running_query`, `probe_query`, `model_task` (the `task` the model sent, `""` when missing or invalid, `null` when no probe answered), `latency_ms`, `held_ms`, `frontend` usage, `task_state` |
+| `barge_in_closed` | every review close, with `reason` (`verdict`, `no_transcript`, `auto_response_off`, `agent_failed`, `client_cancelled`, `session_closed`) |
+| `probe_discarded` | a newer utterance supersedes a frontend call, or makes its verdict stale |
+| `turn_staged`, `staged_committed`, `staged_discarded` | a text answer is held during a review, then spoken (`continue`) or dropped (`new`) |
+| `barge_in_fallback` | a `new` verdict could not be carried out because the conversation state changed (`reason: state_mismatch`); the merged text is answered normally instead |
+
+`thinking_cancelled` has four more reasons: `frontend_verdict_new`, `frontend_verdict_fallback`,
+`auto_response_off` and `client_cancelled`. `filler_skipped` has the reason `barge_in_review`.
+`logging.redact_content: true` also drops `utterance`, `merged_text`, `running_query` and `probe_query`.
+
+The `barge_in_verdict` reasons are `model`, `same_query`, `task_invalid`, `direct_answer`, `contract_fallback`,
+`timeout`, `error`, `state_mismatch`, and `no_transcript`. When `reason` is `same_query`, `model_task` shows
+the model's own choice, so you can count how often the guard overrode it.
+
+To measure a prompt change before you redeploy, replay the recorded verdicts against the live frontend model.
+The replay reads each `barge_in_verdict` in an unredacted event log, plus optional fixed cases from `--cases`,
+and runs them with the current templates and guard setting. It writes the old and new verdicts as JSONL, and
+prints accuracy against the expected verdict, guard overrides, and probe latency p50 and p95 to stderr.
+
+```bash
+PYTHONPATH=src uv run python -m prototypes.voice_frontend_backend_agent.cli.verdict_replay \
+  --events logs/fba_voice_web_events.jsonl \
+  --config src/prototypes/voice_frontend_backend_agent/config/profiles/browser_demo_frontend_verdict.yaml \
+  [--model pine-browser] [--cases misc/prototypes/verdict_cases.jsonl] [--guard off] --out /tmp/verdict_replay.jsonl
+```
+
+`--guard off` (or `on`) overrides the profile's `same_query_guard`, so `--guard off` measures the prompt alone.
+Each probe starts from an empty conversation, and the frontend's capability list comes from the profile's config
+tools only. The fixed cases in `misc/prototypes/verdict_cases.jsonl` are the acknowledgements of the first live
+sessions (expected `continue`) and corrections, additions and cancellations (expected `new`).
+
+Design and rules: [`misc/prototypes/voice-frontend-backend-agent-barge-in-frontend-verdict-plan.md`](../../../misc/prototypes/voice-frontend-backend-agent-barge-in-frontend-verdict-plan.md).
+
 ## Protocol differences from OpenAI
 
 | Topic | This server |
@@ -202,7 +308,7 @@ a JSONL file.
 | `engine/` | input path, segmenter, output path, playback tracker, turn manager, session |
 | `agent/` | runner over `assemble_agent`, tool mapping, instructions, filler tap, history repair, sinks |
 | `normalization/` | identifier rules (`en` ruleset), transcript and tool-argument normalizers, frontend prompt note |
-| `cli/` | `voice_chat`, `tau2_replay`, `normalization_replay`, and `tau2_gates/` (manual tau3 gates, run with tau2's interpreter) |
+| `cli/` | `voice_chat`, `tau2_replay`, `normalization_replay`, `verdict_replay`, and `tau2_gates/` (manual tau3 gates, run with tau2's interpreter) |
 
 `wire/`, `agent/`, `audio/` and the engine state machines import no Pipecat, Riva or FastAPI (a test enforces
 this). The text prototype is imported and never modified.

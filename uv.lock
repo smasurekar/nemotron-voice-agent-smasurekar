@@ -1422,6 +1422,7 @@ version = "2.2.0"
 source = { virtual = "." }
 dependencies = [
     { name = "imageio-ffmpeg" },
+    { name = "jinja2" },
     { name = "langchain-nvidia-ai-endpoints" },
     { name = "loguru" },
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
@@ -1491,6 +1492,7 @@ eval = [
 requires-dist = [
     { name = "fastapi", marker = "extra == 'prototypes-voice'", specifier = ">=0.141.1" },
     { name = "imageio-ffmpeg", specifier = ">=0.5.1" },
+    { name = "jinja2", specifier = ">=3.1" },
     { name = "langchain-nvidia-ai-endpoints", specifier = ">=1.2.1" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "loguru", marker = "extra == 'prototypes-voice'", specifier = ">=0.7.3" },

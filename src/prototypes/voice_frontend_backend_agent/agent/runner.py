@@ -15,18 +15,29 @@ transcript hook on the text of each agent turn, and the tool-argument hook on
 every batch of backend tool calls before it reaches the client. Calls answered
 locally never leave the runner; their results are fed back to the agent at once
 (all calls local) or merged with the client's outputs on ``resume``.
+
+With ``barge_in.while_thinking: frontend_verdict`` the runner also serves the
+barge-in review: it records the running turn's delegation (``in_flight``), asks
+the frontend about speech during that turn (``probe``) without touching the
+state, carries a probe out on the state it was made on (``proceed``), and can
+hold (stage) the running turn's text result until the verdict. Staging is bound
+to the one call in flight when it began; every new call starts with it off.
 """
 
 from __future__ import annotations
 
+import re
+import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Any
 
-from prototypes.text_frontend_backend_agent.agent import FrontendBackendAgent, assemble_agent
+from prototypes.text_frontend_backend_agent.agent import FrontendBackendAgent, FrontendStep, assemble_agent
 from prototypes.text_frontend_backend_agent.backend_context import backend_system_prompt
 from prototypes.text_frontend_backend_agent.config import Config
+from prototypes.text_frontend_backend_agent.delegation import TASK_CONTINUE
 from prototypes.text_frontend_backend_agent.events import EventSink, InternalEvent
+from prototypes.text_frontend_backend_agent.frontend import Delegate, DirectAnswer
 from prototypes.text_frontend_backend_agent.llm import ChatClient
 from prototypes.text_frontend_backend_agent.messages import (
     AgentTurn,
@@ -41,9 +52,18 @@ from prototypes.text_frontend_backend_agent.session import SessionState
 from prototypes.text_frontend_backend_agent.tools import ToolSpec
 from prototypes.voice_frontend_backend_agent.agent.history_repair import repair_interrupted_answer
 from prototypes.voice_frontend_backend_agent.agent.instructions import ResolvedInstructions, session_agent_config
-from prototypes.voice_frontend_backend_agent.agent.port import AgentReply, ReplyUsage, RoleUsage
+from prototypes.voice_frontend_backend_agent.agent.port import (
+    VERDICT_CONTINUE,
+    VERDICT_NEW,
+    AgentReply,
+    InFlight,
+    Probe,
+    ReplyUsage,
+    RoleUsage,
+)
 from prototypes.voice_frontend_backend_agent.agent.tools import realtime_tools_to_specs, to_outgoing, to_results
-from prototypes.voice_frontend_backend_agent.config import InstructionsConfig, ToolsConfig
+from prototypes.voice_frontend_backend_agent.config import InstructionsConfig, ToolsConfig, VoiceConfig
+from prototypes.voice_frontend_backend_agent.errors import ProbeStateError
 from prototypes.voice_frontend_backend_agent.normalization import (
     ARGUMENT_NORMALIZED,
     CALL_ANSWERED_LOCALLY,
@@ -58,6 +78,33 @@ from prototypes.voice_frontend_backend_agent.normalization.arguments import (
 )
 from prototypes.voice_frontend_backend_agent.normalization.prompts import with_frontend_note
 from prototypes.voice_frontend_backend_agent.normalization.transcript import TranscriptNormalizer
+
+
+@dataclass(frozen=True, slots=True)
+class FrontendVerdictSettings:
+    """What the runner needs for ``barge_in.while_thinking: frontend_verdict``.
+
+    The in-progress note itself is a prompt template (``barge_in.frontend_verdict.note_key``),
+    included by the frontend template when ``in_progress`` is set.
+    """
+
+    same_query_guard: bool = True
+
+
+def frontend_verdict_settings(config: VoiceConfig) -> FrontendVerdictSettings | None:
+    """The runner's settings for the frontend verdict, or ``None`` when it is off."""
+    if not config.barge_in.uses_frontend_verdict:
+        return None
+    return FrontendVerdictSettings(same_query_guard=config.barge_in.frontend_verdict.same_query_guard)
+
+
+def _normalized_request(text: str) -> str:
+    return " ".join(re.sub(r"[^\w\s]", " ", text.casefold()).split())
+
+
+def same_request(a: str, b: str) -> bool:
+    """Whether two delegation queries are equal after case-folding and removing punctuation and spacing."""
+    return _normalized_request(a) == _normalized_request(b)
 
 
 @dataclass(frozen=True, slots=True)
@@ -137,9 +184,17 @@ class TextAgentRunner:
         session_id: str,
         seed_greeting: str = "",
         normalization: NormalizationSettings | None = None,
+        barge_in: FrontendVerdictSettings | None = None,
+        prompt_context: Mapping[str, Any] | None = None,
     ) -> None:
-        """Build the initial agent (no client tools, no instructions yet)."""
+        """Build the initial agent (no client tools, no instructions yet).
+
+        ``prompt_context`` holds the Jinja variables of the prompt templates
+        (``config.prompt_context``); the frontend also gets ``in_progress``.
+        """
         self._base = base_config
+        self._barge_in = barge_in
+        self._prompt_context = dict(prompt_context or {})
         self._tools_config = tools_config
         self._instructions_config = instructions_config
         self._clients = clients
@@ -155,6 +210,15 @@ class TextAgentRunner:
         self._held: dict[str, str] = {}
         #: Retry-guard keys of the outstanding calls that were sent.
         self._sent_keys: dict[str, FailureKey] = {}
+        #: The running turn's delegation (frontend verdict note), set between delegation and the call's end.
+        self._in_flight: InFlight | None = None
+        #: Serial number of the respond/resume/proceed call in flight (``None`` when idle).
+        self._active_call: int | None = None
+        self._calls = 0
+        #: The call whose text result is held instead of committed (``begin_staging``).
+        self._staging_call: int | None = None
+        #: The held result and its retry-guard keys, until ``end_staging``.
+        self._staged: tuple[_Settled, frozenset[FailureKey]] | None = None
         self._agent: FrontendBackendAgent | None = None
         self.config: Config = base_config
         self.resolved_instructions: ResolvedInstructions | None = None
@@ -192,6 +256,7 @@ class TextAgentRunner:
             event_sink=self._sink,
             frontend_client=self._clients.frontend if config.frontend_enabled else None,
             backend_client=self._clients.backend,
+            prompt_context=self._prompt_context,
         )
         self.config = config
         self.resolved_instructions = resolved
@@ -200,26 +265,119 @@ class TextAgentRunner:
     async def respond(self, text: str) -> AgentReply:
         """Run one user turn; the state is replaced only if the call completes."""
         assert self._agent is not None  # noqa: S101 - built in __init__
-        text = self._normalize_transcript(text)
-        turn, state = await self._agent.send(text, self._state)
-        settled = await self._settle(turn, state, self._failed)
-        self._commit(settled, self._failed)
-        return settled.reply
+        call = self._begin_call()
+        try:
+            text = self._normalize_transcript(text)
+            if not self._base.frontend_enabled:
+                turn, state = await self._agent.send(text, self._state)
+            else:
+                step = await self._agent.decide_turn(text, self._state)
+                turn, state = await self._continue(step)
+            settled = await self._settle(turn, state, self._failed)
+            return self._commit_or_stage(settled, self._failed, call)
+        finally:
+            self._end_call(call)
 
     async def resume(self, outputs: Mapping[str, str]) -> AgentReply:
         """Continue a suspended turn with the client's outputs (plus any held local results)."""
         assert self._agent is not None  # noqa: S101 - built in __init__
-        failed = self._failed
-        if self._arguments is not None:
-            failed = failed | {
-                self._sent_keys[call_id]
-                for call_id, output in outputs.items()
-                if call_id in self._sent_keys and self._arguments.is_permanent_failure(output)
-            }
-        turn, state = await self._agent.send_tool_results(to_results({**self._held, **outputs}), self._state)
-        settled = await self._settle(turn, state, failed)
-        self._commit(settled, failed)
-        return settled.reply
+        call = self._begin_call()
+        try:
+            failed = self._failed
+            if self._arguments is not None:
+                failed = failed | {
+                    self._sent_keys[call_id]
+                    for call_id, output in outputs.items()
+                    if call_id in self._sent_keys and self._arguments.is_permanent_failure(output)
+                }
+            turn, state = await self._agent.send_tool_results(to_results({**self._held, **outputs}), self._state)
+            settled = await self._settle(turn, state, failed)
+            self._commit(settled, failed)
+            return settled.reply
+        finally:
+            self._end_call(call)
+
+    # -- barge-in frontend verdict ----------------------------------------------
+
+    @property
+    def in_flight(self) -> InFlight | None:
+        """The running turn's delegation, once the frontend has delegated."""
+        return self._in_flight
+
+    async def probe(self, text: str, *, new_words: str, filler_spoken: bool) -> Probe:
+        """Ask the frontend about speech during the running turn; the state is not changed."""
+        in_flight = self._in_flight
+        if self._barge_in is None or in_flight is None:
+            raise ProbeStateError("probe() needs barge_in.while_thinking: frontend_verdict and a delegated turn")
+        return await self.probe_request(text, in_flight=in_flight, new_words=new_words, filler_spoken=filler_spoken)
+
+    async def probe_request(self, text: str, *, in_flight: InFlight, new_words: str, filler_spoken: bool) -> Probe:
+        """The probe for ``in_flight`` (``probe`` uses the running turn's; the verdict replay passes its own)."""
+        assert self._agent is not None  # noqa: S101 - built in __init__
+        text = self._normalize_transcript(text)
+        in_progress = {
+            "query": in_flight.query,
+            "filler": in_flight.filler_text,
+            "filler_heard": filler_spoken,
+            "new_words": new_words.strip(),
+        }
+        started = time.monotonic()
+        step = await self._agent.decide_turn(text, self._state, in_progress=in_progress)
+        latency_ms = (time.monotonic() - started) * 1000.0
+        decision = step.decision
+        probe_query = model_task = ""
+        guard = self._barge_in is None or self._barge_in.same_query_guard
+        if isinstance(decision, Delegate):
+            probe_query, model_task = decision.query, decision.task
+            if guard and same_request(decision.query, in_flight.query):
+                # Restarting the identical request is never useful, whatever the model's task says.
+                verdict = VERDICT_CONTINUE
+                reason = "model" if model_task == TASK_CONTINUE else "same_query"
+            elif model_task == TASK_CONTINUE:
+                verdict, reason = VERDICT_CONTINUE, "model"
+            else:
+                verdict, reason = VERDICT_NEW, ("model" if model_task else "task_invalid")
+        elif isinstance(decision, DirectAnswer):
+            verdict, reason = VERDICT_NEW, "direct_answer"
+        else:
+            verdict, reason = VERDICT_NEW, "contract_fallback"
+        return Probe(
+            verdict=verdict,
+            reason=reason,
+            running_query=in_flight.query,
+            probe_query=probe_query,
+            step=step,
+            latency_ms=latency_ms,
+            frontend=_role_usage(step.totals.frontend),
+            model_task=model_task,
+        )
+
+    async def proceed(self, probe: Probe) -> AgentReply:
+        """Carry out ``probe`` on the state it was made on (raises ``ProbeStateError`` if that changed)."""
+        step = probe.step
+        if not isinstance(step, FrontendStep) or self._state is not step.session:
+            raise ProbeStateError("the conversation state changed since the probe; it cannot be carried out")
+        call = self._begin_call()
+        try:
+            turn, state = await self._continue(step)
+            settled = await self._settle(turn, state, self._failed)
+            return self._commit_or_stage(settled, self._failed, call)
+        finally:
+            self._end_call(call)
+
+    def begin_staging(self) -> None:
+        """Hold a text result of the call in flight instead of committing it."""
+        if self._active_call is not None:
+            self._staging_call = self._active_call
+
+    def end_staging(self, *, commit: bool) -> None:
+        """Stop staging; commit (``commit``) or drop a held result."""
+        staged, self._staged = self._staged, None
+        self._staging_call = None
+        if self._active_call is None:
+            self._in_flight = None
+        if staged is not None and commit:
+            self._commit(*staged)
 
     def repair_last_answer(self, full_text: str, replacement: str) -> None:
         """Rewrite every stored copy of the interrupted answer."""
@@ -265,6 +423,37 @@ class TextAgentRunner:
             spans = [{"spoken": span.spoken, "written": span.written} for span in normalized.spans]
             self._emit(TRANSCRIPT_NORMALIZED, raw=text, text=normalized.text, spans=spans)
         return normalized.text
+
+    def _begin_call(self) -> int:
+        self._calls += 1
+        self._active_call = self._calls
+        self._staging_call = None
+        self._staged = None
+        self._in_flight = None
+        return self._calls
+
+    def _end_call(self, call: int) -> None:
+        if self._active_call == call:
+            self._active_call = None
+            if self._staged is None:
+                # A staged turn is still the request in progress: keep it for further probes.
+                self._in_flight = None
+        if self._staging_call == call:
+            self._staging_call = None
+
+    async def _continue(self, step: FrontendStep) -> tuple[AgentTurn, SessionState]:
+        assert self._agent is not None  # noqa: S101 - built in __init__
+        if isinstance(step.decision, Delegate):
+            self._in_flight = InFlight(query=step.decision.query, filler_text=step.decision.filler_text)
+        return await self._agent.continue_turn(step)
+
+    def _commit_or_stage(self, settled: _Settled, failed: frozenset[FailureKey], call: int) -> AgentReply:
+        """Commit, or hold a text result while this call is staging (tool calls always commit)."""
+        if self._staging_call == call and settled.reply.text is not None:
+            self._staged = (settled, failed)
+            return replace(settled.reply, staged=True)
+        self._commit(settled, failed)
+        return settled.reply
 
     def _commit(self, settled: _Settled, failed: frozenset[FailureKey]) -> None:
         self._state = settled.state
@@ -323,7 +512,9 @@ class TextAgentRunner:
     def rendered_prompts(self) -> dict[str, str]:
         """The exact system prompts this session's agent sends."""
         catalog = load_catalog(self.config.prompts_path, self.config.prompts.inline)
-        prompts = {"backend": backend_system_prompt(catalog, self.config)}
+        prompts = {"backend": backend_system_prompt(catalog, self.config, self._prompt_context)}
         if self.config.frontend_enabled:
-            prompts["frontend"] = render(catalog.get(self.config.frontend.prompt_key), self.config)
+            key = self.config.frontend.prompt_key
+            context = {**self._prompt_context, "in_progress": None}
+            prompts["frontend"] = render(catalog.get(key), self.config, context, catalog=catalog, key=key)
         return prompts

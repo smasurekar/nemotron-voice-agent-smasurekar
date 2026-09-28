@@ -10,16 +10,25 @@ path from :class:`Delegate.filler_text` to an outward envelope.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import Any
 
 from prototypes.text_frontend_backend_agent import events
 from prototypes.text_frontend_backend_agent.config import Config
-from prototypes.text_frontend_backend_agent.delegation import CALL_BACKEND, FRONTEND_TOOLS
+from prototypes.text_frontend_backend_agent.delegation import (
+    CALL_BACKEND,
+    FRONTEND_TOOLS,
+    FRONTEND_TOOLS_IN_PROGRESS,
+    TASK_CONTINUE,
+    TASK_NEW,
+)
 from prototypes.text_frontend_backend_agent.errors import FrontendContractError
 from prototypes.text_frontend_backend_agent.events import EventSink, InternalEvent
 from prototypes.text_frontend_backend_agent.history import History
 from prototypes.text_frontend_backend_agent.llm import ChatClient
 from prototypes.text_frontend_backend_agent.messages import Message, ToolCall, UsageTotals
+from prototypes.text_frontend_backend_agent.prompts import PromptCatalog, compile_template, render_template
 from prototypes.text_frontend_backend_agent.tools import decode_arguments
 
 _REPAIR_INSTRUCTION = (
@@ -47,6 +56,8 @@ class Delegate:
     query: str
     filler_text: str
     assistant_message: Message
+    #: ``continue`` or ``new`` when the call carried a valid in-progress ``task``; ``""`` otherwise.
+    task: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,34 +74,73 @@ Decision = DirectAnswer | Delegate | ContractFallback
 class FrontendAgent:
     """Talks to the user; owns no tools except delegation."""
 
-    def __init__(self, *, client: ChatClient, system_prompt: str, config: Config, sink: EventSink) -> None:
-        """Bind the frontend to its client, prompt and event sink."""
+    def __init__(
+        self,
+        *,
+        client: ChatClient,
+        template: str,
+        config: Config,
+        sink: EventSink,
+        catalog: PromptCatalog | None = None,
+        base_context: Mapping[str, Any] | None = None,
+        prompt_key: str = "",
+    ) -> None:
+        """Bind the frontend to its client, prompt template and event sink.
+
+        The template is rendered with ``base_context`` plus ``in_progress``: ``None``
+        on normal turns (rendered once, here) and a mapping on in-progress calls.
+        """
         self._client = client
-        self._system_prompt = system_prompt
         self._config = config
         self._sink = sink
+        self._prompt_key = prompt_key
+        self._template = compile_template(template, catalog, key=prompt_key)
+        self._base_context = dict(base_context or {})
+        self._system_prompt = self._render(None)
 
-    async def decide(self, user_text: str, history: History, *, session_id: str) -> tuple[Decision, UsageTotals]:
+    @property
+    def system_prompt(self) -> str:
+        """The system prompt of a normal turn."""
+        return self._system_prompt
+
+    def _render(self, in_progress: Mapping[str, Any] | None) -> str:
+        context = {**self._base_context, "in_progress": in_progress}
+        return render_template(self._template, self._config, context, key=self._prompt_key)
+
+    async def decide(
+        self, user_text: str, history: History, *, session_id: str, in_progress: Mapping[str, Any] | None = None
+    ) -> tuple[Decision, UsageTotals]:
         """Choose between answering directly and delegating.
 
         On a contract violation the frontend is reprompted up to
         ``max_repair_attempts`` times and then **fails closed**: the model's raw
         text is never returned as the answer, because that is precisely when it
         is most likely to contain tool-call markup or a half-formed promise.
+
+        ``in_progress`` (a caller's description of a request already being worked
+        on) is passed to the prompt template, and adds the required ``task`` field
+        to ``call_backend``. Without it the call is unchanged.
         """
         totals = UsageTotals()
         delegation = self._config.frontend.delegation
         attempt_messages = [*history.messages, Message.user(user_text)]
+        system_prompt = self._system_prompt
+        tools = FRONTEND_TOOLS
+        if in_progress is not None:
+            system_prompt = self._render(in_progress)
+            tools = FRONTEND_TOOLS_IN_PROGRESS
         problem = ""
         for attempt in range(delegation.max_repair_attempts + 1):
             response = await self._client.complete(
-                messages=[Message.system(self._system_prompt), *attempt_messages],
-                tools=list(FRONTEND_TOOLS),
+                messages=[Message.system(system_prompt), *attempt_messages],
+                tools=list(tools),
             )
             totals = totals.add_call(
                 "frontend", usage=response.usage, latency_ms=response.latency_ms, cost=response.cost
             )
-            decision, problem = self._interpret(response.content, response.tool_calls, session_id=session_id)
+            decision, problem = self._interpret(
+                response.content, response.tool_calls, session_id=session_id, in_progress=in_progress is not None
+            )
             if decision is not None:
                 return decision, totals
             self._sink.emit(
@@ -111,7 +161,7 @@ class FrontendAgent:
         return ContractFallback(text=delegation.fallback_text, problem=problem), totals
 
     def _interpret(
-        self, content: str | None, tool_calls: tuple[ToolCall, ...], *, session_id: str
+        self, content: str | None, tool_calls: tuple[ToolCall, ...], *, session_id: str, in_progress: bool = False
     ) -> tuple[Decision | None, str]:
         """Map one raw completion onto a decision, or report why it is invalid."""
         if tool_calls:
@@ -130,10 +180,17 @@ class FrontendAgent:
                     InternalEvent(events.FRONTEND_CONTRACT_VIOLATION, session_id, {"discarded_text": content.strip()})
                 )
             filler = str(arguments.get("filler_text") or "").strip()
+            task = ""
+            if in_progress:
+                # A missing or unknown value is not a contract violation (no repair round): the caller
+                # treats it as a new request.
+                raw_task = str(arguments.get("task") or "").strip().lower()
+                task = raw_task if raw_task in (TASK_CONTINUE, TASK_NEW) else ""
             return Delegate(
                 query=query,
                 filler_text=filler,
                 assistant_message=Message.assistant_tool_calls((call,)),
+                task=task,
             ), ""
         text = (content or "").strip()
         if not text:

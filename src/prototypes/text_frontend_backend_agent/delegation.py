@@ -13,9 +13,14 @@ is ever called.
 
 from __future__ import annotations
 
+import copy
 from typing import Any
 
 CALL_BACKEND = "call_backend"
+
+#: Values of the in-progress ``task`` field (see :data:`FRONTEND_TOOLS_IN_PROGRESS`).
+TASK_CONTINUE = "continue"
+TASK_NEW = "new"
 
 CALL_BACKEND_TOOL: dict[str, Any] = {
     "type": "function",
@@ -53,3 +58,24 @@ CALL_BACKEND_TOOL: dict[str, Any] = {
 
 #: The complete tool surface offered to the frontend LLM.
 FRONTEND_TOOLS: tuple[dict[str, Any], ...] = (CALL_BACKEND_TOOL,)
+
+
+def _with_task_field(tool: dict[str, Any]) -> dict[str, Any]:
+    extended = copy.deepcopy(tool)
+    parameters = extended["function"]["parameters"]
+    parameters["properties"]["task"] = {
+        "type": "string",
+        "enum": [TASK_CONTINUE, TASK_NEW],
+        "description": (
+            f"Only while a request is in progress: '{TASK_CONTINUE}' if the user's latest words don't change "
+            f"the request in progress, otherwise '{TASK_NEW}'."
+        ),
+    }
+    parameters["required"] = [*parameters["required"], "task"]
+    return extended
+
+
+#: ``call_backend`` with the required ``task`` field, offered only while a request is in progress
+#: (a caller passes an in-progress note). ``FRONTEND_TOOLS`` is unchanged.
+CALL_BACKEND_TOOL_IN_PROGRESS: dict[str, Any] = _with_task_field(CALL_BACKEND_TOOL)
+FRONTEND_TOOLS_IN_PROGRESS: tuple[dict[str, Any], ...] = (CALL_BACKEND_TOOL_IN_PROGRESS,)

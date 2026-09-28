@@ -60,11 +60,35 @@ The agent instance is immutable and reusable; all conversation state is in the `
 pass in and get back. `turn.final_text` and `turn.tool_calls` are never both set and never both
 empty — the same rule τ² enforces in `check_communication_error()`.
 
+In paired mode, `send()` is composed of two steps that you can also call separately:
+
+```python
+step = await agent.decide_turn("where is my order 5512?", session)   # frontend only
+turn, session = await agent.continue_turn(step)                       # carry out step.decision
+```
+
+`decide_turn()` runs only the frontend and returns a `FrontendStep` (`user_text`, `session`, `decision`,
+`totals`). It does not change the session and emits no `delegation` or `filler` events; `continue_turn()`
+emits them when it carries out the decision. `decide_turn(text, session, *, in_progress=None)` also takes
+an optional `in_progress` dictionary that describes a request already running. The frontend prompt is
+rendered with it as the template variable `in_progress`, and `call_backend` gains a required `task`
+(`continue` or `new`). The voice prototype uses it for its frontend barge-in verdict. `assemble_agent(...,
+prompt_context=None)` takes the base template context. This package and the τ² adapter never pass either,
+and with `in_progress=None` the frontend request is byte-identical to `send()`.
+
 ## Configuration
 
 One entry point, [`config/agent.yaml`](config/agent.yaml), which references
 [`config/prompts.yaml`](config/prompts.yaml). `${VAR}` / `${VAR:-default}` resolve from the
-environment. The switches that change behaviour most:
+environment.
+
+Prompt templates are rendered with Jinja 2 first, then the `{persona}`-style placeholders are replaced.
+`{% include "<key>" %}` includes another prompt catalog key, and an undefined variable or a template syntax
+error raises `ConfigError` with the prompt key. A prompt without Jinja syntax (`{{`, `{%` or `{#`) renders
+byte-identically to the previous plain substitution. Text that is not a template, such as a client's policy
+spliced into a prompt, must go through `prompts.literal()` first, so that braces in it render verbatim.
+
+The switches that change behaviour most:
 
 | Key | Effect |
 |---|---|

@@ -150,6 +150,7 @@ class BackendConfig:
     tools: BackendToolsConfig = field(default_factory=BackendToolsConfig)
     history: HistoryConfig = field(default_factory=lambda: HistoryConfig(max_groups=40))
     conversation_history: ConversationHistoryConfig = field(default_factory=ConversationHistoryConfig)
+    simulated_delay_s: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -314,6 +315,16 @@ def load_config(path: str | Path) -> Config:
     return build_config(raw, source_dir=config_path.parent)
 
 
+def _simulated_delay(value: Any) -> float:
+    try:
+        delay = float(value or 0)
+    except (TypeError, ValueError) as exc:
+        raise ConfigError(f"backend.simulated_delay_s must be a number, got {value!r}") from exc
+    if delay < 0:
+        raise ConfigError(f"backend.simulated_delay_s must be >= 0, got {delay}")
+    return delay
+
+
 def build_config(raw: dict[str, Any], *, source_dir: Path | None = None) -> Config:
     """Build a :class:`Config` from an already-interpolated mapping."""
     agent_raw = dict(raw.get("agent") or {})
@@ -377,6 +388,7 @@ def build_config(raw: dict[str, Any], *, source_dir: Path | None = None) -> Conf
         ),
         history=HistoryConfig(max_groups=int(dict(backend_raw.get("history") or {}).get("max_groups", 40))),
         conversation_history=history,
+        simulated_delay_s=_simulated_delay(backend_raw.get("simulated_delay_s", 0)),
     )
 
     return Config(

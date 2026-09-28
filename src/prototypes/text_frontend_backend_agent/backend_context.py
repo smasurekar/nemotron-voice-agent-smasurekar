@@ -16,8 +16,9 @@ needed. Everything here is a pure function over immutable types.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from typing import Any
 
 from prototypes.text_frontend_backend_agent.config import (
     HISTORY_BACKEND_TURNS,
@@ -119,15 +120,22 @@ def close_discarded_turn(history: History, outstanding: Sequence[str]) -> Histor
     return history.extend(results).append(Message.assistant(DISCARDED_TURN_TEXT))
 
 
-def backend_system_prompt(catalog: PromptCatalog, config: Config) -> str:
-    """The backend system prompt: base render, then the history context note and guidance."""
-    prompt = render(catalog.get(config.backend.prompt_key), config)
+def backend_system_prompt(catalog: PromptCatalog, config: Config, context: Mapping[str, Any] | None = None) -> str:
+    """The backend system prompt: base render, then the history context note and guidance.
+
+    ``context`` holds the Jinja variables of the templates (see ``prompts.render``).
+    """
+
+    def rendered(key: str) -> str:
+        return render(catalog.get(key), config, context, catalog=catalog, key=key)
+
+    prompt = rendered(config.backend.prompt_key)
     history_cfg = config.backend.conversation_history
     if not history_cfg.enabled:
         return prompt
-    parts = [prompt, render(catalog.get(history_cfg.context_key), config)]
+    parts = [prompt, rendered(history_cfg.context_key)]
     if guidance_key := history_cfg.resolved_guidance_key:
-        parts.append(render(catalog.get(guidance_key), config))
+        parts.append(rendered(guidance_key))
     return "\n\n".join(part for part in parts if part)
 
 
