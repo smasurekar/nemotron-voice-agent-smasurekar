@@ -119,9 +119,9 @@ logging:
   log_wire: false                           # log every wire event type (debug; never logs audio)
   redact_content: false                     # true: omit transcripts/tool payloads from the event log
 
-# Identifier normalization between speech and the agent (all off by default). See
-# misc/prototypes/voice-frontend-backend-agent-normalization-plan.md; the tau3 arm is
-# profiles/tau3_eval_normalization.yaml.
+# Identifier normalization between speech and the agent (all off in this base config). See
+# misc/prototypes/voice-frontend-backend-agent-normalization-plan.md. The tau3 eval profiles
+# (profiles/tau3_eval.yaml and everything extending it, and profiles/backend_only.yaml) turn it on.
 normalization:
   transcript:                       # ASR hook: spoken identifiers -> written form, for the agent only
     enabled: false                  # the wire keeps the raw transcript

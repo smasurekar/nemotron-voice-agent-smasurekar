@@ -168,6 +168,7 @@ Speech endpoints come from `src/examples/frontend_backend_agent/services.local.y
 | browser page, as above plus the frontend barge-in verdict (§3B only) | `src/prototypes/voice_frontend_backend_agent/config/profiles/browser_demo_frontend_verdict.yaml` |
 | tau3, paired, frontend barge-in verdict (speech while the agent thinks no longer cancels it at once) | `src/prototypes/voice_frontend_backend_agent/config/profiles/tau3_eval_frontend_verdict.yaml` |
 | tau3, as above with the filler spoken (arm `verdictspk`, port 8773; not comparable for Pass^1) | `src/prototypes/voice_frontend_backend_agent/config/profiles/tau3_eval_frontend_verdict_speak.yaml` |
+| tau3, as above plus backend conversation history (`include: full`; arm `verdictspk`, runs tagged `normhist`, port 8773) | `src/prototypes/voice_frontend_backend_agent/config/profiles/tau3_eval_frontend_verdict_speak_history.yaml` |
 
 Every tau3 paired profile pins `backend.conversation_history`, and the two history profiles differ from
 `tau3_eval.yaml` only in it, so `FBA_BACKEND_HISTORY` has no effect on them. For other paired configs,
@@ -178,7 +179,7 @@ paths: `fba-voice-hist` on port 8769 and `fba-voice-histng` on port 8770, loggin
 The event log records the arm in `session_start.backend_history` / `backend_history_guidance`, and in one
 `backend_context` event per delegated turn.
 
-`tau3_eval_normalization.yaml` is `tau3_eval.yaml` (history off) plus the `normalization` section. Run it as
+Since 2026-09-29 identifier normalization is on in `tau3_eval.yaml` (and so in every profile extending it) and in `backend_only.yaml`; `tau3_eval_normalization.yaml` is now an alias of `tau3_eval.yaml`. Before that date, `tau3_eval_normalization.yaml` is `tau3_eval.yaml` (history off) plus the `normalization` section. Run it as
 the `norm` arm: container `fba-voice-norm` on port 8771, logging to `logs/fba_voice_norm_{events,filler}.jsonl`
 (τ³ runbook §4.2). The event log records it in `session_start.normalization`. Before a τ³ run, replay the
 profile offline over the unredacted event log of an earlier paired run (no ASR, no LLM):

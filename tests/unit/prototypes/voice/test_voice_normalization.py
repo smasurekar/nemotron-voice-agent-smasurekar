@@ -360,14 +360,36 @@ class ConfigTests(unittest.TestCase):
         config = self.load(body)
         self.assertTrue(any("ruleset 'en'" in warning for warning in config.warnings))
 
-    def test_profile_differs_from_tau3_eval_only_by_normalization(self) -> None:
+    def test_normalization_profile_equals_tau3_eval(self) -> None:
+        # Normalization is on in tau3_eval.yaml itself; the normalization profile is kept as an alias.
         base = load_voice_config(PROFILES / "tau3_eval.yaml")
         for field in fields(base):
-            if field.name not in ("normalization", "source_files", "resolved_in_paths", "warnings"):
+            if field.name not in ("source_files", "resolved_in_paths", "warnings"):
                 self.assertEqual(getattr(base, field.name), getattr(PROFILE, field.name), field.name)
+        self.assertTrue(base.normalization.transcript.enabled)
+        self.assertTrue(base.normalization.tool_arguments.enabled)
+        self.assertTrue(base.normalization.tool_arguments.retry_guard.enabled)
+
+    def test_normalization_on_in_every_tau3_arm_and_off_in_the_base(self) -> None:
+        for name in (
+            "backend_only.yaml",
+            "tau3_eval_backend_history.yaml",
+            "tau3_eval_backend_history_noguide.yaml",
+            "tau3_eval_frontend_verdict.yaml",
+            "tau3_eval_frontend_verdict_speak.yaml",
+        ):
+            with self.subTest(profile=name):
+                config = load_voice_config(PROFILES / name)
+                self.assertTrue(config.normalization.transcript.enabled)
+                self.assertEqual(config.normalization.transcript.case, "lower")
+                self.assertTrue(config.normalization.tool_arguments.enabled)
+                self.assertEqual(
+                    [(r.tool, r.argument) for r in config.normalization.tool_arguments.rules],
+                    [("get_user_details", "user_id")],
+                )
+        base = load_voice_config(PROFILES.parent / "voice_agent.yaml")
         self.assertFalse(base.normalization.transcript.enabled)
-        self.assertTrue(PROFILE.normalization.transcript.enabled)
-        self.assertTrue(PROFILE.normalization.tool_arguments.enabled)
+        self.assertFalse(base.normalization.tool_arguments.enabled)
 
 
 class ReplayCliTests(unittest.TestCase):
