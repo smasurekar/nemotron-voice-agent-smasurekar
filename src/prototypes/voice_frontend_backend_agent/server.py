@@ -19,7 +19,7 @@ import argparse
 import contextlib
 import json
 import sys
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -46,6 +46,7 @@ from prototypes.voice_frontend_backend_agent.config import (
     prompt_context,
 )
 from prototypes.voice_frontend_backend_agent.engine.session import RealtimeSession
+from prototypes.voice_frontend_backend_agent.engine.turn_api import TurnManagerFactory
 from prototypes.voice_frontend_backend_agent.speech.factory import build_speech_services
 from prototypes.voice_frontend_backend_agent.speech.ports import SpeechServices
 from prototypes.voice_frontend_backend_agent.wire import server_events as ev
@@ -67,6 +68,21 @@ class ServerOptions:
     stub_agent: str = ""
     stub_agent_script: str = ""
     tls: bool = False
+
+
+@dataclass(slots=True)
+class SessionHooks:
+    """Replace the text agent with another turn manager (additive seam for sibling prototypes).
+
+    With hooks the lifespan builds no text-agent LLM clients, sessions get
+    ``turn_manager_factory`` instead of an agent, and ``session.update`` is transactional.
+    """
+
+    turn_manager_factory: TurnManagerFactory
+    startup: Callable[[], Awaitable[None]] | None = None
+    shutdown: Callable[[], Awaitable[None]] | None = None
+    health_extra: Callable[[], dict[str, Any]] | None = None
+    title: str = "Voice agent (prototype)"
 
 
 @dataclass(slots=True)
@@ -133,13 +149,15 @@ def build_app(
     options: ServerOptions | None = None,
     services: SpeechServices | None = None,
     clients: AgentClients | None = None,
+    session_hooks: SessionHooks | None = None,
 ) -> FastAPI:
-    """Create the app; ``services``/``clients`` may be injected (tests)."""
+    """Create the app; ``services``/``clients`` may be injected (tests), ``session_hooks`` swap the agent."""
     state = _AppState(config=config, options=options or ServerOptions(), services=services, clients=clients)
+    hooks = session_hooks
     event_log = EventLog(config.logging.event_log, redact_content=config.logging.redact_content)
     state.routing_sink = SessionRoutingSink(event_log)
     state.filler_log = FillerLog(config.filler.log_path, event_log=event_log)
-    factory = _agent_factory(state)
+    factory = _agent_factory(state) if hooks is None else None
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -147,8 +165,15 @@ def build_app(
             logger.warning(warning)
         if state.services is None:
             state.services = build_speech_services(config, stub=state.options.stub_speech)
-        if state.clients is None and state.options.stub_agent != "scripted":
+        if hooks is None and state.clients is None and state.options.stub_agent != "scripted":
             state.clients = build_clients(config)
+        if hooks is not None and hooks.startup is not None:
+            try:
+                await hooks.startup()
+            except Exception as exc:
+                state.startup_error = str(exc)
+                logger.error(f"startup hook failed: {exc}")
+                raise
         if config.server.warmup and not state.options.stub_speech:
             logger.info("warming up ASR and TTS ...")
             try:
@@ -158,6 +183,22 @@ def build_app(
                 logger.error(f"speech warm-up failed: {exc}")
                 raise
         state.ready = True
+        if hooks is not None:
+            ws_scheme, http_scheme = ("wss", "https") if state.options.tls else ("ws", "http")
+            logger.info(f"browser mic page: {http_scheme}://{config.server.host}:{config.server.port}/")
+            logger.info(
+                f"{hooks.title} ready: {ws_scheme}://{config.server.host}:{config.server.port}{config.server.path}"
+            )
+            try:
+                yield
+            finally:
+                state.ready = False
+                if hooks.shutdown is not None:
+                    with contextlib.suppress(Exception):
+                        await hooks.shutdown()
+                if state.services is not None:
+                    await state.services.aclose()
+            return
         mode = "backend_only" if not config.agent.frontend_enabled else "frontend_backend"
         ws_scheme, http_scheme = ("wss", "https") if state.options.tls else ("ws", "http")
         logger.info(f"browser mic page: {http_scheme}://{config.server.host}:{config.server.port}/")
@@ -174,7 +215,7 @@ def build_app(
             if state.services is not None:
                 await state.services.aclose()
 
-    app = FastAPI(title="Voice Frontend/Backend Agent (prototype)", lifespan=lifespan)
+    app = FastAPI(title=hooks.title if hooks else "Voice Frontend/Backend Agent (prototype)", lifespan=lifespan)
     app.state.voice = state
 
     @app.get("/health")
@@ -187,6 +228,9 @@ def build_app(
         }
         if state.startup_error:
             body["error"] = state.startup_error
+        if hooks is not None and hooks.health_extra is not None:
+            with contextlib.suppress(Exception):
+                body.update(hooks.health_extra())
         return JSONResponse(body, status_code=200 if state.ready else 503)
 
     @app.get("/", include_in_schema=False)
@@ -220,6 +264,7 @@ def build_app(
             transport=CallbackTransport(websocket.send_text),
             services=state.services,
             agent_factory=factory,
+            turn_manager_factory=hooks.turn_manager_factory if hooks is not None else None,
             routing_sink=state.routing_sink,
             filler_log=state.filler_log,
             model=websocket.query_params.get("model", ""),

@@ -14,6 +14,7 @@ future GA fields) are tolerated and echoed.
 from __future__ import annotations
 
 import copy
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -109,6 +110,14 @@ class ApplyResult:
     semantic_vad: bool = False
 
 
+@dataclass(frozen=True, slots=True)
+class SessionPreview:
+    """A validated ``session.update`` not applied yet: :meth:`commit` applies it (transactional updates)."""
+
+    result: ApplyResult
+    commit: Callable[[], ApplyResult]
+
+
 @dataclass(slots=True)
 class _State:
     input_format: AudioFormat
@@ -190,7 +199,10 @@ class RealtimeSessionView:
     @property
     def settings(self) -> SessionSettings:
         """The current immutable settings."""
-        state = self._state
+        return self._settings_of(self._state)
+
+    @staticmethod
+    def _settings_of(state: _State) -> SessionSettings:
         return SessionSettings(
             input_format=state.input_format,
             output_format=state.output_format,
@@ -231,6 +243,13 @@ class RealtimeSessionView:
 
     def apply(self, patch: dict[str, Any]) -> ApplyResult:
         """Validate and merge one ``session.update`` patch; raises on rejection (nothing applied)."""
+        return self.preview(patch).commit()
+
+    def preview(self, patch: dict[str, Any]) -> SessionPreview:
+        """Validate ``patch`` against a copy of the state; nothing changes until ``commit()``.
+
+        Raises on rejection. ``commit()`` fails if another update was applied in between.
+        """
         beta = _find_beta_fields(patch)
         if beta:
             raise WireProtocolError(
@@ -273,15 +292,22 @@ class RealtimeSessionView:
                     warnings.append(f"session.{key} is not used by this server")
 
         old = self._state
-        self._state = new
-        return ApplyResult(
-            settings=self.settings,
+        result = ApplyResult(
+            settings=self._settings_of(new),
             warnings=tuple(warnings),
             tools_changed=old.tools != new.tools,
             instructions_changed=old.instructions != new.instructions,
             formats_changed=(old.input_format, old.output_format) != (new.input_format, new.output_format),
             semantic_vad=semantic,
         )
+
+        def commit() -> ApplyResult:
+            if self._state is not old:
+                raise RuntimeError("the session changed since this preview was made")
+            self._state = new
+            return result
+
+        return SessionPreview(result=result, commit=commit)
 
     # -- helpers -----------------------------------------------------------
 

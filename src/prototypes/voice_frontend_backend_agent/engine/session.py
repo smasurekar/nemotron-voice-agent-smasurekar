@@ -27,6 +27,7 @@ from prototypes.voice_frontend_backend_agent.config import VoiceConfig
 from prototypes.voice_frontend_backend_agent.engine.input_path import InputPath
 from prototypes.voice_frontend_backend_agent.engine.output_path import OutputPath
 from prototypes.voice_frontend_backend_agent.engine.segmenter import SpeechAudio, SpeechEnd, SpeechStart
+from prototypes.voice_frontend_backend_agent.engine.turn_api import SessionChange, TurnContext, TurnManagerFactory
 from prototypes.voice_frontend_backend_agent.engine.turn_manager import TurnManager, UserInput
 from prototypes.voice_frontend_backend_agent.errors import WireProtocolError
 from prototypes.voice_frontend_backend_agent.speech.ports import RecognizerStream, SpeechServices
@@ -58,15 +59,21 @@ class RealtimeSession:
         config: VoiceConfig,
         transport: WireTransport,
         services: SpeechServices,
-        agent_factory: AgentFactory,
+        agent_factory: AgentFactory | None = None,
         routing_sink: SessionRoutingSink,
         filler_log: FillerLog,
         clock: WallClock | None = None,
         model: str = "",
         session_id: str | None = None,
         show_silent_filler: bool = False,
+        turn_manager_factory: TurnManagerFactory | None = None,
     ) -> None:
-        """Wire the session; nothing is sent until :meth:`run`."""
+        """Wire the session; nothing is sent until :meth:`run`.
+
+        With ``turn_manager_factory`` the session builds no agent (``agent_factory`` is
+        never called) and ``session.update`` is transactional (plan 4.3 of the
+        frontend-delegation-hermes prototype).
+        """
         self.config = config
         self.session_id = session_id or new_session_id()
         self._clock = clock or SystemClock()
@@ -92,7 +99,10 @@ class RealtimeSession:
             min_speech_ms=config.turn_detection.min_speech_ms,
         )
         self.conversation = ConversationOrder()
-        self.agent = agent_factory(self.session_id)
+        self._custom_turns = turn_manager_factory is not None
+        if agent_factory is None and turn_manager_factory is None:
+            raise ValueError("RealtimeSession needs an agent_factory or a turn_manager_factory")
+        self.agent = None if turn_manager_factory is not None else agent_factory(self.session_id)  # type: ignore[misc]
         self._session_start = Stamp.now(self._clock, 0.0)
         output = OutputPath(
             synthesizer=services.synthesizer,
@@ -103,7 +113,36 @@ class RealtimeSession:
             pace_lead_ms=config.audio.pace_lead_ms,
             monotonic=self._clock.monotonic,
         )
-        self.turns = TurnManager(
+        if turn_manager_factory is not None:
+            self.turns = turn_manager_factory(
+                TurnContext(
+                    output=output,
+                    emit=self.writer.emit,
+                    conversation=self.conversation,
+                    settings=lambda: self.view.settings,
+                    voice=self._resolve_voice,
+                    config=config,
+                    clock=self._clock,
+                    audio_now=lambda: self.input.clock.now_ms,
+                    session_id=self.session_id,
+                    session_start=self._session_start,
+                    filler_log=filler_log,
+                    event_log=self._event_log,
+                    model=model,
+                    show_silent_filler=show_silent_filler,
+                )
+            )
+        else:
+            self.turns = self._default_turns(output, config, filler_log, show_silent_filler)
+        self._utterance: _Utterance | None = None
+        self._asr_chain: asyncio.Task[None] | None = None
+        self._configured = False
+        self._warned: set[str] = set()
+
+    def _default_turns(
+        self, output: OutputPath, config: VoiceConfig, filler_log: FillerLog, show_silent_filler: bool
+    ) -> TurnManager:
+        return TurnManager(
             agent=self.agent,
             output=output,
             emit=self.writer.emit,
@@ -119,10 +158,6 @@ class RealtimeSession:
             event_log=self._event_log,
             show_silent_filler=show_silent_filler,
         )
-        self._utterance: _Utterance | None = None
-        self._asr_chain: asyncio.Task[None] | None = None
-        self._configured = False
-        self._warned: set[str] = set()
 
     # -- lifecycle ------------------------------------------------------------------
 
@@ -141,6 +176,8 @@ class RealtimeSession:
             normalization=self.config.normalization.summary(),
         )
         logger.info(f"[{self.session_id}] session started (model={self.view.model or '-'})")
+        if self._custom_turns:
+            await self.turns.start()
         timeout = self.config.server.session_update_timeout_s
         try:
             while True:
@@ -192,7 +229,7 @@ class RealtimeSession:
         if isinstance(command, ce.AudioAppend):
             await self._on_append(command.audio)
         elif isinstance(command, ce.SessionUpdate):
-            self._on_session_update(command.session)
+            await self._on_session_update(command.session)
         elif isinstance(command, ce.ItemCreate):
             self._on_item_create(command)
         elif isinstance(command, ce.ResponseCreate):
@@ -227,7 +264,10 @@ class RealtimeSession:
         elif isinstance(command, ce.OutputAudioBufferClear):
             await self.turns.on_output_audio_clear()
 
-    def _on_session_update(self, patch: dict[str, Any]) -> None:
+    async def _on_session_update(self, patch: dict[str, Any]) -> None:
+        if self._custom_turns:
+            await self._on_session_update_transactional(patch)
+            return
         result = self.view.apply(patch)
         settings = result.settings
         for warning in result.warnings:
@@ -248,6 +288,40 @@ class RealtimeSession:
                 self.agent.configure(tools=settings.tools, instructions=settings.instructions)
             except Exception as exc:  # noqa: BLE001 - a bad tool schema must not kill the session
                 raise WireProtocolError(f"cannot configure the agent: {exc}", param="session") from exc
+        self.input.configure(settings.input_format, settings.turn_detection)
+        self._configured = True
+        self._log(
+            "session_updated",
+            input_format=settings.input_format.to_wire(),
+            output_format=settings.output_format.to_wire(),
+            turn_detection=settings.turn_detection.effective() | {"mode": settings.turn_detection.mode},
+            tools=[tool.get("name") for tool in settings.tools],
+            instructions_chars=len(settings.instructions),
+        )
+        self.writer.emit(ev.session_updated(self.view.public()))
+        if first and self.config.protocol.greeting_enabled:
+            self.turns.speak_greeting()
+
+    async def _on_session_update_transactional(self, patch: dict[str, Any]) -> None:
+        """Validate on a copy, let the turn manager accept it, then commit (nothing changes on rejection)."""
+        preview = self.view.preview(patch)
+        result = preview.result
+        settings = result.settings
+        first = not self._configured
+        change = SessionChange(
+            first=first, tools_changed=result.tools_changed, instructions_changed=result.instructions_changed
+        )
+        try:
+            await self.turns.on_session_update(settings, change)
+        except WireProtocolError:
+            raise
+        except Exception as exc:  # noqa: BLE001 - a rejected update must not kill the session
+            raise WireProtocolError(f"session.update rejected: {exc}", param="session") from exc
+        preview.commit()
+        for warning in result.warnings:
+            if warning not in self._warned:
+                self._warned.add(warning)
+                logger.warning(f"[{self.session_id}] {warning}")
         self.input.configure(settings.input_format, settings.turn_detection)
         self._configured = True
         self._log(

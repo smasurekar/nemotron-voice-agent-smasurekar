@@ -1,0 +1,52 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Backend gateway + Hermes workers (prototype-plan.md sections 4.2 and 11).
+# One Hermes worker process per Realtime session; ${VAR:-default} comes from the environment.
+
+gateway:
+  host: ${FDH_GATEWAY_HOST:-127.0.0.1}
+  port: ${FDH_GATEWAY_PORT:-8790}
+  max_sessions: ${FDH_MAX_SESSIONS:-8}       # must be >= the sum of server.max_sessions of the voice servers it serves
+  log: ${FDH_GATEWAY_LOG:-logs/fdh_gateway_events.jsonl}
+
+workers:
+  mode: process_per_session                  # process_per_session | in_process_fake (tests only)
+  python: ${FDH_HERMES_PYTHON:-~/.cache/fdh/hermes-venv-314/bin/python}
+  agent_kind: ${FDH_AGENT_KIND:-hermes}      # hermes | fake
+  hermes_repo: ${FDH_HERMES_REPO:-}          # only needed when the venv does not install hermes-agent
+  start_timeout_s: 15                        # spawn -> ready (P0: ~2-3 s)
+  configure_timeout_s: 30                    # tools + eager AIAgent construction (P0: ~0.2-0.7 s)
+  stop_timeout_s: 12                         # close -> exit; then SIGTERM, kill_grace_s, SIGKILL
+  kill_grace_s: 3
+  warm: ${FDH_WARM_WORKERS:-0}               # pre-started spare workers
+  home_root: ${FDH_HERMES_HOME_ROOT:-.cache/fdh-hermes-homes}   # one HERMES_HOME per worker; runtime state
+  keep_homes: false
+  socket_dir: ${FDH_SOCKET_DIR:-/tmp/fdh-workers}
+  log_dir: ${FDH_WORKER_LOG_DIR:-logs/fdh_workers}
+
+recovery:
+  respawn: true
+  max_respawns_per_session: 2
+
+hermes:
+  model: ${BACKEND_LLM_MODEL:-nvidia/nvidia/nemotron-3-ultra}
+  base_url: ${BACKEND_LLM_BASE_URL:-https://inference-api.nvidia.com/v1}
+  api_key_env: NVIDIA_API_KEY
+  provider: custom
+  context_length: 131072                     # written to each worker's HERMES_HOME/config.yaml (64K floor)
+  agent_construct: eager                     # eager | lazy
+  max_iterations: 30
+  run_budget_seconds: 300                    # Hermes soft budget
+  run_hard_deadline_s: 330                   # gateway watchdog
+  unwind_timeout_s: 10
+  load_soul_identity: true                   # required with skip_context_files
+  tool_result_timeout_s: 120
+  steer_timeout_s: 3
+  status_timeout_s: 2
+  request_overrides:
+    extra_body:
+      chat_template_kwargs: {enable_thinking: true}
+      reasoning_budget: 1024
+  prompts:
+    path: prompts.backend.yaml
