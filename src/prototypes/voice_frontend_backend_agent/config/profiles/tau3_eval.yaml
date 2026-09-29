@@ -54,7 +54,7 @@ barge_in:
 # tau3_eval_normalization.yaml had it). The transcript hook writes spoken user IDs in lower-case
 # written form for the agent (the wire keeps the raw ASR text); the tool-argument hook canonicalizes
 # get_user_details.user_id and answers a malformed or already-failed ID locally instead of sending
-# it to tau2. See misc/prototypes/voice-frontend-backend-agent-normalization-plan.md.
+# it to tau2. See misc/prototypes/voice/normalization-plan.md.
 normalization:
   transcript:
     enabled: true

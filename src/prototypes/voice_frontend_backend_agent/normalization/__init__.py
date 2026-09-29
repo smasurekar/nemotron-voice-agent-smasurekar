@@ -9,7 +9,7 @@
 * :mod:`.prompts`: the optional frontend prompt note.
 
 The TTS-side ``TextNormalizer`` (``speech/ports.py``) may move here later.
-See ``misc/prototypes/voice-frontend-backend-agent-normalization-plan.md``.
+See ``misc/prototypes/voice/normalization-plan.md``.
 """
 
 from __future__ import annotations

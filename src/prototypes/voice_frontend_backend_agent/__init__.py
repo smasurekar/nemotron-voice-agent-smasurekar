@@ -6,7 +6,7 @@
 ASR and TTS (nemo-speech over Riva gRPC) wrap the text prototype's
 ``FrontendBackendAgent``, served as ``WS /v1/realtime`` so tau3-bench's audio-native
 ``openai`` client can drive it. See ``README.md`` and
-``misc/prototypes/voice-frontend-backend-agent-prototype-plan.md``.
+``misc/prototypes/voice/prototype-plan.md``.
 
 ``build_app`` is imported lazily so the wire, engine and agent layers can be used
 without importing FastAPI.

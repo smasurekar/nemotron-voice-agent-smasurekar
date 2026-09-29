@@ -1219,7 +1219,7 @@ uv run tau2 run --domain airline --audio-native --audio-native-provider openai \
 | **P4 Speech adapters + server** | Silero VAD, Riva ASR/TTS, catalog resolver, FastAPI app, `/health`, warm-up | rule 19; manual run against `nemo-speech` |
 | **P5 Chat client** | `voice_chat.py` (text, wav, mic), client tools, `tau2_replay.py` | manual conversation in both modes, filler `speak` and `log_only` |
 | **P6 τ³ bring-up** | `mock` domain 1 task → airline 5 tasks → retail; both modes | tau2 runs end `AGENT_STOP`/`USER_STOP`; scored transcripts non-empty; tool calls recorded |
-| **P7 Docs + hardening** | package README, runbook `misc/prototypes/voice-frontend-backend-agent-runbook.md`, timeouts, max_sessions | validation §19 clean |
+| **P7 Docs + hardening** | package README, runbook `misc/prototypes/voice/runbook.md`, timeouts, max_sessions | validation §19 clean |
 
 ### 18.0 Early validation against the real τ³ client (not only at P6)
 

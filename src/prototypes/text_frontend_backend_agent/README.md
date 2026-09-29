@@ -4,8 +4,8 @@ A domain-agnostic, text-in/text-out reimplementation of
 [`src/examples/frontend_backend_agent/`](../../examples/frontend_backend_agent/), built so a
 scaffold-evaluation harness (τ²-bench) can drive it.
 
-Design and rationale: [`misc/prototypes/text-frontend-backend-agent-prototype-plan.md`](../../../misc/prototypes/text-frontend-backend-agent-prototype-plan.md).
-How to run it: [`misc/prototypes/text-frontend-backend-agent-runbook.md`](../../../misc/prototypes/text-frontend-backend-agent-runbook.md).
+Design and rationale: [`misc/prototypes/text/prototype-plan.md`](../../../misc/prototypes/text/prototype-plan.md).
+How to run it: [`misc/prototypes/text/runbook.md`](../../../misc/prototypes/text/runbook.md).
 
 ## What it is
 

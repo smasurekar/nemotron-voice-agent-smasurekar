@@ -20,11 +20,11 @@ dependencies = [
 # Direct dependency of `src/prototypes/` only. It must be a project extra, not a
 # dependency group: groups are not install metadata, so an external environment
 # doing `uv pip install -e <this repo>` would not get it. See
-# misc/prototypes/text-frontend-backend-agent-prototype-plan.md section 4.1.
+# misc/prototypes/text/prototype-plan.md section 4.1.
 prototypes = ["openai>=1.109.1", "rich>=13.9.4"]
 # Every package `src/prototypes/voice_frontend_backend_agent/` imports directly, declared
 # instead of relied on transitively (plan section 5.1 in
-# misc/prototypes/voice-frontend-backend-agent-prototype-plan.md). All are already in
+# misc/prototypes/voice/prototype-plan.md). All are already in
 # the image; the extra only declares them. Microphone I/O is a separate extra because
 # sounddevice needs the PortAudio system library.
 prototypes-voice = [

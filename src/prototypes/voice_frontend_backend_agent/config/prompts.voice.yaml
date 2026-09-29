@@ -367,7 +367,7 @@ backend_history_guidance_transcript:
 # normalization.transcript.frontend_note_key names it. The two tool_* entries are
 # the tool results of calls the agent answers itself instead of sending them
 # (placeholders: {tool}, {label}, {value}, {format_hint}, {spelled}). See
-# misc/prototypes/voice-frontend-backend-agent-normalization-plan.md.
+# misc/prototypes/voice/normalization-plan.md.
 
 identifier_note_voice:
   description: "Frontend note for the transcript hook: identifiers may arrive in written form."
@@ -399,7 +399,7 @@ tool_call_already_failed:
 # barge_in.frontend_verdict.note_key names it). call_backend then carries a required "task"
 # field. Variables: in_progress.query, in_progress.filler, in_progress.filler_heard,
 # in_progress.new_words. See
-# misc/prototypes/voice-frontend-backend-agent-barge-in-frontend-verdict-plan.md (section 11).
+# misc/prototypes/voice/barge-in-frontend-verdict-plan.md (section 11).
 
 frontend_task_in_progress:
   description: "Frontend note while a request is in progress: decide whether new speech continues it."

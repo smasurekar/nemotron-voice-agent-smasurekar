@@ -15,7 +15,7 @@ of the ID; left of the first anchor, the adjacent word plus any spelled letters
 before it; right of the last anchor, a run of number words (the digit tail) or
 the adjacent word (or a run of spelled letters). Stop words, fillers and
 punctuation-only tokens end the outer parts. See
-``misc/prototypes/voice-frontend-backend-agent-normalization-plan.md`` section 4.2.
+``misc/prototypes/voice/normalization-plan.md`` section 4.2.
 """
 
 from __future__ import annotations

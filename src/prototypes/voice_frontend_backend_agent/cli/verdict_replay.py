@@ -23,7 +23,7 @@ environment::
     PYTHONPATH=src uv run python -m prototypes.voice_frontend_backend_agent.cli.verdict_replay \
         --events logs/fba_voice_web_events.jsonl \
         --config src/prototypes/voice_frontend_backend_agent/config/profiles/browser_demo_frontend_verdict.yaml \
-        --cases misc/prototypes/verdict_cases.jsonl --guard off --out /tmp/verdict_replay.jsonl
+        --cases misc/prototypes/voice/verdict_cases.jsonl --guard off --out /tmp/verdict_replay.jsonl
 
 A cases file holds one JSON object per line: ``request`` (the running turn's
 words followed by the new words), ``new_words``, ``running_query``, optional

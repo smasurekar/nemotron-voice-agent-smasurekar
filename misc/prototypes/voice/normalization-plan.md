@@ -364,8 +364,8 @@ normalization:
 ## 8. Documentation
 
 - Voice `README.md`: the `normalization` section, the new events, the profile.
-- `misc/prototypes/voice-frontend-backend-agent-runbook.md`: profile row and port.
-- `misc/prototypes/voice-frontend-backend-agent-prototype-plan.md`: revision entry.
+- `misc/prototypes/voice/runbook.md`: profile row and port.
+- `misc/prototypes/voice/prototype-plan.md`: revision entry.
 - tau2 repo `misc/prototypes/voice-frontend-backend-agent-tau3-runbook.md`: a `norm` arm
   (container `fba-voice-norm`, port 8771; arm names can't contain `_`).
 

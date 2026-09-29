@@ -88,7 +88,7 @@ class VerdictReplayTests(unittest.TestCase):
         self.assertEqual(user.content, "status of order one two three one? Okay .")
 
     def test_cases_file_accuracy(self) -> None:
-        cases = REPO_ROOT / "misc" / "prototypes" / "verdict_cases.jsonl"
+        cases = REPO_ROOT / "misc" / "prototypes" / "voice" / "verdict_cases.jsonl"
         count = len(cases.read_text(encoding="utf-8").splitlines())
         frontend = FakeChatClient([text_response("It is running.")] * count)
         out = self.root / "cases.jsonl"

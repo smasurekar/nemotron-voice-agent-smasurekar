@@ -349,7 +349,7 @@ overrides, and probe latency p50 and p95) goes to stderr:
 PYTHONPATH=src uv run python -m prototypes.voice_frontend_backend_agent.cli.verdict_replay \
   --events logs/fba_voice_web_events.jsonl \
   --config src/prototypes/voice_frontend_backend_agent/config/profiles/browser_demo_frontend_verdict.yaml \
-  [--model pine-browser] [--cases misc/prototypes/verdict_cases.jsonl] [--guard off] --out /tmp/verdict_replay.jsonl
+  [--model pine-browser] [--cases misc/prototypes/voice/verdict_cases.jsonl] [--guard off] --out /tmp/verdict_replay.jsonl
 ```
 
 The source is bind-mounted, so a restart of `fba-voice-web` picks up the prompt change without a rebuild.

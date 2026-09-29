@@ -14,7 +14,7 @@ per call, whether it goes out or is answered locally:
   produced a *permanent* failure in this session (the retry guard).
 
 Everything here is pure; the per-session failed set is owned by the runner.
-See ``misc/prototypes/voice-frontend-backend-agent-normalization-plan.md`` section 4.3.
+See ``misc/prototypes/voice/normalization-plan.md`` section 4.3.
 """
 
 from __future__ import annotations

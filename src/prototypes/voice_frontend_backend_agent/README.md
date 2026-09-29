@@ -4,8 +4,8 @@ An **OpenAI Realtime (GA) WebSocket server** that wraps the text prototype
 ([`text_frontend_backend_agent`](../text_frontend_backend_agent/README.md)) with nemo-speech ASR and TTS.
 tau3-bench's audio-native `openai` client (`pine-` models) can drive it exactly as it drives `gpt-realtime`.
 
-- Plan: [`misc/prototypes/voice-frontend-backend-agent-prototype-plan.md`](../../../misc/prototypes/voice-frontend-backend-agent-prototype-plan.md)
-- Docker runbook: [`misc/prototypes/voice-frontend-backend-agent-runbook.md`](../../../misc/prototypes/voice-frontend-backend-agent-runbook.md)
+- Plan: [`misc/prototypes/voice/prototype-plan.md`](../../../misc/prototypes/voice/prototype-plan.md)
+- Docker runbook: [`misc/prototypes/voice/runbook.md`](../../../misc/prototypes/voice/runbook.md)
 
 This is a prototype. It is not registered in `examples_registry.yaml` and has no Compose profile of its own.
 
@@ -62,7 +62,7 @@ PYTHONPATH=src uv run python -m prototypes.voice_frontend_backend_agent.server -
 PYTHONPATH=src uv run python -m prototypes.voice_frontend_backend_agent.cli.tau2_replay --pause-s 1
 ```
 
-For the container, follow the [runbook](../../../misc/prototypes/voice-frontend-backend-agent-runbook.md).
+For the container, follow the [runbook](../../../misc/prototypes/voice/runbook.md).
 
 ## Chat client
 
@@ -172,7 +172,7 @@ PYTHONPATH=src uv run python -m prototypes.voice_frontend_backend_agent.cli.norm
   --model pine-fba-voice-paired-airline-regular --out /tmp/norm_replay.jsonl
 ```
 
-Design and rules: [`misc/prototypes/voice-frontend-backend-agent-normalization-plan.md`](../../../misc/prototypes/voice-frontend-backend-agent-normalization-plan.md).
+Design and rules: [`misc/prototypes/voice/normalization-plan.md`](../../../misc/prototypes/voice/normalization-plan.md).
 
 ### Barge-in while thinking
 
@@ -264,15 +264,15 @@ prints accuracy against the expected verdict, guard overrides, and probe latency
 PYTHONPATH=src uv run python -m prototypes.voice_frontend_backend_agent.cli.verdict_replay \
   --events logs/fba_voice_web_events.jsonl \
   --config src/prototypes/voice_frontend_backend_agent/config/profiles/browser_demo_frontend_verdict.yaml \
-  [--model pine-browser] [--cases misc/prototypes/verdict_cases.jsonl] [--guard off] --out /tmp/verdict_replay.jsonl
+  [--model pine-browser] [--cases misc/prototypes/voice/verdict_cases.jsonl] [--guard off] --out /tmp/verdict_replay.jsonl
 ```
 
 `--guard off` (or `on`) overrides the profile's `same_query_guard`, so `--guard off` measures the prompt alone.
 Each probe starts from an empty conversation, and the frontend's capability list comes from the profile's config
-tools only. The fixed cases in `misc/prototypes/verdict_cases.jsonl` are the acknowledgements of the first live
+tools only. The fixed cases in `misc/prototypes/voice/verdict_cases.jsonl` are the acknowledgements of the first live
 sessions (expected `continue`) and corrections, additions and cancellations (expected `new`).
 
-Design and rules: [`misc/prototypes/voice-frontend-backend-agent-barge-in-frontend-verdict-plan.md`](../../../misc/prototypes/voice-frontend-backend-agent-barge-in-frontend-verdict-plan.md).
+Design and rules: [`misc/prototypes/voice/barge-in-frontend-verdict-plan.md`](../../../misc/prototypes/voice/barge-in-frontend-verdict-plan.md).
 
 ## Protocol differences from OpenAI
 

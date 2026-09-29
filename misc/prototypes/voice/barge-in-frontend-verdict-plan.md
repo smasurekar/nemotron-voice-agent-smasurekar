@@ -649,7 +649,7 @@ Changes in `tau2-bench-smasurekar` (separate change in that repository, after th
 
 - Voice `README.md`: the `barge_in.while_thinking` values, the frontend-verdict flow (§2), the new events (§6).
 - Text `README.md`: `decide_turn` / `continue_turn` and the optional `in_progress_note` (unused by text τ²).
-- `misc/prototypes/voice-frontend-backend-agent-runbook.md` §3B: "browser demo with the frontend barge-in
+- `misc/prototypes/voice/runbook.md` §3B: "browser demo with the frontend barge-in
   verdict", the profile path and the §8.1 check.
 - Per `AGENTS.md`: start a documentation subagent with `docs/AGENTS.md` during implementation, and add the
   "Documentation Writer Review" receipt to the PR.
@@ -908,7 +908,7 @@ It follows `cli/normalization_replay.py`:
 PYTHONPATH=src uv run python -m prototypes.voice_frontend_backend_agent.cli.verdict_replay \
   --events logs/fba_voice_web_events.jsonl \
   --config src/prototypes/voice_frontend_backend_agent/config/profiles/browser_demo_frontend_verdict.yaml \
-  [--model pine-browser] [--cases misc/prototypes/verdict_cases.jsonl] --out /tmp/verdict_replay.jsonl
+  [--model pine-browser] [--cases misc/prototypes/voice/verdict_cases.jsonl] --out /tmp/verdict_replay.jsonl
 ```
 
 - **Recorded verdicts:** for each `barge_in_verdict` in the log, it rebuilds the probe input from `merged_text`,
@@ -970,7 +970,7 @@ gives `new`, and the guard is off for the prompt-only comparison. Then run the s
 - **Load-time check.** The frontend and backend templates are always rendered once. The in-progress render runs
   only with `frontend_verdict`.
 - **Replay CLI.** It has `--guard config|on|off` and refuses a profile without `frontend_verdict`. The fixed
-  cases are in `misc/prototypes/verdict_cases.jsonl` (13 cases).
+  cases are in `misc/prototypes/voice/verdict_cases.jsonl` (13 cases).
 
 **Replay (§11.7) on `logs/fba_voice_web_events.jsonl` and the 13 cases**, against the live
 `nemotron-3.5-lightning`, 2026-09-28:
