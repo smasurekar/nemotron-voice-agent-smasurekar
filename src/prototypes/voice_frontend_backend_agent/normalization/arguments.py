@@ -13,6 +13,9 @@ per call, whether it goes out or is answered locally:
 * ``already_failed``: the same tool with the same canonical arguments already
   produced a *permanent* failure in this session (the retry guard).
 
+With ``escalate_invalid_message_key`` set, the second and later ``invalid`` answers of
+the same tool in a session use that (firmer) message; the caller owns the counts.
+
 Everything here is pure; the per-session failed set is owned by the runner.
 See ``misc/prototypes/voice/normalization-plan.md`` section 4.3.
 """
@@ -26,7 +29,11 @@ from dataclasses import dataclass, field, replace
 
 from prototypes.text_frontend_backend_agent.messages import ToolCall, canonical_json
 from prototypes.voice_frontend_backend_agent.normalization.rules import apply_case, spelled_out
-from prototypes.voice_frontend_backend_agent.normalization.transcript import TranscriptNormalizer, TranscriptSettings
+from prototypes.voice_frontend_backend_agent.normalization.transcript import (
+    SpelledRunSettings,
+    TranscriptNormalizer,
+    TranscriptSettings,
+)
 
 ON_INVALID = ("answer_locally", "send")
 GUARD_SCOPES = ("rules", "all")
@@ -75,6 +82,8 @@ class ToolArgumentSettings:
     enabled: bool = False
     rules: tuple[ArgumentRule, ...] = ()
     invalid_message_key: str = "tool_argument_invalid"
+    #: Message for the 2nd+ invalid answer of the same tool in a session ("" = always ``invalid_message_key``).
+    escalate_invalid_message_key: str = ""
     max_local_rounds: int = 3
     retry_guard: RetryGuardSettings = field(default_factory=RetryGuardSettings)
 
@@ -100,6 +109,7 @@ class LocalAnswer:
     value: str
     reason: str
     message: str
+    message_key: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,6 +146,7 @@ class ArgumentNormalizer:
         transcript: TranscriptSettings,
         invalid_template: str,
         already_failed_template: str,
+        escalate_invalid_template: str = "",
     ) -> None:
         """``transcript`` supplies the separator words and ruleset for ``spoken_form`` rules."""
         self._settings = settings
@@ -143,10 +154,13 @@ class ArgumentNormalizer:
         for rule in settings.rules:
             self._rules.setdefault(rule.tool, []).append(rule)
         # Same words as the transcript hook; the rule decides the case.
-        self._spoken = TranscriptNormalizer(replace(transcript, enabled=True, case="keep"))
+        self._spoken = TranscriptNormalizer(
+            replace(transcript, enabled=True, case="keep", spelled_runs=SpelledRunSettings())
+        )
         self._separators = dict(transcript.separator_words)
         self._invalid_template = invalid_template
         self._already_failed_template = already_failed_template
+        self._escalate_template = escalate_invalid_template if settings.escalate_invalid_message_key else ""
         guard = settings.retry_guard
         self._failure = re.compile(guard.permanent_failure_pattern) if guard.enabled else None
 
@@ -183,8 +197,17 @@ class ArgumentNormalizer:
         guard = self._settings.retry_guard
         return guard.enabled and (guard.scope == "all" or tool in self._rules)
 
-    def screen(self, calls: Sequence[ToolCall], failed: frozenset[FailureKey]) -> Screening:
-        """Canonicalize every call and decide which are answered locally."""
+    def screen(
+        self,
+        calls: Sequence[ToolCall],
+        failed: frozenset[FailureKey],
+        invalid_counts: Mapping[str, int] | None = None,
+    ) -> Screening:
+        """Canonicalize every call and decide which are answered locally.
+
+        ``invalid_counts`` (tool -> earlier ``invalid`` answers this session) selects the escalated message.
+        """
+        counts = dict(invalid_counts or {})
         out: list[ToolCall] = []
         rewrites: list[Rewrite] = []
         local: list[LocalAnswer] = []
@@ -214,7 +237,9 @@ class ArgumentNormalizer:
             out.append(canonical_call)
             if invalid is not None:
                 rule, value = invalid
-                local.append(self._answer(call, rule, value, REASON_INVALID))
+                escalate = bool(self._escalate_template) and counts.get(call.name, 0) >= 1
+                counts[call.name] = counts.get(call.name, 0) + 1
+                local.append(self._answer(call, rule, value, REASON_INVALID, escalate=escalate))
                 continue
             if self._guarded(call.name):
                 key = (call.name, canonical_json(arguments))
@@ -231,8 +256,16 @@ class ArgumentNormalizer:
         rule = ArgumentRule(tool=call.name, argument="arguments")
         return self._answer(call, rule, canonical_json(dict(arguments)), REASON_ALREADY_FAILED)
 
-    def _answer(self, call: ToolCall, rule: ArgumentRule, value: str, reason: str) -> LocalAnswer:
-        template = self._invalid_template if reason == REASON_INVALID else self._already_failed_template
+    def _answer(
+        self, call: ToolCall, rule: ArgumentRule, value: str, reason: str, *, escalate: bool = False
+    ) -> LocalAnswer:
+        settings = self._settings
+        if reason == REASON_INVALID and escalate:
+            template, key = self._escalate_template, settings.escalate_invalid_message_key
+        elif reason == REASON_INVALID:
+            template, key = self._invalid_template, settings.invalid_message_key
+        else:
+            template, key = self._already_failed_template, settings.retry_guard.message_key
         message = render_message(
             template,
             tool=call.name,
@@ -241,4 +274,4 @@ class ArgumentNormalizer:
             format_hint=rule.format_hint or "see the tool description",
             spelled=spelled_out(value, self._separators),
         )
-        return LocalAnswer(call.id, call.name, rule.argument, value, reason, message)
+        return LocalAnswer(call.id, call.name, rule.argument, value, reason, message, key)

@@ -21,6 +21,8 @@ from typing import Any
 
 import yaml
 
+from prototypes.voice_delegation_hermes_agent.prompt_features import BACKEND_FEATURES, features
+
 PACKAGE_DIR = Path(__file__).resolve().parents[1]
 CONFIG_DIR = PACKAGE_DIR / "config"
 DEFAULT_GATEWAY_CONFIG = CONFIG_DIR / "gateway.yaml"
@@ -77,6 +79,8 @@ DEFAULTS: dict[str, Any] = {
         },
         "prompts": {"path": "prompts.backend.yaml"},
     },
+    # Backend prompt variants (tau3-failure-fixes-plan.md section 1): all off = the baseline prompts.
+    "prompt_features": dict(BACKEND_FEATURES),
 }
 
 #: Keys whose mapping value is free-form (no strict key check below them).
@@ -188,6 +192,7 @@ class GatewayConfig:
     recovery: RecoverySection
     hermes: HermesSection
     files: tuple[str, ...] = field(default=())
+    prompt_features: Mapping[str, bool] = field(default_factory=lambda: dict(BACKEND_FEATURES))
 
     def summary(self) -> dict[str, Any]:
         """Effective settings for the ``session_open`` log record (no secrets live here)."""
@@ -210,6 +215,7 @@ class GatewayConfig:
                 "respawn": self.recovery.respawn,
                 "max_respawns_per_session": self.recovery.max_respawns_per_session,
             },
+            "prompt_features": dict(self.prompt_features),
         }
 
 
@@ -391,7 +397,11 @@ def build_gateway_config(merged: Mapping[str, Any], files: tuple[Path, ...] = ()
         request_overrides=copy.deepcopy(dict(h.get("request_overrides") or {})),
         prompts_path=prompts_path,
     )
-    config = GatewayConfig(gateway, workers, recovery, hermes, tuple(str(p) for p in files))
+    try:
+        prompt_features = dict(features(merged.get("prompt_features"), BACKEND_FEATURES))
+    except ValueError as exc:
+        raise GatewayConfigError(f"prompt_features: {exc}") from exc
+    config = GatewayConfig(gateway, workers, recovery, hermes, tuple(str(p) for p in files), prompt_features)
     _cross_check(config)
     return config
 

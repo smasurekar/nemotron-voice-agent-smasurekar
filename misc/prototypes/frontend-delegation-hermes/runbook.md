@@ -9,8 +9,9 @@ This runbook starts two deployments that share one backend gateway:
 - the **browser page** (port 8776), with the 5 s simulated backend delay.
 
 Every command runs from the repository root unless it says otherwise. The τ³ campaign runbook for this
-prototype (arms, reportable runs, archiving) is a separate, later document. §6 only shows how to point τ³
-at the server.
+prototype (reportable runs, archiving) is a separate, later document. §6 shows how to point τ³ at the
+server; §6.1 lists the evaluation arms of [`tau3-failure-fixes-plan.md`](tau3-failure-fixes-plan.md) and how
+to start one.
 
 **Last verified 2026-09-29** on one RTX 5000 Ada host, following this runbook top to bottom:
 
@@ -26,6 +27,11 @@ at the server.
 
 **Re-verified 2026-09-30** after the Hermes checkout (v0.21.0) moved to Python `<3.14`: with the venv
 rebuilt on Python 3.13 (§1.2), the gateway (§3), the §3.1 probe and `fdh-voice` (§4) started and passed.
+
+**Re-verified 2026-09-30** after the τ³ failure fixes ([`tau3-failure-fixes-plan.md`](tau3-failure-fixes-plan.md)): image
+rebuilt (§1.4), the gateway (§3), `fdh-voice` (§4, `tau3_eval.yaml`) and `fdh-voice-web` (§5) restarted; every new
+switch reported off on `/health`; the §4.1 text smoke passed; and `fingerprint_check` (§6.1) printed
+`fingerprint: OK` on the smoke session. The arms themselves have not been run yet.
 
 ## 0. What runs where
 
@@ -43,8 +49,8 @@ rebuilt on Python 3.13 (§1.2), the gateway (§3), the §3.1 probe and `fdh-voic
 | Component | Where | Port | Config |
 |---|---|---|---|
 | `nemo-speech` | container (Compose profile `frontend-backend-agent/single-gpu`) | 50051 | `docker/docker-compose.nemo-speech-cpp.yaml` |
-| Backend gateway + Hermes workers | host process | 8790, bound to the `docker0` address | `config/gateway.yaml` |
-| τ³ Realtime voice server `fdh-voice` | container (`nemotron-voice-agent:latest`, `src/` mounted read-only) | 8775 | `config/profiles/tau3_eval.yaml` |
+| Backend gateway + Hermes workers | host process | 8790, bound to the `docker0` address | `config/gateway.yaml` (an arm may use `config/gateway.<variant>.yaml`, §6.1) |
+| τ³ Realtime voice server `fdh-voice` | container (`nemotron-voice-agent:latest`, `src/` mounted read-only) | 8775 | `config/profiles/tau3_eval.yaml` (or an arm profile, §6.1) |
 | Browser voice server `fdh-voice-web` | container | 8776 (https) | `config/profiles/browser_demo.yaml` |
 
 Why the gateway runs on the host: Hermes needs its own venv and Python (3.13 here; the checkout requires
@@ -117,16 +123,18 @@ docker logs -f nemotron-voice-agent-nemo-speech-1 2>&1 | grep -m1 'listening on 
 ## 3. Start the backend gateway (host)
 
 The gateway binds only to the `docker0` address: it has no authentication, so it must not be reachable
-from the LAN. The backend model is pinned on the command line.
+from the LAN. The backend model is pinned on the command line. `FDH_GATEWAY_CONFIG` selects the gateway
+file: `gateway.yaml` (every backend prompt variant off) unless an arm needs another one (§6.1).
 
 ```bash
+export FDH_GATEWAY_CONFIG=${FDH_GATEWAY_CONFIG:-gateway.yaml}
 nohup env PYTHONPATH=src \
   FDH_GATEWAY_HOST=$DOCKER_HOST_IP FDH_GATEWAY_PORT=8790 FDH_MAX_SESSIONS=8 \
   FDH_HERMES_PYTHON=$HOME/.cache/fdh/hermes-venv-313/bin/python \
   BACKEND_LLM_MODEL=nvidia/nvidia/nemotron-3-ultra BACKEND_LLM_BASE_URL=https://inference-api.nvidia.com/v1 \
   FDH_GATEWAY_LOG=logs/fdh_gateway_events.jsonl FDH_WORKER_LOG_DIR=logs/fdh_workers \
   uv run python -m prototypes.voice_delegation_hermes_agent.sidecar.gateway_server \
-    --config src/prototypes/voice_delegation_hermes_agent/config/gateway.yaml \
+    --config src/prototypes/voice_delegation_hermes_agent/config/$FDH_GATEWAY_CONFIG \
   > logs/fdh_gateway.out 2>&1 &
 echo $! > logs/fdh_gateway.pid
 sleep 3; curl -s http://$DOCKER_HOST_IP:8790/health; echo
@@ -137,7 +145,13 @@ Expected health:
 - `"ok": true` and `"max_sessions": 8`;
 - `"agent_kind": "hermes"`;
 - `"hermes": {"model": "nvidia/nvidia/nemotron-3-ultra", "base_url": "https://inference-api.nvidia.com/v1",
-  "reasoning": true}`.
+  "reasoning": true}`;
+- `"backend_features": {"spelling_v2": false, "spoken_output": false, "write_consent": false}` with
+  `gateway.yaml` (one `true` with a `gateway.<variant>.yaml`), and `"backend_catalog_sha256"`, the hash of
+  `prompts.backend.yaml`.
+
+The gateway loads its code and prompts at startup: restart it (§10, then this section) after a code or
+prompt change, or to switch `FDH_GATEWAY_CONFIG`.
 
 **3.1 Optional backend-only check** (a real Hermes worker, text only, about 30 s). It drives the gateway
 directly, the way the voice server does. It covers a new task with a tool call, a continue, a status
@@ -150,23 +164,27 @@ PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.bac
 
 ## 4. Start the τ³ Realtime voice server (`fdh-voice`, port 8775)
 
+`FDH_PROFILE` selects the profile: `tau3_eval.yaml` for normal runs, or an arm profile (§6.1).
+
 ```bash
+export FDH_PROFILE=${FDH_PROFILE:-tau3_eval.yaml}
 docker compose --profile frontend-backend-agent/single-gpu run --rm -d --no-deps --name fdh-voice -p 8775:7860 \
   -v "$PWD/logs:/app/logs" -e PYTHONPATH=/app/src -e PIPELINE_TLS=false \
   -e FDH_BACKEND_URL=ws://host.docker.internal:8790/v1/backend -e FDH_MAX_SESSIONS=4 \
   -e FRONTEND_LLM_MODEL=nvidia/nvidia/nemotron-3.5-lightning -e FRONTEND_LLM_BASE_URL=https://inference-api.nvidia.com/v1 \
-  -e FDH_EVENT_LOG=logs/fdh_voice_events.jsonl \
+  -e FDH_EVENT_LOG=logs/fdh_voice_events.jsonl -e FDH_PROACTIVE_AFTER_S=${FDH_PROACTIVE_AFTER_S:-15} \
   frontend-backend-agent-single-gpu \
   uv run python -m prototypes.voice_delegation_hermes_agent.server \
-    --config src/prototypes/voice_delegation_hermes_agent/config/profiles/tau3_eval.yaml --port 7860
+    --config src/prototypes/voice_delegation_hermes_agent/config/profiles/$FDH_PROFILE --port 7860
 sleep 15; curl -s localhost:8775/health; echo
-docker logs fdh-voice 2>&1 | grep -E 'backend gateway|ready|VAD'
+docker logs fdh-voice 2>&1 | grep -E 'backend gateway|ready|VAD|features'
 ```
 
 Expected:
 
-- `/health` shows `"status": "ok"`, `"prototype": "frontend-delegation-hermes"` and
-  `"backend": {"link": "websocket", ...}`.
+- `/health` shows `"status": "ok"`, `"prototype": "frontend-delegation-hermes"`,
+  `"backend": {"link": "websocket", ...}` and `"features"`: every switch `false` with `tau3_eval.yaml`, only
+  the arm's own switches `true` with an arm profile.
 - The logs show `frontend warm-up done in …s`, `backend gateway http://host.docker.internal:8790/health:
   {... 'ok': True ... 'hermes': {'model': 'nvidia/nvidia/nemotron-3-ultra', ... 'reasoning': True}}` and
   `VAD silence=800ms`.
@@ -284,6 +302,67 @@ PINE_REALTIME_BASE_URL=ws://localhost:8775/v1/realtime PINE_API_KEY=unused \
 # last line: GATE A PASSED  (against a real server it needs a tone the ASR transcribes; see §8 for the stub gate)
 ```
 
+### 6.1 Evaluation arms (τ³ failure fixes)
+
+[`tau3-failure-fixes-plan.md`](tau3-failure-fixes-plan.md) adds generic fixes for the airline failures, each
+behind its own switch and off by default. An arm is a voice profile (§4, `FDH_PROFILE`) plus a gateway
+config (§3, `FDH_GATEWAY_CONFIG`). Every arm is compared with a fresh control on the same host (plan §8).
+
+| Arm | `FDH_PROFILE` | `FDH_GATEWAY_CONFIG` | Turns on |
+|---|---|---|---|
+| Control | `tau3_eval_baseline.yaml` | `gateway.yaml` | nothing: prompts byte-identical to agent commit `3a7e04a` |
+| M1 proactive status | `tau3_arm_m1_status.yaml` | `gateway.yaml` | one short status line per run after `FDH_PROACTIVE_AFTER_S` (default 15) s of silence while WORKING |
+| M3 spelling | `tau3_arm_m3_spelling.yaml` | `gateway.spelling_v2.yaml` | spelled-run joining, spelling hold (airline code pattern), escalating local "invalid ID" wording, backend variant `spelling_v2` |
+| Airline canary (M1 + M3) | `tau3_airline_canary.yaml` | `gateway.spelling_v2.yaml` | M1 and M3 together, after each passed its own arm |
+| M2 replay (experimental) | `tau3_arm_m2_replay.yaml` | `gateway.yaml` | replays an unheard answer on a "status" request in IDLE (RC2), frontend variant `replay_intent` |
+| G1 filler de-duplication | `tau3_arm_g1_filler_dedupe.yaml` | `gateway.yaml` | a repeated filler is dropped (WORKING) or replaced |
+| G2 short answers | `tau3_arm_g2_short_answers.yaml` | `gateway.spoken_output.yaml` | markdown cleanup before TTS, backend variant `spoken_output` |
+| G4 write consent | `tau3_eval_baseline.yaml` | `gateway.write_consent.yaml` | backend variant `write_consent` |
+
+`tau3_eval.yaml` and `tau3_eval_baseline.yaml` behave the same; the baseline pins every new switch off.
+To switch arms, stop both servers (§10) and start them again with the two variables, for example:
+
+```bash
+export FDH_PROFILE=tau3_arm_m3_spelling.yaml FDH_GATEWAY_CONFIG=gateway.spelling_v2.yaml
+# then §3 (gateway) and §4 (fdh-voice)
+```
+
+**Before M1: calibrate `FDH_PROACTIVE_AFTER_S` on the target host** (plan §2): from a control run, take the
+wall-clock and τ² simulated gaps of WORKING spans with no audio; the line must play at about 20 s simulated
+or earlier, and not before the 75th percentile of normal filler-to-answer gaps.
+
+**Before M3: re-measure the spelling hold** on the run's own events (plan §9; the canary is blocked if the
+held/continued counts move by more than 10%). On the 2026-09-29 airline events it gives held 103
+(51 continued, 52 not), not held: complete user ID 10, complete code 7:
+
+```bash
+PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.spelling_hold_replay \
+  <events.jsonl> --config src/prototypes/voice_delegation_hermes_agent/config/profiles/tau3_arm_m3_spelling.yaml
+```
+
+**Frontend decisions for M2:** `delegation_replay` runs 3 more cases (`replay_unheard|IDLE`) when the profile
+turns `replay_intent` on:
+
+```bash
+PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.delegation_replay \
+  --config src/prototypes/voice_delegation_hermes_agent/config/profiles/tau3_arm_m2_replay.yaml --only replay
+```
+
+**Before scoring an arm: check its deployed fingerprint** (plan §1, rule 5). Every session must have the
+arm's switches, the gateway's variants and one set of prompt hashes; exit 1 means the arm is re-run, not
+scored:
+
+```bash
+PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.fingerprint_check \
+  logs/fdh_voice_events.jsonl \
+  --profile src/prototypes/voice_delegation_hermes_agent/config/profiles/$FDH_PROFILE \
+  --gateway-config src/prototypes/voice_delegation_hermes_agent/config/$FDH_GATEWAY_CONFIG
+# last line: fingerprint: OK
+```
+
+Use one event log per arm and domain (`-e FDH_EVENT_LOG=...` in §4): the prompt hashes include the τ² policy
+and tools. Events written before this change have no fingerprint, and the check fails on them.
+
 **Reporting.** `fba_voice_metrics.py` expects one backend operation per turn. Convert the event log first;
 the adapter credits each run to the turn that started it and exits 1 on an orphaned tool call:
 
@@ -296,8 +375,8 @@ PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.rep
 
 | File | Content |
 |---|---|
-| `logs/fdh_voice_events.jsonl`, `logs/fdh_voice_web_events.jsonl` | Voice server events per session: `fdh_session_start` (config hash), `delegation_decision`, `backend_action`, `tool_calls_out`, `tool_output_in`, `backend_answer`, `status_spoken`, `playback_outcome`, `delivery_note`, `history_sync`, `turn_latency`, `filler_timing`, `barge_in` |
-| `logs/fdh_gateway_events.jsonl` | Gateway: sessions, worker spawn/ready/exit (`start_ms`, `rss_mb`), run epochs and outcomes, context delivery states, watchdog, respawns |
+| `logs/fdh_voice_events.jsonl`, `logs/fdh_voice_web_events.jsonl` | Voice server events per session: `fdh_session_start` (config hash, `features`, `invalid_message_keys`), `frontend_prompt` (prompt hash), `backend_configured` (backend fingerprint), `delegation_decision`, `backend_action`, `tool_calls_out`, `tool_output_in`, `call_answered_locally` (`reason`, `message_key`), `backend_answer`, `status_spoken`, `playback_outcome`, `delivery_note`, `history_sync`, `turn_latency`, `filler_timing`, `barge_in`. Only with an arm's switch on: `status_proactive` (M1), `spelling_hold` (M3), `answer_replayed` / `answer_replay_skipped` (M2), `filler_deduped` (G1), `answer_cleaned` (G2) |
+| `logs/fdh_gateway_events.jsonl` | Gateway: `gateway_start` (`backend_features`, `backend_catalog_sha256`), sessions, `backend_fingerprint`, worker spawn/ready/exit (`start_ms`, `rss_mb`), run epochs and outcomes, context delivery states, watchdog, respawns |
 | `logs/fdh_workers/*.log` | Each Hermes worker's stdout/stderr. "Auxiliary Nous client unavailable" lines are harmless |
 | `logs/fdh_gateway.out` | Gateway process output |
 | `docker logs fdh-voice`, `docker logs fdh-voice-web` | Voice server output (latency breakdowns, errors) |
@@ -327,6 +406,9 @@ PINE_REALTIME_BASE_URL=ws://localhost:8779/v1/realtime PINE_API_KEY=unused \
 ```
 
 Unit tests: `uv run pytest tests/unit/prototypes/delegation tests/unit/prototypes/voice -q`.
+`test_fdh_golden_prompts.py` checks that, with every prompt variant off, every prompt is byte-identical to
+agent commit `3a7e04a`; regenerate the golden files only for an intended baseline change
+(`PYTHONPATH=src uv run python tests/unit/prototypes/delegation/_fdh_golden.py --write`).
 
 ## 9. Configuration knobs
 
@@ -349,6 +431,15 @@ Profiles are in `src/prototypes/voice_delegation_hermes_agent/config/`. Unknown 
 | Capacity | env `FDH_MAX_SESSIONS` (gateway and each voice server) | 8 |
 | Hermes budgets | `hermes.max_iterations`, `run_budget_seconds`, `run_hard_deadline_s` | 30, 300 (soft), 330 (hard, kills the worker) |
 | Worker processes | `workers.start_timeout_s`, `stop_timeout_s`, `kill_grace_s`, `warm`, `recovery.*` | 15, 12, 3, 0; respawn at most 2 per session |
+| M1 proactive status | `output.proactive_status.{enabled,after_s,max_per_run}`; lines in `prompts.yaml` `status_proactive_lines` | off, 15 s, 1 per run |
+| M3 spelled runs | `voice/*.yaml` `normalization.transcript.spelled_runs.{enabled,min_tokens,case}` | off, 3, `keep` (on in `voice/tau3_spelling.yaml`) |
+| M3 spelling hold | `delegation.spelling_hold.{enabled,hold_ms,complete_patterns}` | off, 1500 ms, `[]` (airline code pattern in `tau3_arm_m3_spelling.yaml`) |
+| M3 local "invalid ID" wording | `voice/*.yaml` `normalization.tool_arguments.invalid_message_key`, `escalate_invalid_message_key` | `tool_argument_invalid`, none |
+| M2 replay an unheard answer | `delegation.replay_unheard_answer.{enabled,ttl_s}` (needs `prompt_features.replay_intent`) | off, 30 s |
+| G1 filler de-duplication | `delegation.filler_dedupe.{enabled,recent}`; lines in `prompts.yaml` `filler_alternatives` | off, 3 |
+| G2 answer cleanup | `output.clean_answers` | off |
+| Frontend prompt variants | `delegation_agent.yaml` `prompt_features.replay_intent` | off |
+| Backend prompt variants | `gateway.yaml` `prompt_features.{spelling_v2,spoken_output,write_consent}` (`gateway.<variant>.yaml` turns one on) | all off |
 
 ## 10. Stop and clean up
 
@@ -376,6 +467,9 @@ when each worker exits), `/tmp/fdh-workers/` (sockets), and `logs/`.
 | Browser: no microphone | Use `https://<IP>:8776/` (not http, not a proxied hostname) and accept the certificate |
 | tau2: `No module named 'pyaudio'` | In the tau2 checkout: `uv sync --extra voice --extra dev` (needs the `portaudio19-dev` package) |
 | Gate A against the real server fails on the transcript | Gate A streams a tone, which real ASR does not transcribe. Use the stub gate (§8) for Gate A, and §4.2 or §6 for the real stack |
+| `fingerprint_check` fails with `missing [...]` | The voice server or the gateway runs code from before the fingerprint change: restart both (§10, §3, §4) |
+| `fingerprint_check` fails with `the arm declares` | A server runs another arm's profile or gateway config: check `FDH_PROFILE` / `FDH_GATEWAY_CONFIG` and `curl` both `/health` endpoints |
+| Voice server fails with `replay_unheard_answer.enabled needs prompt_features.replay_intent` | M2 needs its frontend prompt variant: use `tau3_arm_m2_replay.yaml` |
 | Status update says "still working" after the answer | This should not happen: a status line is dropped when its run has already finished (`status_dropped` in the event log). If you see it, report the session id |
 | A status sentence sounds templated | The status LLM call exceeded `backend.status_verbalizer.timeout_ms` (3000); `status_spoken.source` is `template_fallback` |
 | Manual-mode client gets `conversation_already_has_active_response` | It sent `response.create` while the previous turn was still deciding or speaking. Wait for `response.done`, as Realtime requires |

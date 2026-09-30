@@ -50,3 +50,10 @@ hermes:
       reasoning_budget: 1024
   prompts:
     path: prompts.backend.yaml
+
+# Backend prompt variants ({% if features.<name> %} in prompts.backend.yaml; tau3-failure-fixes-plan.md).
+# All off = the baseline prompts. gateway.<name>.yaml turns one on.
+prompt_features:
+  spelling_v2: false                         # M3.4: after a failed lookup, read back and ask to spell
+  spoken_output: false                       # G2: at most two sentences, confirmation override
+  write_consent: false                       # G4: consent only to a heard question; read back written names

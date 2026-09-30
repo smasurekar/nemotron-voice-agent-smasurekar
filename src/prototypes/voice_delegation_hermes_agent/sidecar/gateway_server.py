@@ -58,7 +58,7 @@ class GatewayState:
 
 def build_gateway_app(config: GatewayConfig) -> FastAPI:
     """The gateway application."""
-    templates = BackendTemplates(config.hermes.prompts_path)
+    templates = BackendTemplates(config.hermes.prompts_path, prompt_features=config.prompt_features)
     state = GatewayState(
         config=config,
         templates=templates,
@@ -78,7 +78,16 @@ def build_gateway_app(config: GatewayConfig) -> FastAPI:
             if removed:
                 logger.info("removed %d stale worker homes", removed)
             state.pool.prewarm()
-        state.event_log.write("gateway_start", None, {"config": config.summary(), "files": list(config.files)})
+        state.event_log.write(
+            "gateway_start",
+            None,
+            {
+                "config": config.summary(),
+                "files": list(config.files),
+                "backend_features": dict(templates.features),
+                "backend_catalog_sha256": templates.catalog_sha256,
+            },
+        )
         logger.info(
             "gateway ready: max_sessions=%d workers=%s/%s",
             config.gateway.max_sessions,
@@ -112,6 +121,8 @@ def build_gateway_app(config: GatewayConfig) -> FastAPI:
             "worker_pids": workers,
             "worker_mode": config.workers.mode,
             "agent_kind": config.workers.agent_kind,
+            "backend_features": dict(templates.features),
+            "backend_catalog_sha256": templates.catalog_sha256,
             "hermes": {
                 "model": config.hermes.model,
                 "base_url": config.hermes.base_url,

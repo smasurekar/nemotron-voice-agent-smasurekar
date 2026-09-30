@@ -1,6 +1,12 @@
 # Plan: identifier normalization for ASR transcripts and tool arguments (voice Frontend/Backend Agent)
 
-**Status:** implemented; offline replay done (§9.1), τ³ runs pending (§9.2) · **Date:** 2026-09-26 · **Revision:** 3
+**Status:** implemented; offline replay done (§9.1), τ³ runs pending (§9.2) · **Date:** 2026-09-26 · **Revision:** 4
+
+Revision 4 (2026-09-30). Two additive settings, both off by default, for the frontend-delegation prototype's τ³
+failure fixes (`misc/prototypes/frontend-delegation-hermes/tau3-failure-fixes-plan.md` §3.1 and §3.3):
+- `normalization.transcript.spelled_runs` joins spelled letters and digits outside anchored spans (§4.2).
+- `normalization.tool_arguments.escalate_invalid_message_key` makes the local "invalid" answer firmer on
+  repeats (§4.3). Invalid values are still never sent.
 
 Revision 3. Implementation notes (where the code refines §4):
 - §4.2 step 2: after a whole word, only single letters join it on the left ("A a rav" → `aarav`); after
@@ -153,6 +159,25 @@ Examples (from the observation doc):
 | `Underscore nine nine five seven .` | `_9957 .` (an incomplete ID, visible as such) |
 | `I need two passengers` | unchanged (no anchor) |
 
+**Spelled runs** (`spelled_runs`, off by default). After the anchor pass, a run of at least `min_tokens`
+(default 3) spelled tokens in the text the anchor pass left alone is joined too:
+- a spelled token is a single letter or digit, a dotted-letter token (`S.A.N.`), or a digit word;
+- commas and fillers ("uh") may sit inside a run;
+- a run needs at least one letter, so digit-only runs ("five zero zero") are unchanged;
+- any other word, including a stop word of two or more letters ("and"), ends the run.
+
+The run has its own `case` (default `keep`), independent of the span `case`. The ASR case is kept because
+the normalizer cannot tell a name from a reservation code:
+
+| Raw ASR | Normalized (`spelled_runs.case: keep`) |
+|---|---|
+| `I, F, O, Y, Y, Z and N, Q, N, U, five, R` | `IFOYYZ and NQNU5R` |
+| `R O S S I` | `ROSSI` |
+| `five zero zero` | unchanged (no letter) |
+
+The tool-argument hook's `spoken_form` clean-up never uses spelled runs. With the switch off, every output is
+byte-identical to revision 3.
+
 `TranscriptNormalizer.normalize(text) -> NormalizedText(text, spans: tuple[Span, ...])`, where each
 `Span` records the spoken and written forms. An unchanged text has no spans and emits no event.
 
@@ -225,6 +250,18 @@ Local messages are catalog keys with literal placeholders `{label}`, `{value}`, 
   this conversation. Do not retry it unchanged. Read it back character by character ({spelled}) and
   ask the user only about the part that may be wrong."
 
+**Escalating invalid wording** (revision 4, off by default). A profile can select two additive catalog keys;
+`tool_argument_invalid` stays the default:
+- `tool_argument_invalid_readback`, set as `invalid_message_key`: read back what was heard ({spelled}) and ask
+  the user to spell only the part that is missing or wrong, without mentioning the format.
+- `tool_argument_invalid_spell_all`, set as `escalate_invalid_message_key`: used for the second and later
+  invalid answers of the same tool in one session. It asks the user to spell the whole {label} slowly,
+  including separators.
+
+`ArgumentNormalizer.screen(calls, failed, invalid_counts)` takes the per-tool count of earlier invalid answers.
+The caller owns that count. Only the frontend-delegation prototype's `ToolRelay` passes it today. This
+package's runner builds its normalizer without the escalation message, so the setting has no effect here.
+
 ### 4.4 Prompt note
 
 `normalization.transcript.frontend_note_key` names a catalog key appended to the frontend prompt when
@@ -248,7 +285,7 @@ tool results explain themselves.
 |---|---|---|
 | `transcript_normalized` | the transcript hook changed the text | `raw`, `text`, `spans: [{spoken, written}]` |
 | `argument_normalized` | an argument was rewritten | `call_id`, `tool`, `argument`, `before`, `after` |
-| `call_answered_locally` | a call was not sent | `call_id`, `tool`, `argument`, `value`, `reason` (`invalid`, `already_failed`), `local_round` |
+| `call_answered_locally` | a call was not sent | `call_id`, `tool`, `argument`, `value`, `reason` (`invalid`, `already_failed`), `local_round`; the frontend-delegation prototype logs `message_key` instead of `argument`, `value` and `local_round` |
 | `local_rounds_exhausted` | the local loop hit `max_local_rounds` | `tools`, `rounds` |
 | `session_start` (extended) | session start | `normalization: {transcript: bool, tool_arguments: [tool.argument…], retry_guard: bool}` |
 
@@ -278,10 +315,12 @@ normalization:
     max_part_tokens: 6
     case: keep                       # keep | lower | upper (written spans only)
     frontend_note_key: ""            # catalog key appended to the frontend prompt; "" = none
+    spelled_runs: {enabled: false, min_tokens: 3, case: keep}   # revision 4 (§4.2)
   tool_arguments:
     enabled: false
     rules: []                        # §4.3
     invalid_message_key: tool_argument_invalid
+    escalate_invalid_message_key: ""   # revision 4: message for the 2nd+ invalid answer of a tool; "" = none
     max_local_rounds: 3
     retry_guard:
       enabled: false

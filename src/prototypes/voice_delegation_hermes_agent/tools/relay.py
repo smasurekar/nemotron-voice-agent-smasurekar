@@ -84,6 +84,7 @@ class ToolRelay:
         self._cancelled: set[str] = set()
         self._batches: list[_Batch] = []
         self._failed: frozenset[FailureKey] = frozenset()
+        self._invalid_counts: dict[str, int] = {}  # tool -> invalid answers so far (escalating wording)
         self._tasks: set[asyncio.Task[None]] = set()
 
     # -- from the gateway -------------------------------------------------------------------
@@ -192,7 +193,9 @@ class ToolRelay:
         if self._normalizer is None:
             return calls
         screening = self._normalizer.screen(
-            [ToolCall(id=call.call_id, name=call.name, arguments_json=call.arguments) for call in calls], self._failed
+            [ToolCall(id=call.call_id, name=call.name, arguments_json=call.arguments) for call in calls],
+            self._failed,
+            self._invalid_counts,
         )
         by_id = {call.call_id: call for call in calls}
         for rewrite in screening.rewrites:
@@ -206,7 +209,15 @@ class ToolRelay:
             )
         for answer in screening.local:
             call = by_id[answer.call_id]
-            self._log("call_answered_locally", call_id=answer.call_id, tool=answer.tool, reason=answer.reason)
+            if answer.reason == "invalid":
+                self._invalid_counts[answer.tool] = self._invalid_counts.get(answer.tool, 0) + 1
+            self._log(
+                "call_answered_locally",
+                call_id=answer.call_id,
+                tool=answer.tool,
+                reason=answer.reason,
+                message_key=answer.message_key,
+            )
             self._send_result(answer.call_id, call.epoch, answer.message, True)
         out: list[_Call] = []
         for canonical in screening.sent:

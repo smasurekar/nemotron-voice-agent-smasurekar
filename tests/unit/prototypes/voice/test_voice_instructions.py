@@ -172,7 +172,13 @@ class VoiceCatalogTests(unittest.TestCase):
                 for include in ("full", "backend_turns", "transcript")
             ),
         }
-        normalization_keys = {"identifier_note_voice", "tool_argument_invalid", "tool_call_already_failed"}
+        normalization_keys = {
+            "identifier_note_voice",
+            "tool_argument_invalid",
+            "tool_argument_invalid_readback",
+            "tool_argument_invalid_spell_all",
+            "tool_call_already_failed",
+        }
         barge_in_keys = {"frontend_task_in_progress"}
         self.assertEqual(
             set(catalog),

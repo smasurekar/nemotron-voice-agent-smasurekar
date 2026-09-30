@@ -28,6 +28,7 @@ from typing import Any, Protocol
 
 from prototypes.voice_delegation_hermes_agent.backend import protocol as proto
 from prototypes.voice_delegation_hermes_agent.backend.context_queue import ContextEntry, ContextQueue
+from prototypes.voice_delegation_hermes_agent.prompt_features import sha256_text
 
 logger = logging.getLogger(__name__)
 
@@ -207,11 +208,11 @@ class BackendController:
             names = [str(t.get("name")) for t in tools]
             if self._configured and (self._agent_built or self._runs_started > 0):
                 if tools == self._tools and instructions == self._instructions:
-                    self._emit("session.configured", applied=False, tools=self._tool_names())
+                    self._emit("session.configured", applied=False, tools=self._tool_names(), **self._fingerprint())
                     return
                 if self._session_settings.get("update_after_start", "error") == "ignore":
                     self._log("session_update_ignored", tools=names)
-                    self._emit("session.configured", applied=False, tools=self._tool_names())
+                    self._emit("session.configured", applied=False, tools=self._tool_names(), **self._fingerprint())
                 else:
                     self._emit(
                         "error",
@@ -230,7 +231,25 @@ class BackendController:
             if error is not None:
                 self._emit("error", code="construct_failed", message=error, fatal=False)
                 return
-            self._emit("session.configured", applied=True, tools=self._tool_names(), built=self._agent_built)
+            fingerprint = self._fingerprint()
+            self._log("backend_fingerprint", **fingerprint)
+            self._emit(
+                "session.configured", applied=True, tools=self._tool_names(), built=self._agent_built, **fingerprint
+            )
+
+    def _fingerprint(self) -> dict[str, Any]:
+        """What this session's Hermes actually runs (tau3-failure-fixes-plan.md section 1, rule 5).
+
+        Optional ``session.configured`` fields: the voice server logs them in ``backend_configured``.
+        """
+        return {
+            "backend_features": dict(getattr(self._templates, "features", {}) or {}),
+            "backend_catalog_sha256": str(getattr(self._templates, "catalog_sha256", "") or ""),
+            "backend_soul_sha256": sha256_text(self._templates.render("backend_soul")),
+            "backend_system_sha256": sha256_text(
+                self._templates.render("backend_system", instructions=self._instructions)
+            ),
+        }
 
     def append(self, entries: list[dict[str, Any]]) -> None:
         """``history.append``: context entries (deduplicated by ``seq``)."""

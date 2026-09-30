@@ -46,6 +46,10 @@ class Entry:
     reason: str = ""
     answer_id: str = ""
     sent: bool = False
+    # M2 (replay an unheard answer); voice-side only, never sent on the wire.
+    run_id: str = ""  # the backend run that produced a backend_answer (gateway answer.run_id)
+    released_mono: float | None = None  # first output_release of the item that speaks this entry
+    replayed: bool = False
 
     @property
     def final(self) -> bool:
@@ -108,7 +112,14 @@ class SharedTranscript:
         return self._append(Entry(seq=self._seq(), kind="user", origin="user", text=text, route=route, turn_id=turn_id))
 
     def add_spoken(
-        self, kind: str, origin: str, text: str, *, turn_id: int | None = None, answer_id: str = ""
+        self,
+        kind: str,
+        origin: str,
+        text: str,
+        *,
+        turn_id: int | None = None,
+        answer_id: str = "",
+        run_id: str = "",
     ) -> Entry:
         """Assistant speech queued for playback (outcome pending)."""
         if kind not in SPOKEN_KINDS:
@@ -124,6 +135,7 @@ class SharedTranscript:
                 turn_id=turn_id,
                 outcome=PENDING,
                 answer_id=answer_id,
+                run_id=run_id,
             )
         )
 
@@ -205,6 +217,13 @@ class SharedTranscript:
         """The newest assistant entry the user heard (fully or partly)."""
         for entry in reversed(self.entries):
             if entry.kind in SPOKEN_KINDS and entry.outcome in (HEARD, PARTIAL):
+                return entry
+        return None
+
+    def last_backend_answer(self) -> Entry | None:
+        """The newest backend answer entry (whatever its outcome)."""
+        for entry in reversed(self.entries):
+            if entry.kind == "backend_answer":
                 return entry
         return None
 

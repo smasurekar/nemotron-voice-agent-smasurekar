@@ -42,6 +42,18 @@ delegation:
     backchannel_words: [mm-hmm, mhm, uh-huh, uh huh, hmm, mm, okay, ok, okay sure, sure, alright, all right,
                         right, thanks, thank you, got it, cool]
   prompts: {path: "${FDH_PROMPTS:-prompts.yaml}"}
+  # tau3-failure-fixes-plan.md: each switch below is off here and in tau3_eval_baseline.yaml (the control);
+  # the tau3_arm_*.yaml profiles turn on one each.
+  # M3.2: wait hold_ms before deciding a turn that ends mid-spelling with strong evidence and an
+  # incomplete value; speech during the wait merges into the next turn. complete_patterns: full-match
+  # patterns of a complete spelled value (never held), e.g. ['^[A-Za-z0-9]{6}$'] for airline codes.
+  spelling_hold: {enabled: false, hold_ms: 1500, complete_patterns: []}
+  # M2 (experimental, RC2): on request=status while IDLE, speak the unheard last answer again instead
+  # of delegating, if it belongs to the last finished run, no task came since and it is <= ttl_s old.
+  # Needs prompt_features.replay_intent.
+  replay_unheard_answer: {enabled: false, ttl_s: 30}
+  # G1: a delegated filler repeating one of the last `recent` is dropped (WORKING) or replaced.
+  filler_dedupe: {enabled: false, recent: 3}
 
 backend:
   link: websocket                    # websocket (gateway) | in_process_fake (tests, --stub-backend)
@@ -58,6 +70,10 @@ session:
 output:
   hold_max_ms: 4000                  # marks queued audio stale; audio is never released over the user
   on_stale: {backend_answer: keep, status: drop, filler: drop, apology: keep}
+  # M1: one short line (prompts.yaml status_proactive_lines) after after_s of silence while WORKING,
+  # at most max_per_run per backend run. Calibrate after_s per host (tau3-failure-fixes-plan.md 2).
+  proactive_status: {enabled: false, after_s: 15, max_per_run: 1}
+  clean_answers: false               # G2: strip markdown, one sentence per list item, before TTS
 
 tools:
   executor: wire                     # wire (Realtime function_call; tau3) | local (in-process callables; browser)
@@ -66,3 +82,7 @@ tools:
 
 instructions:
   apply_to: [backend]                # session.update.instructions (the tau3 policy) -> backend | frontend
+
+# Frontend prompt variants ({% if features.<name> %} in prompts.yaml); all off = the baseline prompt.
+prompt_features:
+  replay_intent: false               # M2: tell the frontend its last answer was not heard; "status" in IDLE

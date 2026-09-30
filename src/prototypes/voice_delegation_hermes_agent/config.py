@@ -14,6 +14,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -21,6 +22,7 @@ from typing import Any
 import yaml
 
 from prototypes.text_frontend_backend_agent.config import interpolate_env
+from prototypes.voice_delegation_hermes_agent.prompt_features import FRONTEND_FEATURES, features
 from prototypes.voice_frontend_backend_agent.config import VoiceConfig, deep_merge, load_voice_config
 
 CONFIG_DIR = Path(__file__).resolve().parent / "config"
@@ -81,6 +83,10 @@ DEFAULTS: dict[str, Any] = {
             ],
         },
         "prompts": {"path": "prompts.yaml"},
+        # tau3-failure-fixes-plan.md: every behaviour below is off by default (the baseline).
+        "spelling_hold": {"enabled": False, "hold_ms": 1500, "complete_patterns": []},
+        "replay_unheard_answer": {"enabled": False, "ttl_s": 30},
+        "filler_dedupe": {"enabled": False, "recent": 3},
     },
     "backend": {
         "link": "websocket",
@@ -95,9 +101,13 @@ DEFAULTS: dict[str, Any] = {
     "output": {
         "hold_max_ms": 4000,
         "on_stale": {"backend_answer": "keep", "status": "drop", "filler": "drop", "apology": "keep"},
+        "proactive_status": {"enabled": False, "after_s": 15, "max_per_run": 1},
+        "clean_answers": False,
     },
     "tools": {"executor": "wire", "result_timeout_s": 120, "batch_window_ms": 30},
     "instructions": {"apply_to": ["backend"]},
+    # Frontend prompt variants (``{% if features.<name> %}`` in prompts.yaml); all off = the baseline prompt.
+    "prompt_features": dict(FRONTEND_FEATURES),
 }
 
 _ENUMS: dict[str, tuple[str, ...]] = {
@@ -149,6 +159,32 @@ class FrontendConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class SpellingHoldSettings:
+    """``delegation.spelling_hold`` (M3.2): wait before deciding a turn that ends mid-spelling."""
+
+    enabled: bool = False
+    hold_ms: int = 1500
+    #: Full-match patterns of a complete spelled value (e.g. a 6-character reservation code): not held.
+    complete_patterns: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class ReplaySettings:
+    """``delegation.replay_unheard_answer`` (M2, experimental)."""
+
+    enabled: bool = False
+    ttl_s: float = 30.0
+
+
+@dataclass(frozen=True, slots=True)
+class FillerDedupeSettings:
+    """``delegation.filler_dedupe`` (G1)."""
+
+    enabled: bool = False
+    recent: int = 3
+
+
+@dataclass(frozen=True, slots=True)
 class DelegationSettings:
     """The ``delegation`` section."""
 
@@ -158,6 +194,9 @@ class DelegationSettings:
     backend_question_needs_delegate: bool
     backchannel_words: tuple[str, ...]
     prompts_path: Path
+    spelling_hold: SpellingHoldSettings = field(default_factory=SpellingHoldSettings)
+    replay: ReplaySettings = field(default_factory=ReplaySettings)
+    filler_dedupe: FillerDedupeSettings = field(default_factory=FillerDedupeSettings)
 
 
 @dataclass(frozen=True, slots=True)
@@ -176,11 +215,23 @@ class BackendSettings:
 
 
 @dataclass(frozen=True, slots=True)
+class ProactiveStatusSettings:
+    """``output.proactive_status`` (M1): one short line while the backend works in silence."""
+
+    enabled: bool = False
+    after_s: float = 15.0
+    max_per_run: int = 1
+
+
+@dataclass(frozen=True, slots=True)
 class OutputSettings:
     """The ``output`` section."""
 
     hold_max_ms: int
     on_stale: dict[str, str]
+    proactive_status: ProactiveStatusSettings = field(default_factory=ProactiveStatusSettings)
+    #: G2: strip markdown and turn list items into sentences before an answer is spoken.
+    clean_answers: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -206,6 +257,21 @@ class DelegationConfig:
     instructions_apply_to: tuple[str, ...]
     source_files: tuple[Path, ...] = ()
     effective: dict[str, Any] = field(default_factory=dict)
+    prompt_features: dict[str, bool] = field(default_factory=lambda: dict(FRONTEND_FEATURES))
+
+    @property
+    def features(self) -> dict[str, Any]:
+        """Every prompt variant and behaviour switch, for the deployed fingerprint (fdh_session_start)."""
+        dl, out = self.delegation, self.output
+        return {
+            "prompt_features": dict(self.prompt_features),
+            "proactive_status": out.proactive_status.enabled,
+            "clean_answers": out.clean_answers,
+            "spelling_hold": dl.spelling_hold.enabled,
+            "replay_unheard_answer": dl.replay.enabled,
+            "filler_dedupe": dl.filler_dedupe.enabled,
+            "spelled_runs": self.voice.normalization.transcript.spelled_runs.enabled,
+        }
 
     @property
     def config_hash(self) -> str:
@@ -265,6 +331,22 @@ def build_delegation_config(merged: dict[str, Any], files: tuple[Path, ...] = ()
         ),
         backchannel_words=tuple(str(word).lower() for word in dl["guards"]["backchannel_words"] or ()),
         prompts_path=_path(dl["prompts"]["path"]),
+        spelling_hold=SpellingHoldSettings(
+            enabled=_bool(dl["spelling_hold"]["enabled"], "delegation.spelling_hold.enabled"),
+            hold_ms=_int(dl["spelling_hold"]["hold_ms"], "delegation.spelling_hold.hold_ms"),
+            complete_patterns=tuple(
+                _regex(pattern, "delegation.spelling_hold.complete_patterns")
+                for pattern in dl["spelling_hold"]["complete_patterns"] or ()
+            ),
+        ),
+        replay=ReplaySettings(
+            enabled=_bool(dl["replay_unheard_answer"]["enabled"], "delegation.replay_unheard_answer.enabled"),
+            ttl_s=_float(dl["replay_unheard_answer"]["ttl_s"], "delegation.replay_unheard_answer.ttl_s"),
+        ),
+        filler_dedupe=FillerDedupeSettings(
+            enabled=_bool(dl["filler_dedupe"]["enabled"], "delegation.filler_dedupe.enabled"),
+            recent=_int(dl["filler_dedupe"]["recent"], "delegation.filler_dedupe.recent", minimum=1),
+        ),
     )
     gateway_config = str(be.get("gateway_config") or "")
     backend = BackendSettings(
@@ -282,7 +364,17 @@ def build_delegation_config(merged: dict[str, Any], files: tuple[Path, ...] = ()
     for kind, value in on_stale.items():
         if kind not in _STALE_KINDS or value not in ("keep", "drop"):
             raise DelegationConfigError(f"output.on_stale.{kind}: {value!r} (kinds {_STALE_KINDS}, keep | drop)")
-    output = OutputSettings(hold_max_ms=_int(out["hold_max_ms"], "output.hold_max_ms", minimum=1), on_stale=on_stale)
+    proactive = out["proactive_status"]
+    output = OutputSettings(
+        hold_max_ms=_int(out["hold_max_ms"], "output.hold_max_ms", minimum=1),
+        on_stale=on_stale,
+        proactive_status=ProactiveStatusSettings(
+            enabled=_bool(proactive["enabled"], "output.proactive_status.enabled"),
+            after_s=_float(proactive["after_s"], "output.proactive_status.after_s", minimum=0.1),
+            max_per_run=_int(proactive["max_per_run"], "output.proactive_status.max_per_run", minimum=1),
+        ),
+        clean_answers=_bool(out["clean_answers"], "output.clean_answers"),
+    )
     tools = ToolSettings(
         executor=tl["executor"],
         result_timeout_s=_float(tl["result_timeout_s"], "tools.result_timeout_s", minimum=1),
@@ -298,6 +390,15 @@ def build_delegation_config(merged: dict[str, Any], files: tuple[Path, ...] = ()
         raise DelegationConfigError("tools.executor: wire requires the voice profile's tools.source: client")
     if backend.link == "in_process_fake" and backend.gateway_config is None:
         raise DelegationConfigError("backend.link: in_process_fake needs backend.gateway_config")
+    try:
+        prompt_features = dict(features(merged.get("prompt_features"), FRONTEND_FEATURES))
+    except ValueError as exc:
+        raise DelegationConfigError(f"prompt_features: {exc}") from exc
+    if delegation.replay.enabled and not prompt_features["replay_intent"]:
+        raise DelegationConfigError(
+            "delegation.replay_unheard_answer.enabled needs prompt_features.replay_intent (the frontend must be "
+            "told when its last answer was not heard)"
+        )
     effective = copy.deepcopy(merged)
     effective["frontend"]["llm"]["api_key"] = "***" if frontend.llm.api_key else ""
     return DelegationConfig(
@@ -311,6 +412,7 @@ def build_delegation_config(merged: dict[str, Any], files: tuple[Path, ...] = ()
         instructions_apply_to=apply_to,
         source_files=(*files, *voice.source_files),
         effective=effective,
+        prompt_features=prompt_features,
     )
 
 
@@ -398,6 +500,15 @@ def _float(value: Any, key: str, *, minimum: float = 0.0) -> float:
     if number < minimum:
         raise DelegationConfigError(f"{key}: {number} is below {minimum}")
     return number
+
+
+def _regex(value: Any, key: str) -> str:
+    pattern = str(value)
+    try:
+        re.compile(pattern)
+    except re.error as exc:
+        raise DelegationConfigError(f"{key}: {pattern!r} is not a valid regular expression ({exc})") from exc
+    return pattern
 
 
 def _bool(value: Any, key: str) -> bool:

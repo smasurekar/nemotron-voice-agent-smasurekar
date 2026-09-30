@@ -47,6 +47,8 @@ class DecisionContext:
     elapsed_s: int | None = None
     recent_activity: Sequence[str] = field(default_factory=tuple)
     backend_asked_question: bool = False
+    #: M2: the newest backend answer was not heard (or only partly); shown only with ``replay_intent``.
+    last_answer_unheard: bool = False
 
 
 class Decider(Protocol):
@@ -146,6 +148,7 @@ class LLMDecider:
             elapsed_s=context.elapsed_s,
             recent_activity=list(context.recent_activity),
             backend_asked_question=context.backend_asked_question,
+            last_answer_unheard=context.last_answer_unheard,
         )
         return [{"role": "system", "content": f"{context.system_prompt}\n\n{state}"}, *context.messages]
 

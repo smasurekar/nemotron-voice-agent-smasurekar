@@ -89,6 +89,30 @@ class ScreenTests(unittest.TestCase):
         self.assertEqual((answer.reason, answer.value), (REASON_INVALID, "ya"))
         self.assertEqual(answer.message, "bad user ID ya (firstname_lastname_1234)")
 
+    def test_escalated_wording_for_the_second_invalid_answer_of_a_tool(self) -> None:
+        settings = replace(SETTINGS, escalate_invalid_message_key="spell_all")
+        gate = ArgumentNormalizer(
+            settings,
+            transcript=TranscriptSettings(),
+            invalid_template="read back {spelled}",
+            already_failed_template="failed",
+            escalate_invalid_template="spell the whole {label}",
+        )
+        first = gate.screen([call("YA")], frozenset())
+        second = gate.screen([call("YA", call_id="c2")], frozenset(), {"get_user_details": 1})
+        both = gate.screen([call("YA"), call("YB", call_id="c2")], frozenset())
+        self.assertEqual(
+            (first.local[0].message, first.local[0].message_key), ("read back y, a", "tool_argument_invalid")
+        )
+        self.assertEqual(
+            (second.local[0].message, second.local[0].message_key), ("spell the whole user ID", "spell_all")
+        )
+        self.assertEqual([a.message_key for a in both.local], ["tool_argument_invalid", "spell_all"])
+        self.assertEqual(second.sent, ())
+        # Without an escalation key the counts change nothing (the baseline).
+        baseline = normalizer().screen([call("YA")], frozenset(), {"get_user_details": 3})
+        self.assertEqual(baseline.local[0].message, "bad user ID ya (firstname_lastname_1234)")
+
     def test_on_invalid_send_only_rewrites(self) -> None:
         settings = replace(SETTINGS, rules=(replace(RULE, on_invalid="send"),))
         screening = normalizer(settings).screen([call("YA")], frozenset())

@@ -9,7 +9,11 @@ from __future__ import annotations
 
 import unittest
 
-from prototypes.voice_frontend_backend_agent.normalization.transcript import TranscriptNormalizer, TranscriptSettings
+from prototypes.voice_frontend_backend_agent.normalization.transcript import (
+    SpelledRunSettings,
+    TranscriptNormalizer,
+    TranscriptSettings,
+)
 
 LOWER = TranscriptNormalizer(TranscriptSettings(enabled=True, case="lower"))
 
@@ -85,3 +89,41 @@ class TranscriptNormalizerTests(unittest.TestCase):
         normalizer = TranscriptNormalizer(TranscriptSettings(enabled=True, separator_words={"dash": "-"}))
         self.assertEqual(normalizer.normalize("code A B dash four two").text, "code AB-42")
         self.assertEqual(normalizer.normalize("Mia underscore Kim").text, "Mia underscore Kim")
+
+
+SPELLED = TranscriptNormalizer(TranscriptSettings(enabled=True, case="lower", spelled_runs=SpelledRunSettings(True)))
+
+
+class SpelledRunTests(unittest.TestCase):
+    def test_runs_are_joined_with_the_asr_case_and_stop_at_words(self) -> None:
+        cases = {
+            "I, F, O, Y, Y, Z and N, Q, N, U, five, R": "IFOYYZ and NQNU5R",
+            "R O S S I": "ROSSI",
+            "my name is R, uh, O S S I.": "my name is ROSSI.",
+            "G V one N six four": "GV1N64",
+            "from J F K to L A X": "from JFK to LAX",
+        }
+        for spoken, written in cases.items():
+            with self.subTest(spoken=spoken):
+                self.assertEqual(SPELLED.normalize(spoken).text, written)
+
+    def test_unchanged_without_a_letter_or_below_min_tokens(self) -> None:
+        for text in ("five zero zero", "one four four.", "I want a flight", "plan A or B", "A B"):
+            with self.subTest(text=text):
+                self.assertEqual(SPELLED.normalize(text).text, text)
+
+    def test_anchored_spans_win_and_are_unchanged(self) -> None:
+        for spoken, written in CORPUS:
+            if not any(len(token.strip(".,")) == 1 for token in written.split()):
+                with self.subTest(spoken=spoken):
+                    self.assertEqual(SPELLED.normalize(spoken).text, written)
+        self.assertEqual(SPELLED.normalize("Aarav underscore A H underscore one two three four").text, "aarav_ah_1234")
+
+    def test_off_is_byte_identical(self) -> None:
+        for spoken, _ in CORPUS:
+            with self.subTest(spoken=spoken):
+                self.assertEqual(
+                    TranscriptNormalizer(TranscriptSettings(enabled=True, case="lower")).normalize(spoken),
+                    LOWER.normalize(spoken),
+                )
+        self.assertEqual(LOWER.normalize("R O S S I").text, "R O S S I")

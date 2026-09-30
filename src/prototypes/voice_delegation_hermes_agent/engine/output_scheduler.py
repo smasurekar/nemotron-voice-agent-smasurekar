@@ -27,6 +27,7 @@ STALE_KEY = {
     "filler": "filler",
     "direct": "filler",
     "answer": "backend_answer",
+    "replay": "backend_answer",
     "status": "status",
     "apology": "apology",
 }
@@ -36,7 +37,7 @@ STALE_KEY = {
 class SpeechItem:
     """One assistant message to speak as its own response."""
 
-    kind: str  # filler | direct | answer | status | apology | greeting
+    kind: str  # filler | direct | answer | replay | status | apology | greeting
     text: str
     entry: Entry | None = None
     turn_id: int | None = None
@@ -116,9 +117,9 @@ class OutputQueue:
         return None, dropped
 
     def _pick(self, *, deciding: bool, current_turn: int | None) -> int | None:
-        # The current turn's own filler/direct reply goes first.
+        # The current turn's own filler/direct reply (or replayed answer) goes first.
         for index, item in enumerate(self._speech):
-            if item.kind in ("filler", "direct") and item.turn_id == current_turn:
+            if item.kind in ("filler", "direct", "replay") and item.turn_id == current_turn:
                 return index
         if deciding:
             return None  # hold backend speech until the new turn's decision (and filler) is in

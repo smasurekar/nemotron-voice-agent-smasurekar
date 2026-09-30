@@ -16,6 +16,12 @@ before it; right of the last anchor, a run of number words (the digit tail) or
 the adjacent word (or a run of spelled letters). Stop words, fillers and
 punctuation-only tokens end the outer parts. See
 ``misc/prototypes/voice/normalization-plan.md`` section 4.2.
+
+Optionally (``spelled_runs``, off by default), a run of spelled single characters in
+the text the anchor pass left alone is joined too; the run needs at least one letter,
+and any word of two or more letters ends it::
+
+    "I, F, O, Y, Y, Z and N, Q, N, U, five, R" -> "IFOYYZ and NQNU5R"   (case: keep)
 """
 
 from __future__ import annotations
@@ -39,6 +45,15 @@ CASES = ("keep", "lower", "upper")
 
 
 @dataclass(frozen=True, slots=True)
+class SpelledRunSettings:
+    """``normalization.transcript.spelled_runs``: join spelled letters and digits outside anchored spans."""
+
+    enabled: bool = False
+    min_tokens: int = 3
+    case: str = "keep"
+
+
+@dataclass(frozen=True, slots=True)
 class TranscriptSettings:
     """``normalization.transcript``."""
 
@@ -52,6 +67,7 @@ class TranscriptSettings:
     max_part_tokens: int = 6
     case: str = "keep"
     frontend_note_key: str = ""
+    spelled_runs: SpelledRunSettings = field(default_factory=SpelledRunSettings)
 
     def resolved_ruleset(self) -> Ruleset:
         """The named ruleset extended with this config's extra words."""
@@ -105,6 +121,8 @@ class TranscriptNormalizer:
             if span is not None:
                 spans.append(span)
                 floor = next_floor
+        if self._settings.spelled_runs.enabled:
+            spans = sorted([*spans, *self._spelled_runs(text, tokens, spans)], key=lambda span: span.start)
         if not spans:
             return NormalizedText(text)
         pieces: list[str] = []
@@ -114,6 +132,48 @@ class TranscriptNormalizer:
             cursor = span.end
         pieces.append(text[cursor:])
         return NormalizedText("".join(pieces), tuple(spans))
+
+    # -- spelled runs --------------------------------------------------------------
+
+    def spelled_char(self, token: Token) -> str | None:
+        """The character a spelled token stands for: a letter, a digit or a digit word (else ``None``)."""
+        word = token.word
+        if token.spelled:
+            return token.core
+        if len(token.core) == 1 and token.core.isalnum():
+            return token.core
+        if self._settings.number_words and word in self._rules.digits and word not in self._rules.run_only_digits:
+            return self._rules.digits[word]
+        return None
+
+    def _spelled_runs(self, text: str, tokens: Sequence[Token], anchored: Sequence[Span]) -> list[Span]:
+        """Runs of spelled characters outside the anchored spans (fillers and commas may sit inside)."""
+        settings = self._settings.spelled_runs
+        taken = [(span.start, span.end) for span in anchored]
+        out: list[Span] = []
+        run: list[tuple[Token, str]] = []
+
+        def close() -> None:
+            chars = [char for _, char in run]
+            if len(chars) >= settings.min_tokens and any(char.isalpha() for char in "".join(chars)):
+                start, end = run[0][0].start, run[-1][0].end
+                spoken = text[start:end]
+                out.append(Span(spoken=spoken, written=apply_case("".join(chars), settings.case), start=start, end=end))
+            run.clear()
+
+        for token in tokens:
+            if any(start <= token.start < end for start, end in taken):
+                close()
+                continue
+            if not token.core or (run and token.is_filler(self._rules)):
+                continue  # commas and "uh" inside a run
+            char = self.spelled_char(token)
+            if char is None:
+                close()
+                continue
+            run.append((token, char))
+        close()
+        return out
 
     # -- span construction -------------------------------------------------------
 

@@ -4,6 +4,8 @@
 # Frontend prompt catalog of the delegation prototype (Jinja, StrictUndefined: an unknown
 # variable fails at load time). Backend-side templates (SOUL, backend system prompt, context
 # block labels, apologies) live in prompts.backend.yaml, rendered by the gateway.
+# Prompt variants: {% if features.<name> %} blocks switched by prompt_features in
+# delegation_agent.yaml (replay_intent; tau3-failure-fixes-plan.md). All off = the baseline prompt.
 
 frontend_system: |
   You are the voice frontend of a customer-service assistant. You speak with the user in real time.
@@ -47,6 +49,12 @@ frontend_system: |
       ("what's the update?", "how long will it take?", "are you still there?").
     - "task" for everything else, including a new question about a specific thing
       ("what's the status of order 1235?" is a NEW task, not a status request).
+  {%- if features.replay_intent %}
+  When the backend is not working and the state says "your last answer was not heard: yes",
+  also use request "status" (with delegate=true) if the user asks what you found, asks for an
+  update, or asks you to repeat ("did you find anything?", "sorry, can you say that again?").
+  A new question or request is still "task".
+  {%- endif %}
 
   Vocal tics and restarts ("um, so, uh, the order...") do not change the meaning: judge the words
   that remain.
@@ -78,6 +86,9 @@ frontend_backend_state: |
   {%- endfor %}
   {%- endif %}
   backend's last spoken message was a question to the user: {{ "yes" if backend_asked_question else "no" }}
+  {%- if features.replay_intent %}
+  your last answer was not heard: {{ "yes" if last_answer_unheard else "no" }}
+  {%- endif %}
 
 delegate_tool_description: >-
   Decide what happens with the user's latest turn. Call exactly once per user turn.
@@ -112,3 +123,19 @@ normalization_note: |
   Identifiers in user turns may already be written out (for example mia_kim_4397 or a booking code).
   If an earlier user turn gave a complete identifier and a later one gives only part of it, the user
   is continuing or correcting the same identifier: delegate the turn so the backend can use it.
+
+# M1 (output.proactive_status): one of these lines (in rotation) while the backend works in silence.
+# Very short, no promise, no result. One line per line.
+status_proactive_lines: |
+  Still checking, one moment.
+  Still on it, thanks for waiting.
+  Almost there, one moment please.
+  Still working on that for you.
+
+# G1 (delegation.filler_dedupe): replacements for a filler that repeats one of the last few.
+filler_alternatives: |
+  One moment.
+  Let me look into that.
+  Okay, checking now.
+  Give me a second.
+  Let me take a look.

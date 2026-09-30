@@ -24,7 +24,20 @@ class ShippedProfileTests(unittest.TestCase):
     def test_every_profile_loads_with_the_invariants(self) -> None:
         self.assertEqual(
             [p.name for p in SHIPPED],
-            ["browser_demo.yaml", "stub.yaml", "stub_gate.yaml", "tau3_eval.yaml", "tau3_eval_silent_ack.yaml"],
+            [
+                "browser_demo.yaml",
+                "stub.yaml",
+                "stub_gate.yaml",
+                "tau3_airline_canary.yaml",
+                "tau3_arm_g1_filler_dedupe.yaml",
+                "tau3_arm_g2_short_answers.yaml",
+                "tau3_arm_m1_status.yaml",
+                "tau3_arm_m2_replay.yaml",
+                "tau3_arm_m3_spelling.yaml",
+                "tau3_eval.yaml",
+                "tau3_eval_baseline.yaml",
+                "tau3_eval_silent_ack.yaml",
+            ],
         )
         for path in SHIPPED:
             with self.subTest(profile=path.name):
@@ -48,6 +61,31 @@ class ShippedProfileTests(unittest.TestCase):
         self.assertFalse(browser.voice.normalization.tool_arguments.enabled)
         self.assertTrue(browser.voice.protocol.greeting_enabled)
         self.assertEqual([spec.name for spec in browser.voice.tools.config_tool_specs], ["get_order", "cancel_order"])
+
+    def test_baseline_is_tau3_eval_and_each_arm_turns_on_only_its_own_switch(self) -> None:
+        baseline = load_delegation_config(PROFILES / "tau3_eval_baseline.yaml")
+        self.assertEqual(baseline.config_hash, load_delegation_config(PROFILES / "tau3_eval.yaml").config_hash)
+        self.assertFalse(any(v for k, v in baseline.features.items() if k != "prompt_features"))
+        self.assertFalse(any(baseline.features["prompt_features"].values()))
+        arms = {
+            "tau3_arm_m1_status.yaml": {"proactive_status"},
+            "tau3_arm_m2_replay.yaml": {"replay_unheard_answer", "replay_intent"},
+            "tau3_arm_m3_spelling.yaml": {"spelling_hold", "spelled_runs"},
+            "tau3_arm_g1_filler_dedupe.yaml": {"filler_dedupe"},
+            "tau3_arm_g2_short_answers.yaml": {"clean_answers"},
+            "tau3_airline_canary.yaml": {"proactive_status", "spelling_hold", "spelled_runs"},
+        }
+        for name, expected in arms.items():
+            with self.subTest(profile=name):
+                features = load_delegation_config(PROFILES / name).features
+                on = {k for k, v in features.items() if v is True} | {
+                    k for k, v in features["prompt_features"].items() if v
+                }
+                self.assertEqual(on, expected)
+        m3 = load_delegation_config(PROFILES / "tau3_arm_m3_spelling.yaml")
+        self.assertEqual(m3.delegation.spelling_hold.complete_patterns, ("^[A-Za-z0-9]{6}$",))
+        self.assertEqual(m3.voice.normalization.tool_arguments.invalid_message_key, "tool_argument_invalid_readback")
+        self.assertEqual(m3.voice.normalization.transcript.spelled_runs.case, "keep")
 
     def test_delay_is_env_configurable_in_the_browser_profile(self) -> None:
         with mock.patch.dict(os.environ, {"FDH_BACKEND_DELAY_S": "2.5"}):

@@ -46,7 +46,11 @@ from prototypes.voice_frontend_backend_agent.normalization.arguments import (
     ToolArgumentSettings,
 )
 from prototypes.voice_frontend_backend_agent.normalization.rules import RULESETS
-from prototypes.voice_frontend_backend_agent.normalization.transcript import CASES, TranscriptSettings
+from prototypes.voice_frontend_backend_agent.normalization.transcript import (
+    CASES,
+    SpelledRunSettings,
+    TranscriptSettings,
+)
 from prototypes.voice_frontend_backend_agent.speech.catalog import SpeechEndpoint, build_endpoint, load_catalog_entry
 
 PACKAGE_DIR = Path(__file__).resolve().parent
@@ -159,11 +163,13 @@ DEFAULTS: dict[str, Any] = {
             "max_part_tokens": 6,
             "case": "keep",
             "frontend_note_key": "",
+            "spelled_runs": {"enabled": False, "min_tokens": 3, "case": "keep"},
         },
         "tool_arguments": {
             "enabled": False,
             "rules": [],
             "invalid_message_key": "tool_argument_invalid",
+            "escalate_invalid_message_key": "",
             "max_local_rounds": 3,
             "retry_guard": {
                 "enabled": False,
@@ -203,6 +209,7 @@ _ENUMS: dict[str, tuple[str, ...]] = {
     "instructions.placement": ("policy_slot", "replace_prompt", "append"),
     "instructions.frontend_capabilities": ("from_tools", "static", "none"),
     "normalization.transcript.case": CASES,
+    "normalization.transcript.spelled_runs.case": CASES,
     "normalization.tool_arguments.retry_guard.scope": GUARD_SCOPES,
 }
 
@@ -709,6 +716,11 @@ def _normalization(reader: _Reader, tools: ToolsConfig, warnings: list[str]) -> 
         max_part_tokens=reader.int(f"{prefix}.max_part_tokens", minimum=1),
         case=reader.enum(f"{prefix}.case"),
         frontend_note_key=reader.str(f"{prefix}.frontend_note_key").strip(),
+        spelled_runs=SpelledRunSettings(
+            enabled=reader.bool(f"{prefix}.spelled_runs.enabled"),
+            min_tokens=reader.int(f"{prefix}.spelled_runs.min_tokens", minimum=2),
+            case=reader.enum(f"{prefix}.spelled_runs.case"),
+        ),
     )
     prefix = "normalization.tool_arguments"
     raw_rules = reader.raw(f"{prefix}.rules")
@@ -727,6 +739,7 @@ def _normalization(reader: _Reader, tools: ToolsConfig, warnings: list[str]) -> 
         enabled=reader.bool(f"{prefix}.enabled"),
         rules=tuple(_argument_rule(index, raw) for index, raw in enumerate(raw_rules)),
         invalid_message_key=reader.str(f"{prefix}.invalid_message_key").strip(),
+        escalate_invalid_message_key=reader.str(f"{prefix}.escalate_invalid_message_key").strip(),
         max_local_rounds=reader.int(f"{prefix}.max_local_rounds", minimum=1),
         retry_guard=guard,
     )
@@ -752,6 +765,13 @@ def _check_normalization_prompts(config: VoiceConfig) -> None:
         keys.append(("normalization.transcript.frontend_note_key", settings.transcript.frontend_note_key))
     if settings.tool_arguments.enabled:
         keys.append(("normalization.tool_arguments.invalid_message_key", settings.tool_arguments.invalid_message_key))
+        if settings.tool_arguments.escalate_invalid_message_key:
+            keys.append(
+                (
+                    "normalization.tool_arguments.escalate_invalid_message_key",
+                    settings.tool_arguments.escalate_invalid_message_key,
+                )
+            )
         if settings.tool_arguments.retry_guard.enabled:
             keys.append(
                 (

@@ -56,6 +56,13 @@ def tau3_config(**backend: Any) -> DelegationConfig:
     return config
 
 
+def profile_config(name: str) -> DelegationConfig:
+    """A shipped profile with the scripted frontend and no warm-up (like :func:`tau3_config`)."""
+    config = load_delegation_config(PROFILES / name)
+    voice = replace(config.voice, server=replace(config.voice.server, warmup=False))
+    return replace(config, voice=voice, frontend=replace(config.frontend, decider="scripted"))
+
+
 def browser_config() -> DelegationConfig:
     config = load_delegation_config(PROFILES / "browser_demo.yaml")
     voice = replace(config.voice, server=replace(config.voice.server, warmup=False))

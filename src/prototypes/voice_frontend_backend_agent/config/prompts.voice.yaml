@@ -386,6 +386,20 @@ tool_argument_invalid:
     Not looked up: "{value}" is not a complete {label} (format {format_hint}). No tool was called.
     Ask the user to say their complete {label} again. Do not guess or fill in any part of it.
 
+tool_argument_invalid_readback:
+  description: "Local tool result (M3.3): an incomplete value; read back what was heard and ask for the missing part."
+  content: |
+    Not looked up: "{value}" is not a complete {label}. No tool was called. Read back what you heard,
+    character by character ({spelled}), and ask the user to spell only the part that is missing or wrong.
+    Do not mention the format and do not guess.
+
+tool_argument_invalid_spell_all:
+  description: "Local tool result (M3.3): the value is still incomplete after an earlier attempt; ask for all of it."
+  content: |
+    Not looked up again: the {label} is still incomplete ("{value}"). No tool was called. Ask the user to
+    spell the whole {label} slowly, letter by letter, including separators such as underscore. Do not
+    guess or fill in any part of it.
+
 tool_call_already_failed:
   description: "Local tool result: the same call already failed permanently in this conversation."
   content: |

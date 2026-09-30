@@ -12,12 +12,20 @@
 * **Output lane** -- one response at a time, chosen by :class:`OutputQueue`; audio is
   never released while the user speaks, and every spoken item gets a playback outcome
   (heard / partial / not heard) that the shared transcript records (plan 7.4).
+
+tau3-failure-fixes-plan.md adds, each behind its own switch (all off by default):
+M1 one proactive status line per run while the backend works in silence
+(``output.proactive_status``); M3.2 a spelling hold before deciding a turn that ends
+mid-spelling (``delegation.spelling_hold``); M2 replaying an unheard answer on an
+explicit "status" request in IDLE (``delegation.replay_unheard_answer``, RC2); G1 filler
+de-duplication (``delegation.filler_dedupe``); G2 answer cleanup (``output.clean_answers``).
 """
 
 from __future__ import annotations
 
 import asyncio
 import contextlib
+import re
 from collections import deque
 from dataclasses import dataclass, field
 from typing import Any
@@ -26,7 +34,10 @@ from loguru import logger
 
 from prototypes.text_frontend_backend_agent.tools import ToolSpec
 from prototypes.voice_delegation_hermes_agent.backend.protocol import (
+    IDLE,
     NO_SESSION,
+    REQUEST_STATUS,
+    REQUEST_TASK,
     VOICE_TO_GATEWAY,
     WORKING,
     message,
@@ -39,6 +50,8 @@ from prototypes.voice_delegation_hermes_agent.engine.output_scheduler import (
     OutputQueue,
     SpeechItem,
 )
+from prototypes.voice_delegation_hermes_agent.engine.spelling_hold import SpellingHoldPredicate
+from prototypes.voice_delegation_hermes_agent.engine.spoken_text import clean_for_speech
 from prototypes.voice_delegation_hermes_agent.engine.transcript import (
     HEARD,
     NOT_HEARD,
@@ -50,6 +63,7 @@ from prototypes.voice_delegation_hermes_agent.frontend.decider import Decider, D
 from prototypes.voice_delegation_hermes_agent.frontend.delegate_tool import Decision
 from prototypes.voice_delegation_hermes_agent.frontend.prompts import PromptCatalog
 from prototypes.voice_delegation_hermes_agent.frontend.status_verbalizer import StatusVerbalizer
+from prototypes.voice_delegation_hermes_agent.prompt_features import sha256_text
 from prototypes.voice_delegation_hermes_agent.tools.relay import ToolRelay
 from prototypes.voice_frontend_backend_agent.agent.filler import Stamp
 from prototypes.voice_frontend_backend_agent.agent.tools import capability_lines, realtime_tools_to_specs
@@ -75,6 +89,7 @@ class SessionParts:
     transcript_normalizer: TranscriptNormalizer | None = None
     argument_normalizer: ArgumentNormalizer | None = None
     local_tools: tuple[ToolSpec, ...] = ()
+    spelling_hold: SpellingHoldPredicate | None = None
 
 
 @dataclass(slots=True)
@@ -116,6 +131,12 @@ class _Backend:
     unavailable: str = ""
     ready: asyncio.Future[dict[str, Any]] | None = None
     configured: asyncio.Future[dict[str, Any]] | None = None
+    # M2 state (tau3-failure-fixes-plan.md section 4).
+    last_finished_run_id: str = ""  # set on backend_run_done
+    last_finished_epoch: int = 0
+    last_finished_request: str = ""  # the text of the run's first turn
+    last_finished_turn_ids: tuple[int, ...] = ()
+    last_task_turn_id: int = 0  # the newest turn delegated as a task
 
 
 class DelegationTurnManager:
@@ -161,6 +182,18 @@ class DelegationTurnManager:
         self._greeted = False
         self._closed = False
         self._link_open = False
+        # M1: proactive status while the backend works in silence.
+        self._quiet_since: float | None = None
+        self._proactive_epoch = 0
+        self._proactive_count = 0
+        self._proactive_lines = parts.prompts.lines("status_proactive_lines")
+        self._proactive_next = 0
+        self._proactive_task: asyncio.Task[None] | None = None
+        # M3.2: the previous turn was merged during a spelling hold.
+        self._hold_accumulator = False
+        # G1: the session's recent delegated fillers (normalized).
+        self._recent_fillers: deque[str] = deque(maxlen=max(1, config.delegation.filler_dedupe.recent))
+        self._filler_alternatives = parts.prompts.lines("filler_alternatives")
 
     # -- TurnManagerLike: lifecycle ------------------------------------------------------------
 
@@ -183,12 +216,25 @@ class DelegationTurnManager:
         seed = self._voice.protocol.seed_history_with_client_greeting
         if seed:
             self.transcript.seed_greeting(seed)
+        arguments = self._voice.normalization.tool_arguments
         self._log(
             "fdh_session_start",
             config_hash=self._config.config_hash,
             config=self._config.effective,
             model=self._ctx.model,
+            features=self._config.features,
+            invalid_message_keys={
+                "invalid": arguments.invalid_message_key if arguments.enabled else "",
+                "escalate_invalid": arguments.escalate_invalid_message_key if arguments.enabled else "",
+                "already_failed": arguments.retry_guard.message_key
+                if arguments.enabled and arguments.retry_guard.enabled
+                else "",
+            },
         )
+        if self._config.output.proactive_status.enabled:
+            self._proactive_task = asyncio.create_task(
+                self._proactive_loop(), name=f"proactive-status-{self._ctx.session_id}"
+            )
         try:
             await self._parts.link.open(self._on_backend_message)
         except Exception as exc:  # noqa: BLE001 - reported on session.update, never crashes the session
@@ -214,7 +260,12 @@ class DelegationTurnManager:
         if self._closed:
             return
         self._closed = True
-        tasks: list[asyncio.Task[Any] | None] = [self._decision, self._output_task, *self._side_tasks]
+        tasks: list[asyncio.Task[Any] | None] = [
+            self._decision,
+            self._output_task,
+            self._proactive_task,
+            *self._side_tasks,
+        ]
         if self._running is not None:
             tasks.extend([self._running.speak_task, self._running.task])
         for task in tasks:
@@ -249,6 +300,12 @@ class DelegationTurnManager:
             # must not trip session.update_after_start.
             await self._configure(tools, policy)
             self._configured_with = sent
+        if system_prompt != self._system_prompt:
+            self._log(
+                "frontend_prompt",
+                frontend_prompt_sha256=sha256_text(system_prompt),
+                prompt_features=dict(self._config.prompt_features),
+            )
         self._system_prompt = system_prompt
 
     async def _configure(self, tools: list[dict[str, Any]], instructions: str) -> None:
@@ -318,6 +375,7 @@ class DelegationTurnManager:
     async def on_speech_started(self) -> None:
         """Confirmed user speech: hold output, cancel an undecided turn, barge in on audio."""
         self._awaiting += 1
+        self._mark_activity()
         if self._decision is not None and not self._decision.done() and self._decision_turn is not None:
             turn = self._decision_turn
             self._decision.cancel()
@@ -462,6 +520,7 @@ class DelegationTurnManager:
         self._decision = asyncio.create_task(self._decide(turn), name=f"decide-{turn.turn_id}")
 
     async def _decide(self, turn: _Turn) -> None:
+        await self._spelling_hold(turn)
         text = self._normalize(turn.text)
         backend = self._backend
         messages = self.transcript.frontend_messages(max_groups=self._config.frontend.history_max_groups)
@@ -481,6 +540,7 @@ class DelegationTurnManager:
             elapsed_s=elapsed,
             recent_activity=list(backend.activity),
             backend_asked_question=self.transcript.backend_asked_question(),
+            last_answer_unheard=self._last_answer_unheard(),
         )
         decision = await self._parts.decider.decide(context)
         # Everything below is synchronous: a barge-in can no longer undo this decision.
@@ -492,7 +552,29 @@ class DelegationTurnManager:
         )
         if guarded is not decision:
             self._log("delegation_guard", turn_id=turn.turn_id, guard="backend_question_needs_delegate")
+        if self._replay(turn, text, guarded, context):
+            return
         self._apply(turn, text, guarded, context)
+
+    async def _spelling_hold(self, turn: _Turn) -> None:
+        """M3.2: wait ``hold_ms`` before deciding a turn that ends mid-spelling (speech merges it)."""
+        predicate = self._parts.spelling_hold
+        accumulator, self._hold_accumulator = self._hold_accumulator, False
+        if predicate is None or turn.requested:
+            return
+        check = predicate.check(turn.text, accumulator=accumulator)
+        if not check.hold:
+            return
+        hold_ms = self._config.delegation.spelling_hold.hold_ms
+        details = {"turn_id": turn.turn_id, "hold_ms": hold_ms, "evidence": check.evidence, "value": check.value}
+        try:
+            await asyncio.sleep(hold_ms / 1000.0)
+        except asyncio.CancelledError:
+            # Speech started: on_speech_started merges this text into the next turn.
+            self._hold_accumulator = True
+            self._log("spelling_hold", **details, merged=True)
+            raise
+        self._log("spelling_hold", **details, merged=False)
 
     def _normalize(self, text: str) -> str:
         normalizer = self._parts.transcript_normalizer
@@ -503,6 +585,98 @@ class DelegationTurnManager:
             spans = [{"spoken": span.spoken, "written": span.written} for span in normalized.spans]
             self._log("transcript_normalized", raw=text, text=normalized.text, spans=spans)
         return normalized.text
+
+    # -- M2: replay an unheard answer (RC2, tau3-failure-fixes-plan.md section 4) --------------
+
+    def _last_answer_unheard(self) -> bool:
+        """The newest backend answer was not heard or only partly (shown only with ``replay_intent``)."""
+        if not self._config.prompt_features.get("replay_intent"):
+            return False
+        entry = self.transcript.last_backend_answer()
+        return entry is not None and entry.outcome in (NOT_HEARD, PARTIAL) and not entry.replayed
+
+    def _replay(self, turn: _Turn, text: str, decision: Decision, context: DecisionContext) -> bool:
+        """Speak the unheard answer again instead of delegating, when every guard passes."""
+        if not self._config.delegation.replay.enabled:
+            return False
+        if not decision.delegate or decision.request != REQUEST_STATUS or context.state == WORKING:
+            return False  # no explicit intent in IDLE: today's path (RC1)
+        entry = self.transcript.last_backend_answer()
+        reason, replay_text = self._replay_check(entry)
+        if reason or entry is None:
+            self._log("answer_replay_skipped", turn_id=turn.turn_id, reason=reason or "no_answer")
+            return False
+        turn.decided = Stamp.now(self._ctx.clock, self._ctx.audio_now())
+        self.transcript.add_user(text, turn_id=turn.turn_id, delegated=False)
+        self._log(
+            "delegation_decision",
+            turn_id=turn.turn_id,
+            delegate=decision.delegate,
+            request=decision.request,
+            filler=decision.filler_text,
+            filler_chars=len(decision.filler_text),
+            backend_state=context.state,
+            latency_ms=int(decision.latency_ms),
+            user_stop_to_decision_ms=_ms(turn.turn_end, turn.decided),
+            usage=decision.usage,
+            repair=decision.repair,
+            text=text,
+            replay=True,
+        )
+        self._flush_context()
+        entry.replayed = True
+        assert entry.released_mono is not None  # noqa: S101 - checked by _replay_check
+        self._log(
+            "answer_replayed",
+            turn_id=turn.turn_id,
+            answer_id=entry.answer_id,
+            run_id=entry.run_id,
+            request=self._backend.last_finished_request,
+            outcome_before=entry.outcome,
+            age_s=round(self._ctx.clock.monotonic() - entry.released_mono, 2),
+            chars=len(replay_text),
+        )
+        spoken = self.transcript.add_spoken("frontend_speech", "frontend", replay_text, turn_id=turn.turn_id)
+        self._push(
+            SpeechItem(
+                kind="replay",
+                text=replay_text,
+                entry=spoken,
+                turn_id=turn.turn_id,
+                usage=dict(decision.usage),
+                on_first_audio=lambda: self._first_audio(turn, "filler"),
+            )
+        )
+        return True
+
+    def _replay_check(self, entry: Entry | None) -> tuple[str, str]:
+        """``(reason, text)``: the first failed guard (empty when all pass) and what to speak."""
+        backend = self._backend
+        if entry is None:
+            return "no_answer", ""
+        if entry.outcome not in (NOT_HEARD, PARTIAL):
+            return "answer_heard", ""
+        if backend.state != IDLE:
+            return "backend_not_idle", ""
+        if not entry.run_id or entry.run_id != backend.last_finished_run_id:
+            return "other_run", ""
+        if backend.epoch != backend.last_finished_epoch:
+            return "newer_run", ""
+        answer_turn = max(backend.last_finished_turn_ids or (entry.turn_id or 0,))
+        if backend.last_task_turn_id > answer_turn:
+            return "task_since_answer", ""
+        if entry.released_mono is None:
+            return "never_released", ""
+        if self._ctx.clock.monotonic() - entry.released_mono > self._config.delegation.replay.ttl_s:
+            return "ttl_expired", ""
+        if entry.replayed:
+            return "already_replayed", ""
+        text = entry.text if entry.outcome == NOT_HEARD else _unheard_part(entry.text, entry.heard_text)
+        if not text:
+            return "question_heard", ""
+        return "", text
+
+    # -- decisions ------------------------------------------------------------------------------
 
     def _apply(self, turn: _Turn, text: str, decision: Decision, context: DecisionContext) -> None:
         turn.decided = Stamp.now(self._ctx.clock, self._ctx.audio_now())
@@ -523,36 +697,57 @@ class DelegationTurnManager:
         )
         # Earlier context (acks, heard fillers, delivery notes) must reach the gateway before the delegation.
         self._flush_context()
+        filler = decision.filler_text
         if decision.delegate:
             if self._backend.unavailable or not self._link_open:
                 self._speak_local_apology(turn, reason="backend_unavailable")
                 return
             if self._backend.state != WORKING:
                 self._backend.current_request = text
+            if decision.request == REQUEST_TASK or self._backend.state != WORKING:
+                self._backend.last_task_turn_id = turn.turn_id  # the gateway treats IDLE requests as tasks
             self._send(
                 "delegate",
                 turn_id=turn.turn_id,
                 request=decision.request,
                 run_input=[{"seq": user_entry.seq, "text": text}],
             )
-            if decision.filler_text and self._config.delegation.speak_when_delegating:
-                self._queue_frontend(turn, decision, kind="filler")
-            elif decision.filler_text:
-                self._log("filler_silenced", turn_id=turn.turn_id, text=decision.filler_text)
-        elif decision.filler_text:
-            self._queue_frontend(turn, decision, kind="direct")
-        spoken_now = decision.filler_text and (not decision.delegate or self._config.delegation.speak_when_delegating)
+            if filler and self._config.delegation.filler_dedupe.enabled:
+                filler = self._dedupe_filler(turn, filler, backend_state=context.state)
+            if filler and self._config.delegation.speak_when_delegating:
+                self._queue_frontend(turn, decision, filler, kind="filler")
+            elif filler:
+                self._log("filler_silenced", turn_id=turn.turn_id, text=filler)
+        elif filler:
+            self._queue_frontend(turn, decision, filler, kind="direct")
+        spoken_now = filler and (not decision.delegate or self._config.delegation.speak_when_delegating)
         if turn.requested and not spoken_now:
             # A client response.create always gets a response (Realtime semantics): an empty one here.
             self._push(CallsItem(batch_id=f"empty_response_{turn.turn_id}", calls=[]))
         self._wake.set()
 
-    def _queue_frontend(self, turn: _Turn, decision: Decision, *, kind: str) -> None:
-        entry = self.transcript.add_spoken("frontend_speech", "frontend", decision.filler_text, turn_id=turn.turn_id)
+    def _dedupe_filler(self, turn: _Turn, filler: str, *, backend_state: str) -> str:
+        """G1: a delegated filler that repeats a recent one is dropped (WORKING) or replaced."""
+        key = _filler_key(filler)
+        if key not in self._recent_fillers:
+            self._recent_fillers.append(key)
+            return filler
+        if backend_state != WORKING:
+            for alternative in self._filler_alternatives:
+                if _filler_key(alternative) not in self._recent_fillers:
+                    self._recent_fillers.append(_filler_key(alternative))
+                    self._log("filler_deduped", turn_id=turn.turn_id, text=filler, action="replaced", new=alternative)
+                    return alternative
+        reason = "working" if backend_state == WORKING else "all_recent"
+        self._log("filler_deduped", turn_id=turn.turn_id, text=filler, action="dropped", reason=reason)
+        return ""
+
+    def _queue_frontend(self, turn: _Turn, decision: Decision, text: str, *, kind: str) -> None:
+        entry = self.transcript.add_spoken("frontend_speech", "frontend", text, turn_id=turn.turn_id)
         self._push(
             SpeechItem(
                 kind=kind,
-                text=decision.filler_text,
+                text=text,
                 entry=entry,
                 turn_id=turn.turn_id,
                 usage=dict(decision.usage),
@@ -596,7 +791,18 @@ class DelegationTurnManager:
             self._backend.ready.set_result(data)
 
     def _gw_session_configured(self, data: dict[str, Any]) -> None:
-        self._log("backend_configured", **_pick(data, "applied", "tools"))
+        self._log(
+            "backend_configured",
+            **_pick(
+                data,
+                "applied",
+                "tools",
+                "backend_features",
+                "backend_catalog_sha256",
+                "backend_soul_sha256",
+                "backend_system_sha256",
+            ),
+        )
         if self._backend.configured is not None and not self._backend.configured.done():
             self._backend.configured.set_result(data)
 
@@ -609,6 +815,10 @@ class DelegationTurnManager:
         backend.state, backend.epoch, backend.run_id = data["state"], int(data["epoch"]), str(data.get("run_id") or "")
         if backend.state == WORKING and previous != WORKING:
             backend.run_started = self._ctx.clock.monotonic()
+        if backend.state == WORKING and backend.epoch != self._proactive_epoch:
+            # M1: a new run (a pending_steer run follows WORKING directly) gets its own budget and timer.
+            self._proactive_epoch, self._proactive_count = backend.epoch, 0
+            self._mark_activity()
         if backend.state != WORKING:
             backend.run_started = None
         self._log("backend_state", state=backend.state, epoch=backend.epoch, run_id=backend.run_id, previous=previous)
@@ -632,7 +842,15 @@ class DelegationTurnManager:
         self._relay.on_cancel(str(data["call_id"]), str(data.get("reason") or ""))
 
     def _gw_answer(self, data: dict[str, Any]) -> None:
-        text = " ".join(str(data.get("text") or "").split())
+        raw = str(data.get("text") or "")
+        if data["kind"] == "hermes" and self._config.output.clean_answers:
+            cleaned = clean_for_speech(raw)
+            if cleaned != " ".join(raw.split()):
+                self._log(
+                    "answer_cleaned", answer_id=data["answer_id"], chars_before=len(raw), chars_after=len(cleaned)
+                )
+            raw = cleaned
+        text = " ".join(raw.split())
         turn_ids = [int(value) for value in data.get("turn_ids") or () if value is not None]
         turn = self._turns.get(turn_ids[0]) if turn_ids else None
         self._log(
@@ -653,6 +871,7 @@ class DelegationTurnManager:
                 text,
                 turn_id=turn.turn_id if turn else None,
                 answer_id=str(data["answer_id"]),
+                run_id=str(data.get("run_id") or ""),
             )
             kind = "answer"
         else:
@@ -704,6 +923,13 @@ class DelegationTurnManager:
         )
 
     def _gw_backend_run_done(self, data: dict[str, Any]) -> None:
+        backend = self._backend
+        turn_ids = tuple(int(value) for value in data.get("turn_ids") or () if value is not None)
+        first = self._turns.get(turn_ids[0]) if turn_ids else None
+        backend.last_finished_run_id = str(data.get("run_id") or "")
+        backend.last_finished_epoch = int(data.get("epoch") or 0)
+        backend.last_finished_turn_ids = turn_ids
+        backend.last_finished_request = first.text if first is not None else backend.current_request
         self._log(
             "backend_run_done",
             **_pick(data, "run_id", "epoch", "status", "history", "turn_ids", "usage", "tool_call_ids"),
@@ -758,6 +984,53 @@ class DelegationTurnManager:
             # A context entry may have become final while speaking.
             self._flush_context()
 
+    # -- M1: proactive status ---------------------------------------------------------------------
+
+    def _mark_activity(self) -> None:
+        """Audio was released or the user spoke: the silence timer starts again."""
+        self._quiet_since = self._ctx.clock.monotonic()
+
+    async def _proactive_loop(self) -> None:
+        after_s = self._config.output.proactive_status.after_s
+        poll = min(0.5, max(0.02, after_s / 4))
+        while not self._closed:
+            await asyncio.sleep(poll)
+            self._maybe_proactive_status()
+
+    def _maybe_proactive_status(self) -> None:
+        """One short status line after ``after_s`` of silence while WORKING (no LLM call)."""
+        settings = self._config.output.proactive_status
+        backend = self._backend
+        if backend.state != WORKING or backend.unavailable or self._proactive_count >= settings.max_per_run:
+            return
+        now = self._ctx.clock.monotonic()
+        busy = (
+            self._awaiting > 0
+            or self._deciding()
+            or self._running is not None
+            or len(self._queue) > 0
+            or self.progress.active
+        )
+        if busy or self._quiet_since is None:
+            self._quiet_since = now  # silence counts from the end of speech, either side
+            return
+        silence = now - self._quiet_since
+        if silence < settings.after_s or not self._proactive_lines:
+            return
+        text = self._proactive_lines[self._proactive_next % len(self._proactive_lines)]
+        self._proactive_next += 1
+        self._proactive_count += 1
+        self._log(
+            "status_proactive",
+            turn_id=self._turn_counter or None,
+            run_id=backend.run_id,
+            epoch=backend.epoch,
+            text=text,
+            silence_wall_s=round(silence, 2),
+        )
+        entry = self.transcript.add_spoken("status_speech", "frontend", text)
+        self._push(SpeechItem(kind="status", text=text, entry=entry, meta={"epoch": backend.epoch, "proactive": True}))
+
     def _status_current(self, epoch: int) -> bool:
         """Whether the run a status report described is still the one running."""
         return self._backend.state == WORKING and self._backend.epoch == epoch
@@ -780,8 +1053,12 @@ class DelegationTurnManager:
                     writer.function_call(call_id=call_id, name=name, arguments=arguments)
                 writer.finish("completed", usage=ev.usage_object())
                 return
-            waited_ms = int((self._ctx.clock.monotonic() - item.queued_mono) * 1000)
+            now = self._ctx.clock.monotonic()
+            waited_ms = int((now - item.queued_mono) * 1000)
             self._log("output_release", item_kind=item.kind, turn_id=item.turn_id, waited_ms=waited_ms)
+            if item.entry is not None and item.entry.released_mono is None:
+                item.entry.released_mono = now
+            self._mark_activity()
             running.task = asyncio.current_task()
             await self._speak(running, item, settings)
         finally:
@@ -794,7 +1071,7 @@ class DelegationTurnManager:
         writer = running.writer
         prepared = self._ctx.output.prepare(
             item.text,
-            kind="answer" if item.kind in ("answer", "status", "apology") else "filler",
+            kind="answer" if item.kind in ("answer", "replay", "status", "apology") else "filler",
             modality=settings.output_modality,
             voice=self._ctx.voice(),
             out_format=settings.output_format,
@@ -938,6 +1215,27 @@ def _pick(data: dict[str, Any], *keys: str) -> dict[str, Any]:
 
 def _kind(item: SpeechItem | CallsItem) -> str:
     return "function_calls" if isinstance(item, CallsItem) else item.kind
+
+
+_SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
+
+
+def _unheard_part(text: str, heard_text: str) -> str:
+    """A partly heard answer from the start of the sentence that was cut ("" if its last sentence was heard)."""
+    heard = " ".join(heard_text.split())
+    if len(heard.rstrip(".!?")) >= len(text.rstrip(".!?")):
+        return ""
+    start = 0
+    for part in _SENTENCE_END.split(text):
+        end = start + len(part)
+        if end > len(heard.rstrip()):
+            return text[start:].strip()
+        start = end + 1
+    return ""
+
+
+def _filler_key(text: str) -> str:
+    return " ".join(re.sub(r"[^\w\s']", " ", text.lower()).split())
 
 
 __all__ = ["DelegationTurnManager", "SessionParts"]

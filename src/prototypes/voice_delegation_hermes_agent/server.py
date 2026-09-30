@@ -37,6 +37,7 @@ from prototypes.voice_delegation_hermes_agent.config import (
     load_delegation_config,
 )
 from prototypes.voice_delegation_hermes_agent.engine.backend_link import BackendLink, WebSocketBackendLink
+from prototypes.voice_delegation_hermes_agent.engine.spelling_hold import SpellingHoldPredicate
 from prototypes.voice_delegation_hermes_agent.engine.turn_manager import DelegationTurnManager, SessionParts
 from prototypes.voice_delegation_hermes_agent.frontend.decider import Decider, LLMDecider, RuleDecider
 from prototypes.voice_delegation_hermes_agent.frontend.llm import ChatModel, OpenAIChatModel
@@ -59,27 +60,43 @@ class DelegationRuntime:
     def __init__(self, config: DelegationConfig, *, chat_model: ChatModel | None = None) -> None:
         """Load prompts and build the shared model client (injectable for tests)."""
         self.config = config
-        self.prompts: PromptCatalog = load_prompts(config.delegation.prompts_path)
+        self.prompts: PromptCatalog = load_prompts(
+            config.delegation.prompts_path, prompt_features=config.prompt_features
+        )
         needs_llm = config.frontend.decider == "llm" or config.backend.verbalizer_mode == "llm"
         self.chat_model = (
             chat_model if chat_model is not None else (OpenAIChatModel(config.frontend.llm) if needs_llm else None)
         )
         voice = config.voice
         self._script = _load_script(config.frontend.script)
-        self._argument_templates = ("", "")
+        self._argument_templates = ("", "", "")
         arguments = voice.normalization.tool_arguments
         if arguments.enabled:
             catalog = load_catalog(voice.agent.prompts_path, voice.agent.prompts.inline)
             guard = arguments.retry_guard
+            escalate = arguments.escalate_invalid_message_key
             self._argument_templates = (
                 catalog.get(arguments.invalid_message_key),
                 catalog.get(guard.message_key) if guard.enabled else "",
+                catalog.get(escalate) if escalate else "",
             )
         self.gateway_health: dict[str, Any] = {}
 
     def parts(self, context: TurnContext) -> SessionParts:
         """Per-session collaborators (plan 12.1: every one chosen by config)."""
         config, voice = self.config, self.config.voice
+        arguments = (
+            ArgumentNormalizer(
+                voice.normalization.tool_arguments,
+                transcript=voice.normalization.transcript,
+                invalid_template=self._argument_templates[0],
+                already_failed_template=self._argument_templates[1],
+                escalate_invalid_template=self._argument_templates[2],
+            )
+            if voice.normalization.tool_arguments.enabled
+            else None
+        )
+        hold = config.delegation.spelling_hold
         return SessionParts(
             decider=self._decider(),
             verbalizer=self._verbalizer(),
@@ -88,15 +105,13 @@ class DelegationRuntime:
             transcript_normalizer=TranscriptNormalizer(voice.normalization.transcript)
             if voice.normalization.transcript.enabled
             else None,
-            argument_normalizer=ArgumentNormalizer(
-                voice.normalization.tool_arguments,
-                transcript=voice.normalization.transcript,
-                invalid_template=self._argument_templates[0],
-                already_failed_template=self._argument_templates[1],
-            )
-            if voice.normalization.tool_arguments.enabled
-            else None,
+            argument_normalizer=arguments,
             local_tools=tuple(voice.tools.config_tool_specs) if config.tools.executor == "local" else (),
+            spelling_hold=SpellingHoldPredicate(
+                voice.normalization.transcript, complete_patterns=hold.complete_patterns, arguments=arguments
+            )
+            if hold.enabled
+            else None,
         )
 
     def turn_manager(self, context: TurnContext) -> DelegationTurnManager:
@@ -181,6 +196,7 @@ class DelegationRuntime:
         return {
             "prototype": "frontend-delegation-hermes",
             "config_hash": self.config.config_hash,
+            "features": self.config.features,
             "backend": {"link": backend.link, "url": backend.url if backend.link == "websocket" else ""},
             "frontend": {"decider": self.config.frontend.decider, "model": self.config.frontend.llm.model},
         }
@@ -286,6 +302,7 @@ def main(argv: list[str] | None = None) -> None:
         f"{config.backend.url} tools={config.tools.executor} delay={config.backend.delay_seconds:g}s "
         f"VAD silence={config.voice.turn_detection.silence_duration_ms}ms"
     )
+    logger.info(f"features {config.features}")
     uvicorn.run(
         app,
         host=server.host,

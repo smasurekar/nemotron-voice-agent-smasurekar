@@ -1,10 +1,11 @@
 # Plan — Frontend Delegation to a Hermes Backend (voice, OpenAI Realtime server, τ³-voice ready)
 
-**Status:** implemented (revision 5 records implementation notes and measurements, §22) ·
-**Date:** 2026-09-29 · **Revision:** 5
+**Status:** implemented (revision 5 records implementation notes and measurements, §22; revision 6 adds the
+τ³ failure fixes behind switches, §19) ·
+**Date:** 2026-09-30 · **Revision:** 6
 **Code (proposed):** `src/prototypes/voice_delegation_hermes_agent/` · **Runbook (P6):** `runbook.md` (this folder)
 **Behaviour spec:** [`workflow.csv`](workflow.csv) (user query type × backend state → frontend and backend actions),
-amended by requirement change RC1 (§0.1)
+amended by requirement changes RC1 (§0.1) and RC2 (§0.2, behind an experimental switch)
 **Builds on:** the voice frontend/backend prototype (`src/prototypes/voice_frontend_backend_agent/`,
 [`../voice/prototype-plan.md`](../voice/prototype-plan.md), [`../voice/runbook.md`](../voice/runbook.md)).
 **Backend:** Hermes `AIAgent` (`hermes-agent-smasurekar`, `run_agent.py:241`).
@@ -54,6 +55,18 @@ it to `delegate(delegate: bool, filler_text: str, request: "task"|"status")`.
 - **Scope:** the backend reads `request` only in the WORKING state. In NO_SESSION and IDLE it is ignored.
 - **Tests and specs:** the workflow-table test (§15) checks the three-field contract. `workflow.csv` itself is
   not edited, because it is the user's spec.
+
+### 0.2 Requirement change RC2 (approved narrowly, review 2 of the τ³ failure fixes, 2026-09-30)
+
+RC2 extends RC1 for M2, "replay an unheard answer"
+([`tau3-failure-fixes-plan.md`](tau3-failure-fixes-plan.md) §4).
+
+- **Scope:** the voice server interprets `request="status"` in IDLE only when
+  `delegation.replay_unheard_answer.enabled` is true **and** every replay guard passes (same run and
+  request, no task since the answer, within `ttl_s`, not replayed before). It then speaks the answer again
+  and sends no `delegate` to the gateway. If any guard fails, the turn is delegated as before.
+- **Unchanged:** the gateway still ignores `request` in NO_SESSION and IDLE (§5.4). `workflow.csv` is not
+  edited. M2 is off by default and experimental.
 
 ---
 
@@ -437,7 +450,8 @@ sessions are unaffected, because each has its own process and `SessionRuntime`.
 - **`request` field (RC1):**
   - WORKING + `status` → status path; WORKING + `task` (or a missing or invalid value) → steer path.
   - `task` is the fallback because an unneeded steer costs less than a lost instruction.
-  - NO_SESSION / IDLE ignore the field; every delegation starts or continues a run.
+  - NO_SESSION / IDLE ignore the field; every delegation starts or continues a run. Under RC2 (§0.2), the
+    voice server can answer an IDLE `status` turn itself, so that turn never reaches the gateway.
   - The controller logs the field value and the action taken, so wrong labels can be measured (§14).
 
 ---
@@ -1258,6 +1272,17 @@ campaign)
 
 ## 19. Revision log
 
+- **Revision 6 (2026-09-30).** The τ³ failure fixes of
+  [`tau3-failure-fixes-plan.md`](tau3-failure-fixes-plan.md) are implemented, each behind a switch that is off
+  by default. With every switch off, the rendered prompts are byte-identical to agent commit `3a7e04a`.
+  - Prompt variants: `prompt_features` in `delegation_agent.yaml` (frontend) and `gateway.yaml` (backend).
+  - Voice server: proactive status (M1), spelling hold (M3.2), answer replay (M2, RC2 in §0.2), filler
+    de-duplication (G1) and answer cleanup before TTS (G2).
+  - Shared normalization (additive, off by default): spelled-run joining and escalating local "invalid ID"
+    wording (M3.1, M3.3).
+  - Deployed fingerprints in the voice and gateway logs, checked by `cli/fingerprint_check.py`. The control
+    arm is `config/profiles/tau3_eval_baseline.yaml`; the arms are `config/profiles/tau3_arm_*.yaml`.
+  - The gateway protocol is unchanged; `session.configured` carries optional fingerprint fields.
 - **Revision 5 (2026-09-29).** Implemented. Implementation notes, P0 measurements and deviations are in §22.
 - **Revision 4 (2026-09-29).** Addresses the re-review (§21).
   - D8 changed to one Hermes worker process per Realtime session behind a gateway, with configurable capacity at

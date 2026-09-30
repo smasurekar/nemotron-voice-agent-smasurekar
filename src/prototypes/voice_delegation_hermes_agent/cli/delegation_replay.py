@@ -9,6 +9,9 @@ The replay builds exactly the request the voice server would send and reports
 accuracy per workflow cell and per class (CSV cells, answers to backend questions,
 regular speech: backchannels, vocal tics, non-directed speech).
 
+A case with ``requires_feature`` (a frontend prompt variant, e.g. ``replay_intent``) only
+runs when the profile turns that variant on (``--config .../tau3_arm_m2_replay.yaml``).
+
     PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.delegation_replay \
         --config src/prototypes/voice_delegation_hermes_agent/config/profiles/tau3_eval.yaml --domain mock
 """
@@ -57,7 +60,7 @@ def _check(case: dict[str, Any], decision: Any) -> dict[str, bool]:
 async def replay(args: argparse.Namespace) -> int:
     """Run every case and print (and optionally write) the report; exit 1 when a gate fails."""
     config = load_delegation_config(args.config)
-    prompts = load_prompts(config.delegation.prompts_path)
+    prompts = load_prompts(config.delegation.prompts_path, prompt_features=config.prompt_features)
     model = OpenAIChatModel(config.frontend.llm)
     decider = LLMDecider(
         model,
@@ -74,6 +77,10 @@ async def replay(args: argparse.Namespace) -> int:
     cases = [json.loads(line) for line in Path(args.cases).read_text().splitlines() if line.strip()]
     if args.only:
         cases = [case for case in cases if args.only in case["id"] or args.only in case["cell"]]
+    skipped = [case["id"] for case in cases if not config.prompt_features.get(case.get("requires_feature", ""), True)]
+    cases = [case for case in cases if case["id"] not in skipped]
+    if skipped:
+        print(f"skipped {len(skipped)} case(s) whose prompt variant is off: {', '.join(skipped)}")
     semaphore = asyncio.Semaphore(args.concurrency)
 
     async def run(case: dict[str, Any]) -> dict[str, Any]:
@@ -88,6 +95,7 @@ async def replay(args: argparse.Namespace) -> int:
                 elapsed_s=4 if case["state"] == "WORKING" else None,
                 recent_activity=case.get("recent_activity", []),
                 backend_asked_question=bool(case.get("backend_asked_question")),
+                last_answer_unheard=bool(case.get("last_answer_unheard")),
             )
             decision = await decider.decide(context)
             if not args.no_guards:

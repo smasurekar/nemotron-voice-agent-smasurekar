@@ -56,7 +56,9 @@ class SessionRuntime:
         """``send`` takes a validated gateway→voice message dict (enqueue only)."""
         self._config = config
         self._send = send
-        self._templates = templates or BackendTemplates(config.hermes.prompts_path)
+        self._templates = templates or BackendTemplates(
+            config.hermes.prompts_path, prompt_features=config.prompt_features
+        )
         self._pool = pool or WorkerPool(config, soul=self._templates.render("backend_soul"))
         self._event_log = event_log
         self.controller: BackendController | None = None
