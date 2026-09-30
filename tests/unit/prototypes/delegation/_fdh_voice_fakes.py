@@ -48,7 +48,11 @@ FIXTURES = ROOT / "tests" / "unit" / "prototypes" / "voice" / "fixtures" / "tau2
 
 
 def tau3_config(**backend: Any) -> DelegationConfig:
-    config = load_delegation_config(PROFILES / "tau3_eval.yaml")
+    """The tau3 control profile (every tau3-failure-fixes-plan.md switch off), scripted, no warm-up.
+
+    Tests of one fix load its arm with :func:`profile_config`.
+    """
+    config = load_delegation_config(PROFILES / "tau3_eval_baseline.yaml")
     voice = replace(config.voice, server=replace(config.voice.server, warmup=False))
     config = replace(config, voice=voice, frontend=replace(config.frontend, decider="scripted"))
     if backend:

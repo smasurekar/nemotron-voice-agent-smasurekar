@@ -1,8 +1,8 @@
 # Plan — Frontend Delegation to a Hermes Backend (voice, OpenAI Realtime server, τ³-voice ready)
 
 **Status:** implemented (revision 5 records implementation notes and measurements, §22; revision 6 adds the
-τ³ failure fixes behind switches, §19) ·
-**Date:** 2026-09-30 · **Revision:** 6
+τ³ failure fixes behind switches; revision 7 turns them on by default except M2, §19) ·
+**Date:** 2026-09-30 · **Revision:** 7
 **Code (proposed):** `src/prototypes/voice_delegation_hermes_agent/` · **Runbook (P6):** `runbook.md` (this folder)
 **Behaviour spec:** [`workflow.csv`](workflow.csv) (user query type × backend state → frontend and backend actions),
 amended by requirement changes RC1 (§0.1) and RC2 (§0.2, behind an experimental switch)
@@ -1272,6 +1272,13 @@ campaign)
 
 ## 19. Revision log
 
+- **Revision 7 (2026-09-30).** Every τ³ failure fix is on in the YAML defaults except M2 (experimental):
+  `delegation_agent.yaml` (voice profile `voice/tau3_spelling.yaml`, M1, M3.2, G1, G2), `voice/browser.yaml`
+  (spelled runs), and `gateway.yaml` (all three backend variants). `tau3_eval.yaml` also pins the airline
+  code as a complete spelled value. The control is `tau3_eval_baseline.yaml` with the new
+  `gateway.baseline.yaml` (every backend variant off); the `gateway.<variant>.yaml` arms extend it. Python
+  code defaults and the shared normalization stay off. The arms are not evaluated yet
+  ([`tau3-failure-fixes-plan.md`](tau3-failure-fixes-plan.md) §14).
 - **Revision 6 (2026-09-30).** The τ³ failure fixes of
   [`tau3-failure-fixes-plan.md`](tau3-failure-fixes-plan.md) are implemented, each behind a switch that is off
   by default. With every switch off, the rendered prompts are byte-identical to agent commit `3a7e04a`.

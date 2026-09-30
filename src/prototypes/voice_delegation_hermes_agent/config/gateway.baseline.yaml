@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Control gateway of every tau3-failure-fixes-plan.md evaluation: gateway.yaml with every backend
+# prompt variant pinned off, so the backend prompts are byte-identical to agent commit 3a7e04a.
+# Pair it with profiles/tau3_eval_baseline.yaml. The gateway.<variant>.yaml arms extend this file.
+
+extends: gateway.yaml
+
+prompt_features:
+  spelling_v2: false
+  spoken_output: false
+  write_consent: false

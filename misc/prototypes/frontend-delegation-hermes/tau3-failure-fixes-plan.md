@@ -1,7 +1,9 @@
 # Plan: τ³-voice failure fixes for the Frontend Delegation Agent (FDH)
 
-**Status:** implemented behind switches, all off by default; not yet evaluated (§8) · **Date:** 2026-09-30 ·
-**Revision:** 4 (implementation, §13; review 2 findings and decisions applied in revision 3, §10)
+**Status:** implemented behind switches; every fix except M2 on by default in the FDH YAML defaults (§14),
+off in code; not yet evaluated (§8) · **Date:** 2026-09-30 ·
+**Revision:** 5 (defaults on except M2, §14; implementation in revision 4, §13; review 2 findings and
+decisions applied in revision 3, §10)
 **Context for a new reader:** Appendix A records everything this plan was built from: the original proposal,
 the failure analysis, the log measurements, the code facts, the ranking history, both reviews and the
 decisions. Read it first if you pick this plan up without the conversation that produced it.
@@ -11,6 +13,26 @@ decisions. Read it first if you pick this plan up without the conversation that 
 **Evidence:** airline run `voice-agent-evaluation-dump/tau-3-voice/2026-09-29_17-04-09Z_fdh-voice`
 (`fdh_voice_dlg_airline_regular`, agent commit `3a7e04a`, Pass^1 0.660, 33 of 50 passed). The per-task
 analysis is in `observations/airline_failed_tasks_analysis.md` in that dump.
+
+## Summary: what each fix solves
+
+The task numbers are the failed airline tasks of the 2026-09-29 run (Appendix A.3). "Default" is the FDH
+YAML default (§14). The control `tau3_eval_baseline.yaml` + `gateway.baseline.yaml` turns every fix off.
+
+| Fix | Problem it solves | What it does | Airline tasks | Switch | Default |
+|---|---|---|---|---|---|
+| **M1** proactive status (§2) | Long silences while Hermes works: the user asks "are you still there?" and τ² ends the call after 40 s of inactivity | Speaks one short fixed line ("Still checking, one moment.") after `after_s` of silence while the backend is WORKING, at most once per run | 14, 18, 20, 21, 22, 23 | `output.proactive_status` | on |
+| **M3.1** spelled-run joining (§3.1) | Spelled codes and names ("I, F, O, Y, Y, Z", "R O S S I") reach the agents as loose letters | Joins a run of single letters or digits into one token (IFOYYZ, ROSSI); "and" ends a run, so two IDs don't merge | 7, 21 | `normalization.transcript.spelled_runs` | on |
+| **M3.2** spelling hold (§3.2) | A spelled ID split across turns is looked up half-finished | Waits `hold_ms` before deciding a turn that ends mid-spelling with strong evidence and an incomplete value; speech during the wait joins the turn | 17, 37 | `delegation.spelling_hold` | on |
+| **M3.3** "invalid ID" wording (§3.3) | Local invalid-ID answers made Hermes repeat the format and ask again, with no lookup | The local answer asks for a read-back of what was heard, then for the whole ID spelled out; invalid IDs are still never sent to a tool | 37 | `normalization.tool_arguments.invalid_message_key`, `escalate_invalid_message_key` | on (τ³) |
+| **M3.4** backend `spelling_v2` (§3.4) | After a failed lookup Hermes retried with guesses, or asked again for an ID it had already verified | Backend prompt: no guessed retries; read back and ask to spell; don't re-ask for an ID already found | 12 | gateway `prompt_features.spelling_v2` | on |
+| **M2** replay an unheard answer (§4) | The user asks for an update because the answer was never heard | On a "status" request in IDLE, replays the last unheard answer (run-bound, short TTL, explicit intent) instead of delegating again. Experimental: unheard answers are as common in passing tasks (79%) as in failed ones (82%) | 20, 22, 23 | `delegation.replay_unheard_answer` + `prompt_features.replay_intent` | **off** |
+| **G1** filler de-duplication (§5) | The same filler repeated 4+ times (task 23: 11 times) and annoyed the user | Drops a repeated delegated filler while WORKING, otherwise swaps in an unused alternative | 21, 23, 35 | `delegation.filler_dedupe` | on |
+| **G2** short spoken answers (§6) | Long, list-heavy answers are slow to hear and easy to talk over | Backend prompt `spoken_output` (at most two short sentences, but every detail a write confirmation needs) plus cleanup before TTS (markdown stripped, one sentence per list item) | none directly | gateway `prompt_features.spoken_output`, `output.clean_answers` | on |
+| **G4** write consent (§7) | A change made on a "go ahead" said to a filler; a spoken name written without read-back ("Mei" → "May") | Backend prompt `write_consent`: a "yes" counts only if the question with the change details was heard in full; spell back spoken names and IDs before writing | 14, 40 | gateway `prompt_features.write_consent` | on |
+
+Not addressed: backend reasoning and policy errors (tasks 24, 29, 32, 39, 44) and parallel tool calls, which
+the τ² policies forbid (§0, "Dropped").
 
 The airline baseline already beats the comparable FBA arm (0.62). This plan therefore puts **not regressing
 the 33 passing airline tasks** first. It adds the fewest generic changes that target the voice-layer failures,
@@ -54,7 +76,8 @@ a different machine. It does not set any default in this plan.
 ## 1. Rules for every change
 
 1. **A switch that restores the baseline exactly.**
-   - Every behaviour is off by default in code.
+   - Every behaviour is off by default in code. Since revision 5 the FDH YAML defaults turn every fix on
+     except M2 (§14); the control profile pins them off.
    - Every prompt change is a **prompt variant**: a Jinja `{% if features.<name> %}` block in the
      catalog, driven by a feature map in config. The backend map is `prompt_features` in `gateway.yaml`,
      passed to the `prompts.backend.yaml` renders. The frontend map is `prompt_features` in
@@ -64,8 +87,8 @@ a different machine. It does not set any default in this plan.
 2. **A byte-identical baseline, tested.** Before any prompt edit, write golden files of the rendered
    frontend system prompt, the backend `backend_soul` / `backend_system` (with the airline policy) and the
    local tool-result messages at `3a7e04a`. A test renders them with every feature off and asserts byte
-   equality. The profile `config/profiles/tau3_eval_baseline.yaml` (with its gateway config) turns every new
-   switch off. It is the control arm for every evaluation.
+   equality. The profile `config/profiles/tau3_eval_baseline.yaml` with the gateway config
+   `config/gateway.baseline.yaml` turns every new switch off. It is the control arm for every evaluation.
 3. **One change per arm.** Each change is evaluated alone against the control before it is combined.
 4. **The gateway protocol does not change.** Shared normalization code gets additive settings only, off by
    default, so the other voice prototype is unchanged. New gateway reply fields are optional; the protocol
@@ -438,7 +461,8 @@ Targets task 14 (a cancellation on a "go ahead" said to a filler) and task 40 ("
 
 ## 8. Evaluation and non-regression gate
 
-**Paired arms.** The control is `tau3_eval_baseline.yaml` on the same commit as the treatment. Both arms use
+**Paired arms.** The control is `tau3_eval_baseline.yaml` with `gateway.baseline.yaml` on the same commit as
+the treatment. Both arms use
 the same host, NIM and LLM endpoints, τ² commit, concurrency, user-simulator seed and speech complexity. Only
 the one switch under test differs. Each evaluation is two paired repetitions.
 
@@ -539,7 +563,8 @@ Review 2 resolved the earlier questions (§0 decisions). Still open:
 
 ## 13. Implementation (revision 4)
 
-Everything in §1–§7 is implemented, off by default, with tests. `uv run pytest tests/` passes except one
+Everything in §1–§7 is implemented, with tests. In revision 4 every switch was off by default; revision 5
+turned the FDH YAML defaults on except M2 (§14). `uv run pytest tests/` passes except one
 test that already failed before this change (`test_voice_config.py`: it expects 13 voice-package profiles
 and there are 14).
 
@@ -556,16 +581,18 @@ and there are 14).
 | G1 | `engine/turn_manager.py` `_dedupe_filler` | `delegation.filler_dedupe` | `FillerDedupeTests` |
 | G2 cleanup | `engine/spoken_text.py` | `output.clean_answers` | `SpokenTextTests` (5 confirmation fixtures), `CleanAnswersTurnTests` |
 
-**Profiles** (`config/profiles/`, gateway files in `config/`), one change per arm (runbook §6.1):
+**Profiles** (`config/profiles/`, gateway files in `config/`), one change per arm over the control (runbook
+§6.1). The following table shows the pairs as of revision 5:
 
 | Arm | Voice profile | Gateway config |
 |---|---|---|
-| Control | `tau3_eval_baseline.yaml` (same config hash as `tau3_eval.yaml`) | `gateway.yaml` |
-| M1 | `tau3_arm_m1_status.yaml` (`after_s` from `FDH_PROACTIVE_AFTER_S`, default 15) | `gateway.yaml` |
+| Default (every fix except M2; not an arm) | `tau3_eval.yaml` | `gateway.yaml` |
+| Control | `tau3_eval_baseline.yaml` (config hash differs from `tau3_eval.yaml` since revision 5) | `gateway.baseline.yaml` |
+| M1 | `tau3_arm_m1_status.yaml` (`after_s` from `FDH_PROACTIVE_AFTER_S`, default 15) | `gateway.baseline.yaml` |
 | M3 | `tau3_arm_m3_spelling.yaml` (voice profile `voice/tau3_spelling.yaml`) | `gateway.spelling_v2.yaml` |
 | M1 + M3 | `tau3_airline_canary.yaml` | `gateway.spelling_v2.yaml` |
-| M2 | `tau3_arm_m2_replay.yaml` | `gateway.yaml` |
-| G1 | `tau3_arm_g1_filler_dedupe.yaml` | `gateway.yaml` |
+| M2 | `tau3_arm_m2_replay.yaml` | `gateway.baseline.yaml` |
+| G1 | `tau3_arm_g1_filler_dedupe.yaml` | `gateway.baseline.yaml` |
 | G2 | `tau3_arm_g2_short_answers.yaml` | `gateway.spoken_output.yaml` |
 | G4 | `tau3_eval_baseline.yaml` | `gateway.write_consent.yaml` |
 
@@ -587,6 +614,31 @@ and there are 14).
 - §5: fillers are compared lower-cased without punctuation; only delegated fillers are recorded.
 
 ---
+
+## 14. Defaults on except M2 (revision 5)
+
+On 2026-09-30 the user chose to turn every fix on by default in the FDH YAML defaults, except M2
+(experimental). The arms have still not been evaluated (§8), and M1's `after_s` still needs calibration per
+host (`FDH_PROACTIVE_AFTER_S`, §2). The following list shows what changed:
+
+- `config/delegation_agent.yaml`: `voice_profile: voice/tau3_spelling.yaml` (M3.1, M3.3),
+  `spelling_hold.enabled: true` with `complete_patterns: []`, `filler_dedupe.enabled: true`,
+  `output.proactive_status.enabled: true` with `after_s: "${FDH_PROACTIVE_AFTER_S:-15}"`, and
+  `output.clean_answers: true`. `replay_unheard_answer.enabled` and `prompt_features.replay_intent` stay
+  `false`.
+- `config/profiles/tau3_eval.yaml`: `voice/tau3_spelling.yaml` and the airline code pattern
+  `complete_patterns: ['^[A-Za-z0-9]{6}$']`. It pairs with `gateway.yaml`.
+- `config/voice/browser.yaml`: `normalization.transcript.spelled_runs` on. `browser_demo.yaml` therefore
+  runs M1, M3.1, M3.2 (no complete patterns), G1, and G2. Tool-argument normalization, and with it M3.3,
+  does not apply to the browser.
+- `config/gateway.yaml`: `spelling_v2`, `spoken_output`, and `write_consent` all `true`.
+- New `config/gateway.baseline.yaml`: extends `gateway.yaml` with every backend variant `false`, the control
+  gateway (backend prompts byte-identical to `3a7e04a`). The `gateway.<variant>.yaml` arms now extend it.
+- The control stays `tau3_eval_baseline.yaml` (it now also pins `spelling_hold.complete_patterns: []`), now
+  paired with `gateway.baseline.yaml`. The M1, M2, and G1 arms also pair with `gateway.baseline.yaml`.
+
+Python code defaults stay off, and the shared normalization in `voice_frontend_backend_agent` is unchanged,
+so the other voice prototype is unchanged. The test harness `tau3_config()` loads the control profile.
 
 ## Appendix A. Context: everything this plan was built from
 

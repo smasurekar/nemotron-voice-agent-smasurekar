@@ -15,7 +15,8 @@ An OpenAI Realtime (GA) voice agent with two agents that are decoupled in time:
 - **Design:** [`prototype-plan.md`](../../../misc/prototypes/frontend-delegation-hermes/prototype-plan.md).
   §22 has the implementation notes and measurements.
 - **τ³ failure fixes:** [`tau3-failure-fixes-plan.md`](../../../misc/prototypes/frontend-delegation-hermes/tau3-failure-fixes-plan.md).
-  Every fix is behind a switch that is off by default (refer to "Failure-Fix Switches" below).
+  Every fix is behind a switch. The YAML defaults turn every fix on except M2 (experimental); the Python
+  code defaults stay off (refer to "Failure-Fix Switches" below).
 
 ## Layout
 
@@ -30,18 +31,18 @@ An OpenAI Realtime (GA) voice agent with two agents that are decoupled in time:
 | `sidecar/` | gateway (host) | `gateway_server.py` (`WS /v1/backend`, `/health`), `session_runtime.py`, `worker_pool.py` (spawn / stop / kill / respawn), `homes.py` (per-worker `HERMES_HOME`), `inprocess_link.py` (stub backend) |
 | `worker/` | Hermes worker (Py 3.14) | `worker_main.py` (Unix-socket control loop), `tool_futures.py` (keyed result futures), `hermes_adapter.py` (the only Hermes import), `fake_host.py` |
 | `cli/` | tools | `delegation_replay.py` (frontend decision gate), `backend_probe.py` (gateway without audio), `report_adapter.py` (event log → `fba_voice_metrics.py` records), `fingerprint_check.py` (deployed fingerprint of an arm; exit 1 on a mismatch), `spelling_hold_replay.py` (spelling-hold predicate over an event log) |
-| `config/` | — | `delegation_agent.yaml`, `gateway.yaml` (+ `gateway.fake.yaml`, `gateway.stub_gate.yaml`, and the backend prompt variants `gateway.spelling_v2.yaml`, `gateway.spoken_output.yaml`, `gateway.write_consent.yaml`), `prompts.yaml` (frontend), `prompts.backend.yaml` (backend), `voice/*.yaml` (voice-package profiles), `profiles/*.yaml` |
+| `config/` | — | `delegation_agent.yaml`, `gateway.yaml` (+ `gateway.fake.yaml`, `gateway.stub_gate.yaml`, the control `gateway.baseline.yaml`, and the backend prompt variants `gateway.spelling_v2.yaml`, `gateway.spoken_output.yaml`, `gateway.write_consent.yaml`), `prompts.yaml` (frontend), `prompts.backend.yaml` (backend), `voice/*.yaml` (voice-package profiles), `profiles/*.yaml` |
 
 ## Profiles
 
 | Profile | Use |
 |---|---|
-| `profiles/tau3_eval.yaml` | τ³ / OpenAI Realtime clients: client-executed tools, no greeting, argument normalization, port 8775 |
+| `profiles/tau3_eval.yaml` | τ³ / OpenAI Realtime clients: client-executed tools, no greeting, argument normalization, every failure fix except M2 (airline code as a complete spelled value), port 8775. Pair it with `gateway.yaml` |
 | `profiles/browser_demo.yaml` | Browser page: TLS, greeting, demo tools run in the server, `FDH_BACKEND_DELAY_S` (default 5 s) before each backend run, port 8776 |
 | `profiles/tau3_eval_silent_ack.yaml` | Ablation: the filler of a delegated turn is not spoken |
 | `profiles/stub.yaml`, `profiles/stub_gate.yaml` | No GPU / LLM / Hermes (with `--stub-speech`); `stub_gate` makes the fake backend call a tool so τ³ Gate A passes |
-| `profiles/tau3_eval_baseline.yaml` | Control arm of the failure fixes: `tau3_eval.yaml` with every new switch pinned off. Pair it with `gateway.yaml` |
-| `profiles/tau3_arm_*.yaml` | One failure fix each, on top of the baseline: `m1_status`, `m3_spelling` (with `gateway.spelling_v2.yaml`), `m2_replay`, `g1_filler_dedupe`, `g2_short_answers` (with `gateway.spoken_output.yaml`). G4 is the baseline profile with `gateway.write_consent.yaml` |
+| `profiles/tau3_eval_baseline.yaml` | Control arm of the failure fixes: `tau3_eval.yaml` with every new switch pinned off. Pair it with `gateway.baseline.yaml` |
+| `profiles/tau3_arm_*.yaml` | One failure fix each, on top of the baseline: `m1_status`, `m2_replay`, and `g1_filler_dedupe` (with `gateway.baseline.yaml`), `m3_spelling` (with `gateway.spelling_v2.yaml`), `g2_short_answers` (with `gateway.spoken_output.yaml`). G4 is the baseline profile with `gateway.write_consent.yaml` |
 | `profiles/tau3_airline_canary.yaml` | M1 and M3 together (with `gateway.spelling_v2.yaml`) |
 
 Every profile has 800 ms end-of-turn silence (the client's value is ignored), transcript normalization on,
@@ -49,18 +50,21 @@ and no WebSocket keepalive ping. The configuration knobs are listed in the runbo
 
 ### Failure-Fix Switches
 
-Each switch below is off by default and in `tau3_eval_baseline.yaml`. With every switch off, the rendered
-prompts are byte-identical to agent commit `3a7e04a` (`test_fdh_golden_prompts.py`).
+Each switch below is on in the YAML defaults (`delegation_agent.yaml`, `gateway.yaml`, `voice/browser.yaml`,
+`profiles/tau3_eval.yaml`), except M2, which stays off. The Python code defaults are off.
+`tau3_eval_baseline.yaml` with `gateway.baseline.yaml` pins every switch off. With every switch off, the
+rendered prompts are byte-identical to agent commit `3a7e04a` (`test_fdh_golden_prompts.py`). The following
+table lists the switches:
 
 | Switch | Where | Fix |
 |---|---|---|
-| `output.proactive_status` | `delegation_agent.yaml` | M1: one `status_proactive_lines` line after `after_s` of silence while WORKING (`FDH_PROACTIVE_AFTER_S` in the arm profile) |
-| `normalization.transcript.spelled_runs`, `normalization.tool_arguments.escalate_invalid_message_key` | `voice/tau3_spelling.yaml` | M3.1 and M3.3: spelled letters and digits are joined; the local "invalid ID" answer asks for a read-back, then for the whole ID |
-| `delegation.spelling_hold` | `delegation_agent.yaml` | M3.2: wait `hold_ms` before deciding a turn that ends mid-spelling |
-| `delegation.replay_unheard_answer` + `prompt_features.replay_intent` | `delegation_agent.yaml` | M2 (experimental, RC2): replay an unheard answer on `request=status` in IDLE |
+| `output.proactive_status` | `delegation_agent.yaml` | M1: one `status_proactive_lines` line after `after_s` of silence while WORKING (`FDH_PROACTIVE_AFTER_S`, default 15; calibrate it per host) |
+| `normalization.transcript.spelled_runs`, `normalization.tool_arguments.escalate_invalid_message_key` | `voice/tau3_spelling.yaml` (the default voice profile; `voice/browser.yaml` has spelled runs only) | M3.1 and M3.3: spelled letters and digits are joined; the local "invalid ID" answer asks for a read-back, then for the whole ID |
+| `delegation.spelling_hold` | `delegation_agent.yaml` | M3.2: wait `hold_ms` before deciding a turn that ends mid-spelling (`tau3_eval.yaml` never holds a complete six-character airline code) |
+| `delegation.replay_unheard_answer` + `prompt_features.replay_intent` | `delegation_agent.yaml` | M2 (experimental, RC2, off by default): replay an unheard answer on `request=status` in IDLE |
 | `delegation.filler_dedupe` | `delegation_agent.yaml` | G1: drop or replace a repeated filler (`filler_alternatives`) |
 | `output.clean_answers` | `delegation_agent.yaml` | G2: strip markdown and make one sentence per list item before TTS |
-| `prompt_features.spelling_v2`, `spoken_output`, `write_consent` | `gateway.yaml` | M3.4, G2 and G4: backend prompt variants; `gateway.<name>.yaml` turns one on |
+| `prompt_features.spelling_v2`, `spoken_output`, `write_consent` | `gateway.yaml` | M3.4, G2 and G4: backend prompt variants, all on; `gateway.baseline.yaml` turns all off, and `gateway.<name>.yaml` turns one on over it |
 
 The voice server and the gateway log a deployed fingerprint (`fdh_session_start.features`, `frontend_prompt`,
 `backend_configured`). Adding these default keys changed the `config_hash` of every profile compared to earlier
@@ -70,7 +74,7 @@ runs. To check that every session of an arm ran the expected switches and prompt
 PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.fingerprint_check \
   logs/fdh_voice_events.jsonl \
   --profile src/prototypes/voice_delegation_hermes_agent/config/profiles/tau3_eval_baseline.yaml \
-  --gateway-config src/prototypes/voice_delegation_hermes_agent/config/gateway.yaml
+  --gateway-config src/prototypes/voice_delegation_hermes_agent/config/gateway.baseline.yaml
 ```
 
 The runbook, §6.1, lists each arm with its gateway config and the M1 calibration.

@@ -12,7 +12,7 @@ switches match the arm's profile and gateway config. Exit 1 otherwise (re-run th
     PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.fingerprint_check \
         logs/fdh_voice_events.jsonl \
         --profile src/prototypes/voice_delegation_hermes_agent/config/profiles/tau3_eval_baseline.yaml \
-        --gateway-config src/prototypes/voice_delegation_hermes_agent/config/gateway.yaml
+        --gateway-config src/prototypes/voice_delegation_hermes_agent/config/gateway.baseline.yaml
 """
 
 from __future__ import annotations

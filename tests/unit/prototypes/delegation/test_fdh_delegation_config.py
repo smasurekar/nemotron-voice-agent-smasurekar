@@ -16,6 +16,7 @@ from unittest import mock
 from _fdh_voice_fakes import PROFILES
 
 from prototypes.voice_delegation_hermes_agent.config import DelegationConfigError, load_delegation_config
+from prototypes.voice_delegation_hermes_agent.sidecar import gateway_config as gc
 
 SHIPPED = sorted(PROFILES.glob("*.yaml"))
 
@@ -62,9 +63,33 @@ class ShippedProfileTests(unittest.TestCase):
         self.assertTrue(browser.voice.protocol.greeting_enabled)
         self.assertEqual([spec.name for spec in browser.voice.tools.config_tool_specs], ["get_order", "cancel_order"])
 
-    def test_baseline_is_tau3_eval_and_each_arm_turns_on_only_its_own_switch(self) -> None:
+    def test_defaults_turn_on_every_fix_except_m2(self) -> None:
+        expected = {"proactive_status", "clean_answers", "spelling_hold", "filler_dedupe", "spelled_runs"}
+        for name in ("tau3_eval.yaml", "browser_demo.yaml"):
+            with self.subTest(profile=name):
+                features = load_delegation_config(PROFILES / name).features
+                self.assertEqual({k for k, v in features.items() if v is True}, expected)
+                self.assertFalse(any(features["prompt_features"].values()))  # replay_intent (M2) stays off
+        tau3 = load_delegation_config(PROFILES / "tau3_eval.yaml")
+        self.assertEqual(tau3.delegation.spelling_hold.complete_patterns, ("^[A-Za-z0-9]{6}$",))
+        self.assertEqual(tau3.voice.normalization.tool_arguments.invalid_message_key, "tool_argument_invalid_readback")
+        self.assertEqual(
+            tau3.voice.normalization.tool_arguments.escalate_invalid_message_key, "tool_argument_invalid_spell_all"
+        )
+
+    def test_gateway_defaults_turn_on_every_backend_variant_and_the_baseline_none(self) -> None:
+        config_dir = PROFILES.parent
+        self.assertTrue(all(gc.load_gateway_config(config_dir / "gateway.yaml").prompt_features.values()))
+        self.assertFalse(any(gc.load_gateway_config(config_dir / "gateway.baseline.yaml").prompt_features.values()))
+        for name in ("spelling_v2", "spoken_output", "write_consent"):
+            with self.subTest(variant=name):
+                features = gc.load_gateway_config(config_dir / f"gateway.{name}.yaml").prompt_features
+                self.assertEqual({k for k, v in features.items() if v}, {name})
+
+    def test_baseline_turns_every_switch_off_and_each_arm_turns_on_only_its_own(self) -> None:
         baseline = load_delegation_config(PROFILES / "tau3_eval_baseline.yaml")
-        self.assertEqual(baseline.config_hash, load_delegation_config(PROFILES / "tau3_eval.yaml").config_hash)
+        self.assertEqual(baseline.voice.normalization.tool_arguments.invalid_message_key, "tool_argument_invalid")
+        self.assertEqual(baseline.voice.normalization.tool_arguments.escalate_invalid_message_key, "")
         self.assertFalse(any(v for k, v in baseline.features.items() if k != "prompt_features"))
         self.assertFalse(any(baseline.features["prompt_features"].values()))
         arms = {
