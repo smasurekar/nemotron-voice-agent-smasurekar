@@ -24,6 +24,9 @@ at the server.
   calls round-tripped through τ³. Its reward was 0.0: ASR lowercased the requested title "Important
   Meeting", and the mock domain has no tool that can rename a task.
 
+**Re-verified 2026-09-30** after the Hermes checkout (v0.21.0) moved to Python `<3.14`: with the venv
+rebuilt on Python 3.13 (§1.2), the gateway (§3), the §3.1 probe and `fdh-voice` (§4) started and passed.
+
 ## 0. What runs where
 
 ```
@@ -31,7 +34,7 @@ at the server.
  tau2 / Realtime ─ws─► fdh-voice      (container, :8775 → 7860, client tools)               ─┤ ws://<docker0>:8790/v1/backend
                                                                                              ▼
                                backend gateway (host process, Hermes-free, :8790 on docker0)
-                                 └─ one Hermes worker process per Realtime session (Python 3.14)
+                                 └─ one Hermes worker process per Realtime session (Python 3.13)
                                       └─ AIAgent → Inference Hub nvidia/nvidia/nemotron-3-ultra (reasoning on)
  speech: nemo-speech (container, :50051, ASR + TTS) ◄── both voice containers
  frontend LLM: Inference Hub nvidia/nvidia/nemotron-3.5-lightning (reasoning off) ◄── both voice containers
@@ -44,9 +47,10 @@ at the server.
 | τ³ Realtime voice server `fdh-voice` | container (`nemotron-voice-agent:latest`, `src/` mounted read-only) | 8775 | `config/profiles/tau3_eval.yaml` |
 | Browser voice server `fdh-voice-web` | container | 8776 (https) | `config/profiles/browser_demo.yaml` |
 
-Why the gateway runs on the host: Hermes needs Python 3.14 and its own venv, while the voice image ships
-Python 3.12 (plan D1). The voice containers reach the host through `host.docker.internal`, which the
-Compose `app-base` maps to the `docker0` address.
+Why the gateway runs on the host: Hermes needs its own venv and Python (3.13 here; the checkout requires
+`>=3.11,<3.14`), while the voice image ships Python 3.12 with this repository's dependencies (plan D1).
+The voice containers reach the host through `host.docker.internal`, which the Compose `app-base` maps to
+the `docker0` address.
 
 Both profiles use:
 
@@ -66,13 +70,14 @@ test -f .env || cp .env.example .env      # then set NVIDIA_API_KEY
 grep -c '^NVIDIA_API_KEY=.\+' .env        # expect 1
 ```
 
-**1.2 Hermes checkout and its Python 3.14 environment.** A separate venv under `~/.cache/fdh`, so the
-checkout's own `.venv` is not touched:
+**1.2 Hermes checkout and its Python 3.13 environment.** A separate venv under `~/.cache/fdh`, so the
+checkout's own `.venv` is not touched. The Hermes checkout caps Python at `<3.14` (Rust-backed dependencies
+have no cp314 wheels yet), so `uv sync --python 3.14` fails:
 
 ```bash
 export HERMES_REPO=$PWD/../hermes-agent-smasurekar     # adjust if the checkout lives elsewhere
-(cd "$HERMES_REPO" && UV_PROJECT_ENVIRONMENT=$HOME/.cache/fdh/hermes-venv-314 uv sync --python 3.14)
-$HOME/.cache/fdh/hermes-venv-314/bin/python -c "import run_agent; print('hermes ok')"   # run from $HERMES_REPO
+(cd "$HERMES_REPO" && UV_PROJECT_ENVIRONMENT=$HOME/.cache/fdh/hermes-venv-313 uv sync --python 3.13)
+$HOME/.cache/fdh/hermes-venv-313/bin/python -c "import run_agent; print('hermes ok')"   # run from $HERMES_REPO
 ```
 
 If the last command fails with `ModuleNotFoundError: run_agent` from another directory, set
@@ -117,7 +122,7 @@ from the LAN. The backend model is pinned on the command line.
 ```bash
 nohup env PYTHONPATH=src \
   FDH_GATEWAY_HOST=$DOCKER_HOST_IP FDH_GATEWAY_PORT=8790 FDH_MAX_SESSIONS=8 \
-  FDH_HERMES_PYTHON=$HOME/.cache/fdh/hermes-venv-314/bin/python \
+  FDH_HERMES_PYTHON=$HOME/.cache/fdh/hermes-venv-313/bin/python \
   BACKEND_LLM_MODEL=nvidia/nvidia/nemotron-3-ultra BACKEND_LLM_BASE_URL=https://inference-api.nvidia.com/v1 \
   FDH_GATEWAY_LOG=logs/fdh_gateway_events.jsonl FDH_WORKER_LOG_DIR=logs/fdh_workers \
   uv run python -m prototypes.voice_delegation_hermes_agent.sidecar.gateway_server \
