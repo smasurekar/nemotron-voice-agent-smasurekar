@@ -76,6 +76,26 @@ class RetryGuardSettings:
 
 
 @dataclass(frozen=True, slots=True)
+class ResultHintSettings:
+    """``normalization.tool_arguments.result_hints``: a note appended to a failed lookup's result.
+
+    The runner appends ``message_key`` to the first output of ``tools`` that matches
+    ``failure_pattern`` and ``escalate_message_key`` ("" = the same message) to later ones,
+    at most ``max_hints`` times until a lookup of ``tools`` succeeds. With
+    ``count_local_invalid`` a local ``invalid`` answer for ``tools`` counts as a miss (it
+    never gets a note itself). Independent of ``rules`` and the retry guard.
+    """
+
+    enabled: bool = False
+    tools: tuple[str, ...] = ()
+    failure_pattern: str = ""
+    count_local_invalid: bool = True
+    max_hints: int = 3
+    message_key: str = "identity_not_found_hint"
+    escalate_message_key: str = ""
+
+
+@dataclass(frozen=True, slots=True)
 class ToolArgumentSettings:
     """``normalization.tool_arguments``."""
 
@@ -86,6 +106,7 @@ class ToolArgumentSettings:
     escalate_invalid_message_key: str = ""
     max_local_rounds: int = 3
     retry_guard: RetryGuardSettings = field(default_factory=RetryGuardSettings)
+    result_hints: ResultHintSettings = field(default_factory=ResultHintSettings)
 
 
 @dataclass(frozen=True, slots=True)

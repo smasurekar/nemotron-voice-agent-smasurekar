@@ -271,6 +271,8 @@ class DelegationConfig:
             "replay_unheard_answer": dl.replay.enabled,
             "filler_dedupe": dl.filler_dedupe.enabled,
             "spelled_runs": self.voice.normalization.transcript.spelled_runs.enabled,
+            "result_hints": self.voice.normalization.tool_arguments.enabled
+            and self.voice.normalization.tool_arguments.result_hints.enabled,
         }
 
     @property

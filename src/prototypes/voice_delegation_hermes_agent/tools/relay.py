@@ -6,6 +6,8 @@
 * Calls arriving within ``batch_window_ms`` form one batch.
 * ``ArgumentNormalizer.screen`` runs first (when configured): invalid or already-failed
   lookups are answered locally and never reach the client.
+* ``ResultHints`` (when configured) appends a recovery note to a failed identity lookup's
+  output before it goes to the gateway (tau3-identity-fixes-plan.md I3, I4).
 * ``executor: wire`` emits the batch as one Realtime response of ``function_call`` items;
   ``function_call_output`` goes back to the gateway, and a later ``response.create`` is the
   batch's acknowledgement (:meth:`ToolRelay.take_ack`).
@@ -24,6 +26,7 @@ from typing import Any
 from prototypes.text_frontend_backend_agent.messages import ToolCall
 from prototypes.text_frontend_backend_agent.tools import ToolRegistry, ToolSpec
 from prototypes.voice_delegation_hermes_agent.engine.output_scheduler import CallsItem
+from prototypes.voice_delegation_hermes_agent.tools.result_hints import ResultHints
 from prototypes.voice_frontend_backend_agent.errors import WireProtocolError
 from prototypes.voice_frontend_backend_agent.normalization.arguments import ArgumentNormalizer, FailureKey
 
@@ -65,6 +68,7 @@ class ToolRelay:
         emit_calls: Callable[[CallsItem], None],
         log: Log,
         normalizer: ArgumentNormalizer | None = None,
+        result_hints: ResultHints | None = None,
         local_tools: Sequence[ToolSpec] = (),
         batch_window_ms: int = 30,
         per_call_delay_s: float = 0.0,
@@ -75,6 +79,7 @@ class ToolRelay:
         self._emit_calls = emit_calls
         self._log = log
         self._normalizer = normalizer
+        self._hints = result_hints
         self._registry = ToolRegistry(local_tools) if executor == "local" else None
         self._window = batch_window_ms / 1000.0
         self._delay = per_call_delay_s
@@ -129,6 +134,7 @@ class ToolRelay:
         self._log("tool_output_in", call_id=call_id, output=output)
         if call.key is not None and self._normalizer is not None and self._normalizer.is_permanent_failure(output):
             self._failed = self._failed | {call.key}
+        output = self._annotate(call, output)
         self._send_result(call_id, call.epoch, output, False)
         for batch in self._batches:
             if call_id in batch.call_ids:
@@ -211,6 +217,8 @@ class ToolRelay:
             call = by_id[answer.call_id]
             if answer.reason == "invalid":
                 self._invalid_counts[answer.tool] = self._invalid_counts.get(answer.tool, 0) + 1
+                if self._hints is not None:
+                    self._hints.on_local_invalid(answer.tool)
             self._log(
                 "call_answered_locally",
                 call_id=answer.call_id,
@@ -235,4 +243,14 @@ class ToolRelay:
             ToolCall(id=call.call_id, name=call.name, arguments_json=call.arguments or "{}")
         )
         self._log("tool_output_in", call_id=call.call_id, output=result.content, local_executor=True)
-        self._send_result(call.call_id, call.epoch, result.content, False)
+        self._send_result(call.call_id, call.epoch, self._annotate(call, result.content), False)
+
+    def _annotate(self, call: _Call, output: str) -> str:
+        """The output with a recovery note appended when ``ResultHints`` asks for one."""
+        if self._hints is None:
+            return output
+        hint = self._hints.on_output(call.name, output)
+        if hint is None:
+            return output
+        self._log("result_hint", call_id=call.call_id, tool=call.name, message_key=hint.message_key, n=hint.miss)
+        return hint.output

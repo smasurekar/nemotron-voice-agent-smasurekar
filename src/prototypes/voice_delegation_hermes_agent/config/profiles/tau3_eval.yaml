@@ -3,12 +3,13 @@
 #
 # tau3-bench voice evaluation (OpenAI Realtime server on 8775). The defaults already target tau3;
 # this profile pins the eval-relevant keys so a later edit to the defaults cannot change an eval.
-# Every tau3-failure-fixes-plan.md fix is on (delegation_agent.yaml) except M2; pair with gateway.yaml.
+# Every tau3-failure-fixes-plan.md fix is on (delegation_agent.yaml) except M2, and every
+# tau3-identity-fixes-plan.md fix (I3/I4 in voice/tau3_fixes.yaml, I1 in gateway.yaml); pair with gateway.yaml.
 # The control is tau3_eval_baseline.yaml with gateway.baseline.yaml.
 
 extends: ../delegation_agent.yaml
 
-voice_profile: ../voice/tau3_spelling.yaml
+voice_profile: ../voice/tau3_fixes.yaml
 
 delegation:
   speak_when_delegating: true

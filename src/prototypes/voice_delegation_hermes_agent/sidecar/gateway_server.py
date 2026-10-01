@@ -123,6 +123,7 @@ def build_gateway_app(config: GatewayConfig) -> FastAPI:
             "agent_kind": config.workers.agent_kind,
             "backend_features": dict(templates.features),
             "backend_catalog_sha256": templates.catalog_sha256,
+            "domains": [name for name, _ in config.domains],  # domain-note detection order (gateway.yaml)
             "hermes": {
                 "model": config.hermes.model,
                 "base_url": config.hermes.base_url,

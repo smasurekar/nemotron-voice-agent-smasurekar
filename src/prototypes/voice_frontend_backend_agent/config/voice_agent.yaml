@@ -145,3 +145,11 @@ normalization:
       scope: rules                  # rules (tools with a rule) | all
       permanent_failure_pattern: "" # regex searched in the client's output; required when enabled
       message_key: tool_call_already_failed
+    result_hints:                   # a note appended to a failed lookup's result (tau3-identity-fixes-plan.md 4)
+      enabled: false
+      tools: []                     # the lookups it watches (one shared miss counter per session)
+      failure_pattern: ""           # regex searched in the client's output; required when enabled
+      count_local_invalid: true     # a local "invalid" answer for these tools counts as a miss
+      max_hints: 3                  # notes per session until a lookup of these tools succeeds
+      message_key: identity_not_found_hint          # the first miss
+      escalate_message_key: ""      # later misses ("" = message_key again)

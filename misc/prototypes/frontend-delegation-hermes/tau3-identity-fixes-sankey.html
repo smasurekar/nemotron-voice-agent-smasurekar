@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FDH fixes-on failures by proposed fix</title>
+<style>
+  .viz-root { color-scheme: light; --surface-0:#f4f3f0; --surface-1:#fcfcfb; --text-primary:#0b0b0b; --text-secondary:#52514e;
+    --text-muted:#75746f; --border:#e1e0db; --neutral-node:#8a8984; --link-opacity:.34; --link-hover:.66; --d-airline:#2a78d6; --d-retail:#eb6834; --d-telecom:#1d9a6c; --fix-node:#3d3c38; --deferred-node:#b9b8b2; }
+  @media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) .viz-root { color-scheme: dark;
+    --surface-0:#111110; --surface-1:#1a1a19; --text-primary:#fff; --text-secondary:#c3c2b7; --text-muted:#9a998f;
+    --border:#33332f; --neutral-node:#8f8e86; --link-opacity:.4; --link-hover:.72; --d-airline:#3987e5; --d-retail:#d95926; --d-telecom:#2bb583; --fix-node:#e8e7e1; --deferred-node:#5f5e58; } }
+  :root[data-theme="dark"] .viz-root { color-scheme: dark; --surface-0:#111110; --surface-1:#1a1a19; --text-primary:#fff;
+    --text-secondary:#c3c2b7; --text-muted:#9a998f; --border:#33332f; --neutral-node:#8f8e86; --link-opacity:.4; --link-hover:.72; --d-airline:#3987e5; --d-retail:#d95926; --d-telecom:#2bb583; --fix-node:#e8e7e1; --deferred-node:#5f5e58; }
+  html, body { margin: 0; } body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .viz-root { background: var(--surface-0); color: var(--text-primary); min-height: 100vh; padding: 24px; box-sizing: border-box; }
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 24px 24px 16px; max-width: 1480px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  .sub { font-size: 13px; color: var(--text-secondary); margin: 0 0 16px; line-height: 1.45; }
+  .tiles { display: flex; gap: 12px; flex-wrap: wrap; margin: 0 0 12px; }
+  .tile { border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; min-width: 140px; }
+  .tile .v { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; } .tile .l { font-size: 12px; color: var(--text-secondary); }
+  .legend { display: flex; gap: 18px; font-size: 12px; color: var(--text-secondary); margin: 4px 0 8px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; } .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .link { fill: none; stroke-opacity: var(--link-opacity); transition: stroke-opacity .12s; }
+  .link:hover, .link:focus, .link.hl { stroke-opacity: var(--link-hover); outline: none; }
+  .node:focus { outline: none; } .node:focus rect.mark, .node:hover rect.mark { stroke: var(--text-primary); stroke-width: 1.5px; }
+  .lbl { font-size: 12.5px; fill: var(--text-primary); paint-order: stroke; stroke: var(--surface-1); stroke-width: 4px; stroke-linejoin: round; }
+  .lbl .n { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .lbl2 { font-size: 11px; fill: var(--text-muted); paint-order: stroke; stroke: var(--surface-1); stroke-width: 4px; stroke-linejoin: round; }
+  .colhead { font-size: 11px; fill: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+  #tip { position: fixed; pointer-events: none; background: color-mix(in srgb, var(--surface-1) 62%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); color: var(--text-primary); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; font-size: 12px; line-height: 1.4; box-shadow: 0 6px 24px rgba(0,0,0,.18); max-width: 380px; display: none; z-index: 5; }
+  #tip .tv { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  #tip .tk { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+  #tip .tl { color: var(--text-secondary); } #tip .td { margin-top: 6px; } #tip .tx { margin-top: 6px; padding-left: 8px; border-left: 2px solid var(--border); } #tip .tt { color: var(--text-muted); margin-top: 4px; }
+  details { margin-top: 12px; font-size: 13px; } summary { cursor: pointer; color: var(--text-secondary); }
+  table { border-collapse: collapse; width: 100%; margin-top: 8px; font-size: 12.5px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--text-secondary); font-weight: 600; } td.num, th.num { font-variant-numeric: tabular-nums; text-align: right; }
+  .foot { font-size: 11.5px; color: var(--text-muted); margin-top: 12px; line-height: 1.5; }
+  .toggle { float: right; font-size: 12px; background: none; border: 1px solid var(--border); color: var(--text-secondary); border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+  #tip .ts { margin-top: 8px; line-height: 1.45; }
+  #tip .th { font-weight: 600; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+<div class="card">
+  <button class="toggle" id="theme" type="button" aria-label="Toggle light or dark theme">Light / dark</button>
+  <h1>FDH fixes ON · failed tasks by proposed fix</h1>
+  <p class="sub">120 of the 155 failed tasks of the FDH fixes-on runs, by the fix that targets them (fixes with at least 10 tasks). Band colour = domain. Hover a bar or a band for details; the table view lists every fix.</p>
+  <div class="tiles" aria-label="Key numbers">
+    <div class="tile"><div class="v">69</div><div class="l">telecom: phone-number note (I1)</div></div>
+    <div class="tile"><div class="v">18</div><div class="l">word-assisted spelling (I4)</div></div>
+    <div class="tile"><div class="v">21</div><div class="l">recovery hint after a failed lookup (I3)</div></div>
+  </div>
+  <div class="legend" aria-hidden="true">
+    <span><i style="background:var(--d-airline)"></i>airline</span>
+    <span><i style="background:var(--d-retail)"></i>retail</span>
+    <span><i style="background:var(--d-telecom)"></i>telecom</span>
+    <span><i style="background:var(--fix-node)"></i>in this plan</span>
+    <span><i style="background:var(--deferred-node)"></i>deferred</span>
+  </div>
+  <svg id="sankey" role="img" aria-labelledby="svgtitle svgdesc">
+    <title id="svgtitle">FDH fixes-on failures by proposed fix</title>
+    <desc id="svgdesc">120 failed tasks by domain, identification outcome, cause and the proposed fix that targets them.</desc>
+  </svg>
+  <details>
+    <summary>Table view</summary>
+    <table id="tbl"><thead><tr><th>Proposed fix</th><th>In plan</th><th class="num">airline</th><th class="num">retail</th><th class="num">telecom</th><th class="num">All</th></tr></thead><tbody></tbody></table>
+  </details>
+  <p class="foot">Source: the collated <code>collated_failure_classes.csv</code> and <code>tau3-identity-fixes-mapping.csv</code> (next to this file); the plan is <code>tau3-identity-fixes-plan.md</code>. Task numbers: airline and retail = tau2 task ids, telecom = #n index in its data/tasks.json.</p>
+</div>
+<div id="tip" role="tooltip"></div>
+</div>
+<script>
+(() => {
+  const DATA = {"nodes": [{"id": "airline", "label": "airline", "col": 0, "value": 12, "color": "var(--d-airline)", "sub": "12 failed tasks shown", "ctx": "FDH fixes-on run", "tasks": [], "desc": "Mostly misheard spelled user IDs; the rest is spread across wrong changes, breakdowns and one transfer.", "example": null}, {"id": "retail", "label": "retail", "col": 0, "value": 36, "color": "var(--d-retail)", "sub": "36 failed tasks shown", "ctx": "FDH fixes-on run", "tasks": [], "desc": "Mostly misheard names, zips and emails, then conversation breakdowns during long tool chains.", "example": null}, {"id": "telecom", "label": "telecom", "col": 0, "value": 72, "color": "var(--d-telecom)", "sub": "72 failed tasks shown", "ctx": "FDH fixes-on run", "tasks": [], "desc": "Dominated by the phone number sent without dashes (exact-match lookup), then wrong transfers.", "example": null}, {"id": "GA", "label": "Failed before identification", "col": 1, "value": 104, "color": "var(--neutral-node)", "sub": "airline 6 · retail 30 · telecom 68", "ctx": "of 120 tasks shown", "tasks": [], "desc": "No lookup ever returned the user, so no task action could follow. Telecom: mainly number format; retail and airline: mainly ASR mishearing.", "example": null}, {"id": "GB", "label": "Failed after identification or none needed", "col": 1, "value": 16, "color": "var(--neutral-node)", "sub": "airline 6 · retail 6 · telecom 4", "ctx": "of 120 tasks shown", "tasks": [], "desc": "The user was identified (or the task needed no lookup), and something later went wrong: backend judgement, dead air and cut-offs, or a late identification.", "example": null}, {"id": "id_format", "label": "Identity heard right, sent in the wrong form", "col": 2, "value": 64, "color": "var(--neutral-node)", "sub": "telecom 64", "ctx": "Failed before identification", "tasks": [], "desc": "Telecom: the phone number was heard right, but the backend sent it as 5551232002 while the DB matches only 555-123-2002 exactly. The spelling_v2 \"no variants\" rule blocked a retry in the dashed form; the agent asked for date of birth instead and the user ended out of scope.", "example": "telecom #3: the user read out 555-123-2002; the backend looked up 5551232002 → not found. Under spelling_v2 it would not retry with dashes, asked for date of birth / customer ID (the user had neither), and the user ended with ###OUT-OF-SCOPE### after 490 s."}, {"id": "id_misheard", "label": "Identity misheard or mangled", "col": 2, "value": 40, "color": "var(--neutral-node)", "sub": "airline 6 · retail 30 · telecom 4", "ctx": "Failed before identification", "tasks": [], "desc": "ASR mangled the spoken identity, so every lookup missed. Retail: names (Mei→\"May\", Kovacs→\"Covax\"), doubled letters lost (\"ROSI\"), zips with a digit dropped or added, email prefixes lost. Airline: spelled user IDs with doubled letters collapsed, \"AA\" dropped, G/V/B/D swapped. Telecom: phone digits misheard.", "example": "retail 0: the user said zip \"one, nine, one, two, two\"; ASR heard \"one nine one two\", so the lookup used 1912 → not found. The agent re-spelled only the name and retried with the same wrong zip. (Airline 17: R-O-S-S-I heard as \"R O S I\" → omar_rosi_1241, on every attempt.)"}, {"id": "id_late", "label": "Identified too late (ID loop used up the call)", "col": 2, "value": 4, "color": "var(--neutral-node)", "sub": "airline 2 · retail 1 · telecom 1", "ctx": "Failed after identification or none needed", "tasks": [], "desc": "The user was found only after a 1–3 minute ID loop of misheard spellings; the user quit or hit the error limit seconds later.", "example": "airline 32: \"Rashi\" → ivan_rashi_8555, \"Evan\" → evan_rossi_8555, \"R O S I\" → ivan_rosi_8555. The right ID was found only at 195.8 s; the backend then searched silently and the user quit at 214.2 s (\"This is going nowhere\")."}, {"id": "wrong_change", "label": "Wrong, missing or extra change", "col": 2, "value": 9, "color": "var(--neutral-node)", "sub": "airline 3 · retail 3 · telecom 3", "ctx": "Failed after identification or none needed", "tasks": [], "desc": "Backend judgement after identification. Airline: changed a basic-economy booking, booked the wrong route. Retail: narrowed \"all orders\" to one, refused a valid pending-order exchange, wrote without a yes, identical-item exchange. Telecom: missed troubleshooting steps (data refuel, Wi-Fi calling, SMS permission).", "example": "airline 23: the agent changed the flights on basic-economy reservation K1NW8N and charged $2,046, which policy forbids. The later rebooking could not undo that extra write."}, {"id": "info_wrong", "label": "Right actions, wrong or missing information", "col": 2, "value": 2, "color": "var(--neutral-node)", "sub": "airline 1 · retail 1", "ctx": "Failed after identification or none needed", "tasks": [], "desc": "The database ended correct, but a stated fact was wrong: a wrong upcoming-flights total (airline), the tracking number of the wrong order or a wrong remaining total (retail).", "example": "airline 7: all three writes were correct (DB passed), but asked for the total of the other upcoming flights, the agent said \"$6,120\"; the expected answer is $1,628."}, {"id": "detail_misheard", "label": "A non-ID detail misheard", "col": 2, "value": 1, "color": "var(--neutral-node)", "sub": "retail 1", "ctx": "Failed after identification or none needed", "tasks": [], "desc": "Retail: a non-ID detail was misheard (\"PayPal instead of the gift card\" heard as \"Hard.\"), so a change used the wrong payment method.", "example": "retail 71: at 171.8 s the user said \"can we use PayPal instead of the gift card? And yes, proceed\"; ASR heard only \"Hard.\" / \"Change.\", so the item change was charged to the gift card instead of PayPal and could not be fixed afterwards."}, {"id": "I1", "label": "I1 Telecom phone-number note (prompt)", "col": 3, "value": 69, "color": "var(--fix-node)", "sub": "telecom 69", "ctx": "In this plan", "tasks": [], "desc": null, "example": null, "sections": [["What it does", "Tells the agent that phone numbers are written with dashes, like 555-123-4567. If a lookup fails and the number it sent had exactly ten digits with only the dashes wrong, it retries once with the same ten digits dashed, without asking the user again. It never adds, drops or changes a digit: a number with too few or too many digits (555123, 15551232002), or a retry that still fails, gets the digits read back in groups so the user can correct them."], ["Example", "Telecom: the user says \"five five five, one two three, two zero zero two\". Today the agent looks up 5551232002, gets \"not found\", asks for a date of birth the user doesn't have, and the user leaves. With the fix it looks up 555-123-2002 and finds the customer."], ["Why it's safe", "It is added only for telecom calls; airline and retail don't change at all. Every successful telecom lookup in the runs already used dashes, so it only repeats what already works."]]}, {"id": "I3", "label": "I3 Recovery hint after a failed lookup", "col": 3, "value": 21, "color": "var(--fix-node)", "sub": "airline 1 · retail 20", "ctx": "In this plan", "tasks": [], "desc": null, "example": null, "sections": [["What it does", "When a customer lookup fails, the agent gets a short tip with the error: keep the other details for now, but treat none as certain, because even a spelled name can be misheard. Ask about the most doubtful detail first, one at a time, have the user spell it, ask which is right when two versions differ, and never guess a missing letter or digit. After two misses, try the other way to identify the user (email, or name and zip)."], ["Example", "Retail 0: the user says zip \"one, nine, one, two, two\", but the agent hears 1912. Today it re-asks only the name and sends 1912 again. With the fix it keeps the name, reads back \"1, 9, 1, 2\", notices a zip needs five digits, and asks for the zip again: 19122."], ["Why it's safe", "It appears only after a lookup has failed, and only in airline and retail. Calls where the first lookup works see nothing new."]]}, {"id": "I4", "label": "I4 Word-assisted spelling (later miss)", "col": 3, "value": 18, "color": "var(--fix-node)", "sub": "airline 7 · retail 11", "ctx": "In this plan", "tasks": [], "desc": null, "example": null, "sections": [["What it does", "If the lookup fails again, the agent asks the user to spell the doubtful part with a word for each letter (\"S as in Sam\") and to say \"double S\" for repeated letters. Words are heard much more reliably than single letters."], ["Example", "Airline 17: the user spells \"R, O, S, S, I\" again and again, and the agent hears \"ROSI\" or worse every time; the user gives up after 14 minutes. With the fix the user says \"R as in Robert, O as in Oscar, double S as in Sam, I as in India\", and the agent can write ROSSI."], ["Why it's safe", "It appears only after two failed attempts, and it changes only the instruction the agent sees, not what the user said. If a word and a letter disagree, the agent asks instead of guessing."]]}, {"id": "D_judgement", "label": "Deferred: backend policy judgement", "col": 3, "value": 12, "color": "var(--deferred-node)", "sub": "airline 4 · retail 5 · telecom 3", "ctx": "Not in this plan", "tasks": [], "desc": "Wrong writes, missed troubleshooting steps, wrong facts. These need policy-specific reasoning fixes with their own ablation; no change here can be shown to be trade-off free.", "example": null}], "links": [{"s": "airline", "t": "GA", "value": 6, "color": "var(--d-airline)", "label": "airline: Failed before identification", "ctx": "6 airline tasks", "tasks": [], "order": 0}, {"s": "retail", "t": "GA", "value": 30, "color": "var(--d-retail)", "label": "retail: Failed before identification", "ctx": "30 retail tasks", "tasks": [], "order": 1}, {"s": "telecom", "t": "GA", "value": 68, "color": "var(--d-telecom)", "label": "telecom: Failed before identification", "ctx": "68 telecom tasks", "tasks": [], "order": 2}, {"s": "airline", "t": "GB", "value": 6, "color": "var(--d-airline)", "label": "airline: Failed after identification or none needed", "ctx": "6 airline tasks", "tasks": [], "order": 0}, {"s": "retail", "t": "GB", "value": 6, "color": "var(--d-retail)", "label": "retail: Failed after identification or none needed", "ctx": "6 retail tasks", "tasks": [], "order": 1}, {"s": "telecom", "t": "GB", "value": 4, "color": "var(--d-telecom)", "label": "telecom: Failed after identification or none needed", "ctx": "4 telecom tasks", "tasks": [], "order": 2}, {"s": "GA", "t": "id_format", "value": 64, "color": "var(--d-telecom)", "label": "telecom: Identity heard right, sent in the wrong form", "ctx": "64 telecom tasks", "tasks": ["#0", "#3", "#4", "#5", "#6", "#8", "#10", "#12", "#13", "#16", "#17", "#21", "#23", "#24", "#26", "#27", "#29", "#30", "#33", "#35", "#36", "#38", "#39", "#43", "#44", "#45", "#47", "#48", "#50", "#52", "#53", "#54", "#55", "#56", "#57", "#58", "#59", "#61", "#62", "#64", "#66", "#68", "#69", "#71", "#72", "#73", "#75", "#76", "#79", "#80", "#82", "#84", "#86", "#89", "#93", "#94", "#95", "#96", "#102", "#105", "#106", "#109", "#111", "#113"], "order": 2}, {"s": "GA", "t": "id_misheard", "value": 6, "color": "var(--d-airline)", "label": "airline: Identity misheard or mangled", "ctx": "6 airline tasks", "tasks": ["14", "15", "16", "17", "25", "37"], "order": 0}, {"s": "GA", "t": "id_misheard", "value": 30, "color": "var(--d-retail)", "label": "retail: Identity misheard or mangled", "ctx": "30 retail tasks", "tasks": ["0", "3", "4", "5", "9", "14", "26", "27", "29", "30", "35", "38", "42", "44", "49", "63", "66", "70", "74", "75", "76", "78", "79", "88", "90", "91", "92", "94", "98", "108"], "order": 1}, {"s": "GA", "t": "id_misheard", "value": 4, "color": "var(--d-telecom)", "label": "telecom: Identity misheard or mangled", "ctx": "4 telecom tasks", "tasks": ["#11", "#18", "#92", "#99"], "order": 2}, {"s": "GB", "t": "id_late", "value": 2, "color": "var(--d-airline)", "label": "airline: Identified too late (ID loop used up the call)", "ctx": "2 airline tasks", "tasks": ["29", "32"], "order": 0}, {"s": "GB", "t": "id_late", "value": 1, "color": "var(--d-retail)", "label": "retail: Identified too late (ID loop used up the call)", "ctx": "1 retail tasks", "tasks": ["23"], "order": 1}, {"s": "GB", "t": "id_late", "value": 1, "color": "var(--d-telecom)", "label": "telecom: Identified too late (ID loop used up the call)", "ctx": "1 telecom tasks", "tasks": ["#46"], "order": 2}, {"s": "GB", "t": "wrong_change", "value": 3, "color": "var(--d-airline)", "label": "airline: Wrong, missing or extra change", "ctx": "3 airline tasks", "tasks": ["23", "24", "44"], "order": 0}, {"s": "GB", "t": "wrong_change", "value": 3, "color": "var(--d-retail)", "label": "retail: Wrong, missing or extra change", "ctx": "3 retail tasks", "tasks": ["20", "21", "84"], "order": 1}, {"s": "GB", "t": "wrong_change", "value": 3, "color": "var(--d-telecom)", "label": "telecom: Wrong, missing or extra change", "ctx": "3 telecom tasks", "tasks": ["#7", "#20", "#37"], "order": 2}, {"s": "GB", "t": "info_wrong", "value": 1, "color": "var(--d-airline)", "label": "airline: Right actions, wrong or missing information", "ctx": "1 airline tasks", "tasks": ["7"], "order": 0}, {"s": "GB", "t": "info_wrong", "value": 1, "color": "var(--d-retail)", "label": "retail: Right actions, wrong or missing information", "ctx": "1 retail tasks", "tasks": ["103"], "order": 1}, {"s": "GB", "t": "detail_misheard", "value": 1, "color": "var(--d-retail)", "label": "retail: A non-ID detail misheard", "ctx": "1 retail tasks", "tasks": ["71"], "order": 1}, {"s": "id_format", "t": "I1", "value": 64, "color": "var(--d-telecom)", "label": "telecom: Identity heard right, sent in the wrong form → I1 Telecom phone-number note (prompt)", "ctx": "64 telecom tasks", "tasks": ["#0", "#3", "#4", "#5", "#6", "#8", "#10", "#12", "#13", "#16", "#17", "#21", "#23", "#24", "#26", "#27", "#29", "#30", "#33", "#35", "#36", "#38", "#39", "#43", "#44", "#45", "#47", "#48", "#50", "#52", "#53", "#54", "#55", "#56", "#57", "#58", "#59", "#61", "#62", "#64", "#66", "#68", "#69", "#71", "#72", "#73", "#75", "#76", "#79", "#80", "#82", "#84", "#86", "#89", "#93", "#94", "#95", "#96", "#102", "#105", "#106", "#109", "#111", "#113"], "order": 2}, {"s": "id_misheard", "t": "I1", "value": 4, "color": "var(--d-telecom)", "label": "telecom: Identity misheard or mangled → I1 Telecom phone-number note (prompt)", "ctx": "4 telecom tasks", "tasks": ["#11", "#18", "#92", "#99"], "order": 2}, {"s": "id_late", "t": "I1", "value": 1, "color": "var(--d-telecom)", "label": "telecom: Identified too late (ID loop used up the call) → I1 Telecom phone-number note (prompt)", "ctx": "1 telecom tasks", "tasks": ["#46"], "order": 2}, {"s": "id_misheard", "t": "I3", "value": 19, "color": "var(--d-retail)", "label": "retail: Identity misheard or mangled → I3 Recovery hint after a failed lookup", "ctx": "19 retail tasks", "tasks": ["0", "3", "4", "5", "14", "26", "30", "35", "44", "66", "70", "79", "88", "90", "91", "92", "94", "98", "108"], "order": 1}, {"s": "id_late", "t": "I3", "value": 1, "color": "var(--d-airline)", "label": "airline: Identified too late (ID loop used up the call) → I3 Recovery hint after a failed lookup", "ctx": "1 airline tasks", "tasks": ["29"], "order": 0}, {"s": "id_late", "t": "I3", "value": 1, "color": "var(--d-retail)", "label": "retail: Identified too late (ID loop used up the call) → I3 Recovery hint after a failed lookup", "ctx": "1 retail tasks", "tasks": ["23"], "order": 1}, {"s": "id_misheard", "t": "I4", "value": 6, "color": "var(--d-airline)", "label": "airline: Identity misheard or mangled → I4 Word-assisted spelling (later miss)", "ctx": "6 airline tasks", "tasks": ["14", "15", "16", "17", "25", "37"], "order": 0}, {"s": "id_misheard", "t": "I4", "value": 11, "color": "var(--d-retail)", "label": "retail: Identity misheard or mangled → I4 Word-assisted spelling (later miss)", "ctx": "11 retail tasks", "tasks": ["9", "27", "29", "38", "42", "49", "63", "74", "75", "76", "78"], "order": 1}, {"s": "id_late", "t": "I4", "value": 1, "color": "var(--d-airline)", "label": "airline: Identified too late (ID loop used up the call) → I4 Word-assisted spelling (later miss)", "ctx": "1 airline tasks", "tasks": ["32"], "order": 0}, {"s": "wrong_change", "t": "D_judgement", "value": 3, "color": "var(--d-airline)", "label": "airline: Wrong, missing or extra change → Deferred: backend policy judgement", "ctx": "3 airline tasks", "tasks": ["23", "24", "44"], "order": 0}, {"s": "wrong_change", "t": "D_judgement", "value": 3, "color": "var(--d-retail)", "label": "retail: Wrong, missing or extra change → Deferred: backend policy judgement", "ctx": "3 retail tasks", "tasks": ["20", "21", "84"], "order": 1}, {"s": "wrong_change", "t": "D_judgement", "value": 3, "color": "var(--d-telecom)", "label": "telecom: Wrong, missing or extra change → Deferred: backend policy judgement", "ctx": "3 telecom tasks", "tasks": ["#7", "#20", "#37"], "order": 2}, {"s": "info_wrong", "t": "D_judgement", "value": 1, "color": "var(--d-airline)", "label": "airline: Right actions, wrong or missing information → Deferred: backend policy judgement", "ctx": "1 airline tasks", "tasks": ["7"], "order": 0}, {"s": "info_wrong", "t": "D_judgement", "value": 1, "color": "var(--d-retail)", "label": "retail: Right actions, wrong or missing information → Deferred: backend policy judgement", "ctx": "1 retail tasks", "tasks": ["103"], "order": 1}, {"s": "detail_misheard", "t": "D_judgement", "value": 1, "color": "var(--d-retail)", "label": "retail: A non-ID detail misheard → Deferred: backend policy judgement", "ctx": "1 retail tasks", "tasks": ["71"], "order": 1}], "total": 120, "table": [["I1 Telecom phone-number note (prompt)", "yes", "0", "0", "69", "69"], ["I3 Recovery hint after a failed lookup", "yes", "1", "20", "0", "21"], ["I4 Word-assisted spelling (later miss)", "yes", "7", "11", "0", "18"], ["Deferred: C1 frontend dead-air guards", "no", "0", "5", "0", "5"], ["Deferred: C2 same-item exchange guard", "no", "0", "1", "0", "1"], ["Deferred: C3 key figure first", "no", "2", "7", "0", "9"], ["Deferred: C4 numbers as digits", "no", "1", "0", "0", "1"], ["Deferred: no external lookup reached", "no", "1", "2", "0", "3"], ["Deferred: backend policy judgement", "no", "4", "5", "3", "12"], ["Deferred: transfer rules", "no", "1", "0", "7", "8"], ["Deferred: backend latency", "no", "0", "2", "2", "4"], ["Benchmark artifact (no agent fix)", "no", "0", "4", "0", "4"], ["Total failed", "", "17", "57", "81", "155"]], "colheads": ["Domain", "Identification", "Cause", "Proposed fix"], "numcols": [2, 3, 4, 5]};
+  const W = 1420, TOP = 36, BOTTOM = 12, NODE_W = 14, GAP = 32, SPACER = 2;
+  const COLX = [30, 250, 590, 1000];
+  const nodes = DATA.nodes, links = DATA.links, byId = Object.fromEntries(nodes.map(n => [n.id, n]));
+  const cols = [0, 1, 2, 3].map(c => nodes.filter(n => n.col === c));
+  const total = DATA.total;
+  const H = Math.max(600, 80 + Math.max(cols[2].length, cols[3].length) * 84);
+  const maxGaps = Math.max(...cols.map(c => c.length - 1));
+  const k = (H - TOP - BOTTOM - GAP * maxGaps) / total;
+  cols.forEach(c => {
+    const h = c.reduce((s, n) => s + n.value * k, 0) + GAP * (c.length - 1);
+    let y = TOP + (H - TOP - BOTTOM - h) / 2;
+    c.forEach(n => { n.x = COLX[n.col]; n.y = y; n.h = n.value * k; y += n.h + GAP; });
+  });
+  const idx = n => cols[n.col].indexOf(n);
+  nodes.forEach(n => {
+    const out = links.filter(L => L.s === n.id).sort((a, b) => idx(byId[a.t]) - idx(byId[b.t]) || a.order - b.order);
+    let o = 0; out.forEach(L => { L.sy = n.y + o; o += L.value * k; });
+    const inn = links.filter(L => L.t === n.id).sort((a, b) => idx(byId[a.s]) - idx(byId[b.s]) || a.order - b.order);
+    let i = 0; inn.forEach(L => { L.ty = n.y + i; i += L.value * k; });
+  });
+  const NS = 'http://www.w3.org/2000/svg', svg = document.getElementById('sankey');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const el = (name, attrs, parent) => { const e = document.createElementNS(NS, name); for (const a in attrs) e.setAttribute(a, attrs[a]); (parent || svg).appendChild(e); return e; };
+  DATA.colheads.forEach((t, i) => { const e = el('text', { x: COLX[i], y: 16, class: 'colhead' }); e.textContent = t; });
+  const gL = el('g', {});
+  links.forEach(L => {
+    const s = byId[L.s], t = byId[L.t], w = L.value * k, x0 = s.x + NODE_W, x1 = t.x, y0 = L.sy + w / 2, y1 = L.ty + w / 2, mx = (x0 + x1) / 2;
+    const p = el('path', { d: `M${x0},${y0} C${mx},${y0} ${mx},${y1} ${x1},${y1}`, class: 'link', tabindex: 0,
+      'stroke-width': Math.max(1, w - SPACER), style: `stroke:${L.color}` }, gL);
+    p.setAttribute('aria-label', `${L.value} tasks: ${L.label}. Tasks ${L.tasks.join(', ')}`);
+    bindTip(p, () => tipContent(L.value, L.label, L.color, L.ctx, L.tasks, L.detail)); L.el = p;
+  });
+  const gN = el('g', {});
+  nodes.forEach(n => {
+    const g = el('g', { class: 'node', tabindex: 0 }, gN);
+    el('rect', { x: n.x - 6, y: n.y - 4, width: NODE_W + 12, height: n.h + 8, fill: 'transparent' }, g);
+    el('rect', { class: 'mark', x: n.x, y: n.y, width: NODE_W, height: Math.max(n.h, 2), style: `fill:${n.color}` }, g);
+    const lx = n.x + NODE_W + 8, cy = n.y + n.h / 2;
+    const t = el('text', { x: lx, y: n.sub ? cy - 2 : cy + 4, class: 'lbl' }, g);
+    const num = document.createElementNS(NS, 'tspan'); num.setAttribute('class', 'n'); num.textContent = n.value + '  ';
+    t.appendChild(num); t.appendChild(document.createTextNode(n.label));
+    if (n.sub) { const s2 = el('text', { x: lx, y: cy + 12, class: 'lbl2' }, g); s2.textContent = n.sub; }
+    g.setAttribute('aria-label', `${n.value} tasks: ${n.label}. ${n.sub || ''}`);
+    bindTip(g, () => tipContent(n.value, n.label, n.color, n.ctx, n.tasks, n.detail, n.desc, n.example, n.sections));
+    const on = v => links.forEach(L => { if (L.s === n.id || L.t === n.id) L.el.classList.toggle('hl', v); });
+    g.addEventListener('pointerenter', () => on(true)); g.addEventListener('pointerleave', () => on(false));
+    g.addEventListener('focus', () => on(true)); g.addEventListener('blur', () => on(false));
+  });
+  const tip = document.getElementById('tip');
+  function tipContent(value, label, color, context, tasks, detail, desc, example, sections) {
+    const f = document.createDocumentFragment();
+    const v = document.createElement('div'); v.className = 'tv'; v.textContent = value + (value === 1 ? ' task' : ' tasks'); f.appendChild(v);
+    const l = document.createElement('div'); const key = document.createElement('span'); key.className = 'tk'; key.style.background = color;
+    l.appendChild(key); l.appendChild(document.createTextNode(label)); f.appendChild(l);
+    if (context) { const c = document.createElement('div'); c.className = 'tl'; c.textContent = context; f.appendChild(c); }
+    if (desc) { const d = document.createElement('div'); d.className = 'td'; d.textContent = desc; f.appendChild(d); }
+    if (example) { const x = document.createElement('div'); x.className = 'tx'; const b = document.createElement('b'); b.textContent = 'Best example: ';
+      x.appendChild(b); x.appendChild(document.createTextNode(example)); f.appendChild(x); }
+    (sections || []).forEach(([head, text]) => {
+      const x = document.createElement('div'); x.className = 'ts';
+      const h = document.createElement('div'); h.className = 'th'; h.textContent = head;
+      x.appendChild(h);
+      x.appendChild(document.createTextNode(text)); f.appendChild(x); });
+    if (tasks && tasks.length) { const t = document.createElement('div'); t.className = 'tt'; t.textContent = 'Tasks: ' + tasks.join(', '); f.appendChild(t); }
+    if (detail) { const d = document.createElement('div'); d.className = 'tt'; d.textContent = detail; f.appendChild(d); }
+    return f;
+  }
+  function bindTip(target, build) {
+    const move = (x, y) => { const r = tip.getBoundingClientRect(); let left = x + 14, top = y + 14;
+      if (left + r.width > innerWidth - 8) left = x - r.width - 14; if (top + r.height > innerHeight - 8) top = y - r.height - 14;
+      tip.style.left = left + 'px'; tip.style.top = top + 'px'; };
+    const show = (x, y) => { tip.replaceChildren(build()); tip.style.display = 'block'; move(x, y); };
+    target.addEventListener('pointerenter', e => show(e.clientX, e.clientY));
+    target.addEventListener('pointermove', e => move(e.clientX, e.clientY));
+    target.addEventListener('pointerleave', () => { tip.style.display = 'none'; });
+    target.addEventListener('focus', () => { const b = target.getBoundingClientRect(); show(b.right, b.top + b.height / 2); });
+    target.addEventListener('blur', () => { tip.style.display = 'none'; });
+  }
+  const tbody = document.querySelector('#tbl tbody');
+  DATA.table.forEach(row => { const tr = document.createElement('tr');
+    row.forEach((txt, i) => { const td = document.createElement('td'); td.textContent = txt; if (DATA.numcols.includes(i)) td.className = 'num'; tr.appendChild(td); });
+    tbody.appendChild(tr); });
+  document.getElementById('theme').addEventListener('click', () => {
+    const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.dataset.theme = cur === 'dark' ? 'light' : 'dark'; });
+})();
+</script>
+</body>
+</html>

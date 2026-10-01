@@ -43,6 +43,19 @@ per host (§6.1). After the change, the gateway `/health` with `gateway.yaml` re
 `true`, and the voice `/health` for `tau3_eval.yaml` and `browser_demo.yaml` reported every switch `true`
 except `replay_unheard_answer` and `prompt_features.replay_intent`.
 
+**Changed 2026-10-01:** the τ³ identity fixes ([`tau3-identity-fixes-plan.md`](tau3-identity-fixes-plan.md)) are
+implemented and on by default:
+- **I1**, a telecom phone-number note in the Hermes system prompt (`gateway.yaml` `prompt_features.domain_notes`);
+- **I3** and **I4**, recovery notes appended to a failed airline or retail identity lookup's result (the new
+  default voice profile `voice/tau3_fixes.yaml`).
+
+The identity arms are compared with a new control, the fixes-on deployment without I1, I3 and I4
+(`tau3_identity_control.yaml` with `gateway.identity_control.yaml`); each fix has its own arm (§6.1). The
+all-off control (`tau3_eval_baseline.yaml` with `gateway.baseline.yaml`) also turns the identity fixes off.
+Verified offline only: unit tests, and a replay of the 2026-09-30 tool outputs through the new hook (notes only
+on the plan's 11 airline and 27 retail passing tasks with a miss, none on telecom or on a session whose first
+lookup succeeded). The stack has not been restarted with this change and no arm has run.
+
 ## 0. What runs where
 
 ```
@@ -174,9 +187,12 @@ Expected health:
 - `"agent_kind": "hermes"`;
 - `"hermes": {"model": "nvidia/nvidia/nemotron-3-ultra", "base_url": "https://inference-api.nvidia.com/v1",
   "reasoning": true}`;
-- `"backend_features": {"spelling_v2": true, "spoken_output": true, "write_consent": true}` with
-  `gateway.yaml` (all `false` with `gateway.baseline.yaml`, one `true` with a `gateway.<variant>.yaml`), and
-  `"backend_catalog_sha256"`, the hash of `prompts.backend.yaml`.
+- `"backend_features": {"spelling_v2": true, "spoken_output": true, "write_consent": true, "domain_notes": true}`
+  with `gateway.yaml` (all `false` with `gateway.baseline.yaml`, one `true` with a `gateway.<variant>.yaml`,
+  only `domain_notes` `false` with `gateway.identity_control.yaml`),
+  and `"backend_catalog_sha256"`, the hash of `prompts.backend.yaml`;
+- `"domains": ["telecom", "retail", "airline"]`, the domain detection order (every gateway config extends
+  `gateway.yaml`, so the control has it too; only `domain_notes` decides whether a note renders).
 
 The gateway loads its code and prompts at startup: restart it (§10, then this section) after a code or
 prompt change, or to switch `FDH_GATEWAY_CONFIG`.
@@ -214,7 +230,7 @@ Expected:
 
 - `/health` shows `"status": "ok"`, `"prototype": "frontend-delegation-hermes"`,
   `"backend": {"link": "websocket", ...}` and `"features"`: with `tau3_eval.yaml`, `proactive_status`,
-  `clean_answers`, `spelling_hold`, `filler_dedupe` and `spelled_runs` `true`, `replay_unheard_answer` and
+  `clean_answers`, `spelling_hold`, `filler_dedupe`, `spelled_runs` and `result_hints` `true`, `replay_unheard_answer` and
   `prompt_features.replay_intent` `false`; with `tau3_eval_baseline.yaml`, every switch `false`; with an arm
   profile, only the arm's own switches `true`.
 - The logs show `frontend warm-up done in …s`, `backend gateway http://host.docker.internal:8790/health:
@@ -335,17 +351,18 @@ PINE_REALTIME_BASE_URL=ws://localhost:8775/v1/realtime PINE_API_KEY=unused \
 # last line: GATE A PASSED  (against a real server it needs a tone the ASR transcribes; see §8 for the stub gate)
 ```
 
-### 6.1 Evaluation arms (τ³ failure fixes)
+### 6.1 Evaluation arms (τ³ failure fixes and identity fixes)
 
-[`tau3-failure-fixes-plan.md`](tau3-failure-fixes-plan.md) adds generic fixes for the airline failures, each
-behind its own switch. Since 2026-09-30 the YAML defaults turn every fix on except M2, so the default
+[`tau3-failure-fixes-plan.md`](tau3-failure-fixes-plan.md) adds generic fixes for the airline failures, and
+[`tau3-identity-fixes-plan.md`](tau3-identity-fixes-plan.md) adds I1, I3 and I4 for identification in all three
+domains, each behind its own switch. Since 2026-09-30 the YAML defaults turn every fix on except M2, so the default
 deployment is `tau3_eval.yaml` with `gateway.yaml`. An arm is a voice profile (§4, `FDH_PROFILE`) plus a
 gateway config (§3, `FDH_GATEWAY_CONFIG`). Each arm turns on one fix over the control, and is compared with
 a fresh control on the same host (plan §8). The following table lists the pairs:
 
 | Arm | `FDH_PROFILE` | `FDH_GATEWAY_CONFIG` | Turns on |
 |---|---|---|---|
-| Default (every fix except M2) | `tau3_eval.yaml` | `gateway.yaml` | M1, M3, G1, G2 and G4 together; not an evaluated arm |
+| Default (every fix except M2) | `tau3_eval.yaml` | `gateway.yaml` | M1, M3, G1, G2, G4, I1, I3 and I4 together; not an evaluated arm |
 | Control | `tau3_eval_baseline.yaml` | `gateway.baseline.yaml` | nothing: prompts byte-identical to agent commit `3a7e04a` |
 | M1 proactive status | `tau3_arm_m1_status.yaml` | `gateway.baseline.yaml` | one short status line per run after `FDH_PROACTIVE_AFTER_S` (default 15) s of silence while WORKING |
 | M3 spelling | `tau3_arm_m3_spelling.yaml` | `gateway.spelling_v2.yaml` | spelled-run joining, spelling hold (airline code pattern), escalating local "invalid ID" wording, backend variant `spelling_v2` |
@@ -354,9 +371,14 @@ a fresh control on the same host (plan §8). The following table lists the pairs
 | G1 filler de-duplication | `tau3_arm_g1_filler_dedupe.yaml` | `gateway.baseline.yaml` | a repeated filler is dropped (WORKING) or replaced |
 | G2 short answers | `tau3_arm_g2_short_answers.yaml` | `gateway.spoken_output.yaml` | markdown cleanup before TTS, backend variant `spoken_output` |
 | G4 write consent | `tau3_eval_baseline.yaml` | `gateway.write_consent.yaml` | backend variant `write_consent` |
+| Identity control | `tau3_identity_control.yaml` | `gateway.identity_control.yaml` | the default without I1, I3 and I4 (M1, M3, G1, G2 and G4 on): the deployment of the runs the identity plan analysed |
+| I1 telecom phone-number note | `tau3_identity_control.yaml` | `gateway.yaml` | backend variant `domain_notes`: a `<domain_notes>` block after the policy in telecom sessions only (dashed numbers; one silent retry only for exactly ten digits; else a grouped read-back) |
+| I3 recovery note | `tau3_arm_i3_recovery_hint.yaml` | `gateway.identity_control.yaml` | `result_hints`: the I3 note appended to every failed airline/retail identity lookup's result (no escalation) |
+| I4 word-assisted spelling (on top of I3) | `tau3_arm_i4_word_spelling.yaml` | `gateway.identity_control.yaml` | I3 on the first miss, the I4 note ("S as in Sam") on later misses; compare it with the I3 arm |
 
 `tau3_eval.yaml` and `tau3_eval_baseline.yaml` no longer behave the same: the baseline pins every new
-switch off, and it must run with `gateway.baseline.yaml`, not `gateway.yaml`. Their config hashes differ.
+switch off, and it must run with `gateway.baseline.yaml`, not `gateway.yaml`. Likewise
+`tau3_identity_control.yaml` runs with `gateway.identity_control.yaml`. Their config hashes differ.
 To switch arms, stop both servers (§10) and start them again with the two variables, for example:
 
 ```bash
@@ -385,6 +407,14 @@ PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.del
   --config src/prototypes/voice_delegation_hermes_agent/config/profiles/tau3_arm_m2_replay.yaml --only replay
 ```
 
+**I1, I3 and I4: what to check in a run.** Run I1 on telecom and I3/I4 on airline and retail (the other domains
+are unchanged by construction), each against a fresh identity control. The arms add one identity fix to the
+identity control, not to the all-off control. In `backend_configured`, `backend_domain` must be the run's
+domain. For I3/I4, `result_hint` events (`message_key`, `n`) show each appended note; a session whose first
+lookup succeeded has none. Gate each arm per task against a fresh control (plan §7.3): no repeatable loss, and
+inspect every changed sentinel, first the 6 that passed without ever being identified (airline 0, 26; retail
+25, 60, 65, 80).
+
 **Before scoring an arm: check its deployed fingerprint** (plan §1, rule 5). Every session must have the
 arm's switches, the gateway's variants and one set of prompt hashes; exit 1 means the arm is re-run, not
 scored:
@@ -398,7 +428,8 @@ PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.fin
 ```
 
 Use one event log per arm and domain (`-e FDH_EVENT_LOG=...` in §4): the prompt hashes include the τ² policy
-and tools. Events written before this change have no fingerprint, and the check fails on them.
+and tools. Events written before this change have no fingerprint, and the check fails on them. Since the
+identity fixes, the check also compares `backend_domain`: logs written before 2026-10-01 report it missing.
 
 **Reporting.** `fba_voice_metrics.py` expects one backend operation per turn. Convert the event log first;
 the adapter credits each run to the turn that started it and exits 1 on an orphaned tool call:
@@ -412,7 +443,7 @@ PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.rep
 
 | File | Content |
 |---|---|
-| `logs/fdh_voice_events.jsonl`, `logs/fdh_voice_web_events.jsonl` | Voice server events per session: `fdh_session_start` (config hash, `features`, `invalid_message_keys`), `frontend_prompt` (prompt hash), `backend_configured` (backend fingerprint), `delegation_decision`, `backend_action`, `tool_calls_out`, `tool_output_in`, `call_answered_locally` (`reason`, `message_key`), `backend_answer`, `status_spoken`, `playback_outcome`, `delivery_note`, `history_sync`, `turn_latency`, `filler_timing`, `barge_in`. Only with the fix's switch on (the defaults or an arm): `status_proactive` (M1), `spelling_hold` (M3), `answer_replayed` / `answer_replay_skipped` (M2), `filler_deduped` (G1), `answer_cleaned` (G2) |
+| `logs/fdh_voice_events.jsonl`, `logs/fdh_voice_web_events.jsonl` | Voice server events per session: `fdh_session_start` (config hash, `features`, `invalid_message_keys`), `frontend_prompt` (prompt hash), `backend_configured` (backend fingerprint), `delegation_decision`, `backend_action`, `tool_calls_out`, `tool_output_in`, `call_answered_locally` (`reason`, `message_key`), `backend_answer`, `status_spoken`, `playback_outcome`, `delivery_note`, `history_sync`, `turn_latency`, `filler_timing`, `barge_in`. Only with the fix's switch on (the defaults or an arm): `status_proactive` (M1), `spelling_hold` (M3), `answer_replayed` / `answer_replay_skipped` (M2), `filler_deduped` (G1), `answer_cleaned` (G2), `result_hint` (I3/I4: `tool`, `message_key`, `n`). `backend_configured` carries `backend_domain` (I1) |
 | `logs/fdh_gateway_events.jsonl` | Gateway: `gateway_start` (`backend_features`, `backend_catalog_sha256`), sessions, `backend_fingerprint`, worker spawn/ready/exit (`start_ms`, `rss_mb`), run epochs and outcomes, context delivery states, watchdog, respawns |
 | `logs/fdh_workers/*.log` | Each Hermes worker's stdout/stderr. "Auxiliary Nous client unavailable" lines are harmless |
 | `logs/fdh_gateway.out` | Gateway process output |
@@ -454,7 +485,7 @@ Profiles are in `src/prototypes/voice_delegation_hermes_agent/config/`. Unknown 
 | Setting | Where | Default |
 |---|---|---|
 | End-of-turn silence | `voice/base.yaml` `turn_detection.silence_duration_ms` | 800 (client values ignored) |
-| Transcript / tool-argument normalization | `voice/base.yaml`, `voice/tau3.yaml`, `voice/tau3_spelling.yaml` `normalization.*` | on / on (τ³), off (browser) |
+| Transcript / tool-argument normalization | `voice/base.yaml`, `voice/tau3.yaml`, `voice/tau3_spelling.yaml`, `voice/tau3_fixes.yaml` (the default) `normalization.*` | on / on (τ³), off (browser) |
 | Simulated backend delay | `backend.simulated_delay.{seconds,where}`, env `FDH_BACKEND_DELAY_S` (browser profile) | 0, 5 in `browser_demo` |
 | Frontend model | env `FRONTEND_LLM_MODEL`, `FRONTEND_LLM_BASE_URL`; `frontend.llm.*` | `nvidia/nvidia/nemotron-3.5-lightning`, thinking off |
 | Frontend tool choice, hedging, timeout | `frontend.tool_choice`, `frontend.hedge_after_ms`, `frontend.timeout_ms` | `named`, 1500, 4000 |
@@ -471,12 +502,14 @@ Profiles are in `src/prototypes/voice_delegation_hermes_agent/config/`. Unknown 
 | M1 proactive status | `output.proactive_status.{enabled,after_s,max_per_run}` (`after_s` from env `FDH_PROACTIVE_AFTER_S`); lines in `prompts.yaml` `status_proactive_lines` | on, 15 s, 1 per run |
 | M3 spelled runs | `voice/*.yaml` `normalization.transcript.spelled_runs.{enabled,min_tokens,case}` | on, 3, `keep` (`voice/tau3_spelling.yaml`, `voice/browser.yaml`; off in `voice/tau3.yaml`) |
 | M3 spelling hold | `delegation.spelling_hold.{enabled,hold_ms,complete_patterns}` | on, 1500 ms, `[]` (airline code pattern in `tau3_eval.yaml` and `tau3_arm_m3_spelling.yaml`) |
-| M3 local "invalid ID" wording | `voice/*.yaml` `normalization.tool_arguments.invalid_message_key`, `escalate_invalid_message_key` | `tool_argument_invalid_readback`, `tool_argument_invalid_spell_all` (`voice/tau3_spelling.yaml`, the default voice profile); `tool_argument_invalid`, none in `voice/tau3.yaml` |
+| M3 local "invalid ID" wording | `voice/*.yaml` `normalization.tool_arguments.invalid_message_key`, `escalate_invalid_message_key` | `tool_argument_invalid_readback`, `tool_argument_invalid_spell_all` (`voice/tau3_spelling.yaml`, which the default voice profile `voice/tau3_fixes.yaml` extends); `tool_argument_invalid`, none in `voice/tau3.yaml` |
+| I3/I4 recovery notes | `voice/*.yaml` `normalization.tool_arguments.result_hints.{enabled,tools,failure_pattern,count_local_invalid,max_hints,message_key,escalate_message_key}`; texts in `voice_frontend_backend_agent/config/prompts.voice.yaml` | on in `voice/tau3_fixes.yaml` (the default; `voice/tau3_recovery_hint.yaml` is I3 without escalation): `find_user_id_by_name_zip`, `find_user_id_by_email`, `get_user_details`; `^Error: .*\bnot found\b`; local invalid answers count; 3; `identity_not_found_hint`, `identity_not_found_hint_words`. Off in `voice/tau3.yaml`, `voice/tau3_spelling.yaml` and the code defaults |
+| I1 domain notes | `gateway.yaml` `prompt_features.domain_notes`, `domains.<name>.tools_any`; note texts in `prompts.backend.yaml` `backend_domain_notes` | on (off in `gateway.baseline.yaml` and `gateway.identity_control.yaml`); telecom (`get_customer_by_phone`), retail, airline; a note only for telecom |
 | M2 replay an unheard answer | `delegation.replay_unheard_answer.{enabled,ttl_s}` (needs `prompt_features.replay_intent`) | off, 30 s |
 | G1 filler de-duplication | `delegation.filler_dedupe.{enabled,recent}`; lines in `prompts.yaml` `filler_alternatives` | on, 3 |
 | G2 answer cleanup | `output.clean_answers` | on |
 | Frontend prompt variants | `delegation_agent.yaml` `prompt_features.replay_intent` | off |
-| Backend prompt variants | `gateway.yaml` `prompt_features.{spelling_v2,spoken_output,write_consent}` (`gateway.baseline.yaml` turns all off; `gateway.<variant>.yaml` turns one on over it) | all on |
+| Backend prompt variants | `gateway.yaml` `prompt_features.{spelling_v2,spoken_output,write_consent,domain_notes}` (`gateway.baseline.yaml` turns all off; `gateway.<variant>.yaml` turns one on over it) | all on |
 
 ## 10. Stop and clean up
 

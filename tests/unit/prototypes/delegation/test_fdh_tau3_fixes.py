@@ -507,7 +507,13 @@ class FingerprintTests(unittest.IsolatedAsyncioTestCase):
         h = ControllerHarness()
         await h.start()
         configured = h.of_type("session.configured")[0]
-        for key in ("backend_features", "backend_catalog_sha256", "backend_soul_sha256", "backend_system_sha256"):
+        for key in (
+            "backend_features",
+            "backend_catalog_sha256",
+            "backend_soul_sha256",
+            "backend_system_sha256",
+            "backend_domain",
+        ):
             self.assertIn(key, configured)
         self.assertEqual(configured["backend_features"]["spelling_v2"], False)
 
@@ -525,7 +531,7 @@ class FingerprintCheckTests(unittest.IsolatedAsyncioTestCase):
         await harness.close()
         events = [{"kind": name, "session_id": "s1", **data} for name, data in harness.events_log]
         backend = {"backend_features": {"spelling_v2": True}, "backend_catalog_sha256": "c", "backend_soul_sha256": "s",
-                   "backend_system_sha256": "y"}  # fmt: skip
+                   "backend_system_sha256": "y", "backend_domain": "airline"}  # fmt: skip
         events.append({"kind": "backend_configured", "session_id": "s1", **backend})
         prints = fc.session_fingerprints(events)
         self.assertEqual(fc.check(prints), [])

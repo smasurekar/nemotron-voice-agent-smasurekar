@@ -98,6 +98,8 @@ class ControllerSettings:
     respawn: bool = True
     max_respawns: int = 2
     worker_hermes: dict[str, Any] = field(default_factory=dict)
+    #: ``(domain, tools_any)`` in detection order (gateway.yaml ``domains``; tau3-identity-fixes-plan.md 3.2).
+    domains: tuple[tuple[str, tuple[str, ...]], ...] = ()
 
 
 @dataclass(slots=True)
@@ -246,10 +248,25 @@ class BackendController:
             "backend_features": dict(getattr(self._templates, "features", {}) or {}),
             "backend_catalog_sha256": str(getattr(self._templates, "catalog_sha256", "") or ""),
             "backend_soul_sha256": sha256_text(self._templates.render("backend_soul")),
-            "backend_system_sha256": sha256_text(
-                self._templates.render("backend_system", instructions=self._instructions)
-            ),
+            "backend_system_sha256": sha256_text(self._system_prompt()),
+            "backend_domain": self._domain(),
         }
+
+    def _domain(self) -> str:
+        """The session's domain: the first configured domain with one of its tools in the tool list ("" = none)."""
+        names = {str(t.get("name")) for t in self._tools}
+        for domain, tools_any in self._settings.domains:
+            if names.intersection(tools_any):
+                return domain
+        return ""
+
+    def _system_prompt(self) -> str:
+        """The rendered ``backend_system``: the one render input of both the worker and the fingerprint."""
+        note_of = getattr(self._templates, "domain_note", None)
+        note = note_of(self._domain()) if callable(note_of) else ""
+        if not note:
+            return self._templates.render("backend_system", instructions=self._instructions)
+        return self._templates.render("backend_system", instructions=self._instructions, domain_note=note)
 
     def append(self, entries: list[dict[str, Any]]) -> None:
         """``history.append``: context entries (deduplicated by ``seq``)."""
@@ -694,7 +711,7 @@ class BackendController:
             {"name": t.get("name"), "description": t.get("description") or "", "parameters": t.get("parameters") or {}}
             for t in self._tools
         ]
-        system = self._templates.render("backend_system", instructions=self._instructions)
+        system = self._system_prompt()
         try:
             self._worker.send(
                 {

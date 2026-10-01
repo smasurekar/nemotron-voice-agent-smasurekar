@@ -407,6 +407,30 @@ tool_call_already_failed:
     retry it unchanged. Read it back character by character ({spelled}) and ask the user only about
     the part that may be wrong.
 
+identity_not_found_hint:
+  description: "Appended to the first failed identity lookup's result (result_hints; tau3-identity-fixes-plan.md I3)."
+  content: |
+    [Not found. At least one value you sent is wrong, possibly one the user spelled: speech
+    recognition can drop or change letters even in a spelling. Keep the other fields for the
+    next lookup, but none is confirmed until a lookup succeeds. Ask about one field at a time,
+    starting with the most doubtful: a zip code that is not five digits, a name you only heard
+    as a word, or a field whose versions differ. Read back only that field, letter by letter or
+    digit by digit, and ask the user to confirm or spell it, saying "double S" for repeated
+    letters. Build the next lookup from the latest value of each field, taken from what the user
+    spelled rather than a word you heard; if that spelling differs from an earlier version
+    (Ana after Anna), ask which is right first. Never fill in a missing letter or digit.
+    After two misses with one method, offer the other method your policy allows.]
+
+identity_not_found_hint_words:
+  description: "Appended to a later failed identity lookup's result (result_hints escalation; tau3-identity-fixes-plan.md I4)."
+  content: |
+    [Not found again. Keep the other fields for now; a field spelled before can still be the
+    wrong one. Ask the user to spell only the field most likely wrong once more, using a word
+    for each letter, for example "S as in Sam, A as in apple", and to say "double" for
+    repeated letters. Use the first letter of each word; if a word and the spoken letter
+    disagree, ask which is right. Read that field back once before you look it up. After two
+    misses with one method, offer the other method your policy allows.]
+
 # --- Barge-in: frontend verdict ---------------------------------------------------------------
 # Included by the frontend template (a Jinja template) while a delegated request is still being
 # worked on and the user has spoken again (barge_in.while_thinking: frontend_verdict;

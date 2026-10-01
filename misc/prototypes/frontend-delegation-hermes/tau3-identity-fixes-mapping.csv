@@ -1,0 +1,156 @@
+domain,task,bucket,stage,proposed_fix,fix_label
+airline,3,user_sim,BACKEND-LLM,C4,Deferred: C4 numbers as digits
+airline,7,info_wrong,BACKEND-LLM,D_judgement,Deferred: backend policy judgement
+airline,11,breakdown,LATENCY,C3,Deferred: C3 key figure first
+airline,14,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+airline,15,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+airline,16,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+airline,17,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+airline,21,breakdown,LATENCY,C3,Deferred: C3 key figure first
+airline,23,wrong_change,BACKEND-LLM,D_judgement,Deferred: backend policy judgement
+airline,24,wrong_change,BACKEND-LLM,D_judgement,Deferred: backend policy judgement
+airline,25,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+airline,29,id_late,ASR,I3,I3 Recovery hint after a failed lookup
+airline,32,id_late,ASR,I4,I4 Word-assisted spelling (later miss)
+airline,35,transfer_wrong,BACKEND-LLM,D_transfer,Deferred: transfer rules
+airline,37,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+airline,39,id_misheard,ASR,D_nolookup,Deferred: no external lookup reached
+airline,44,wrong_change,BACKEND-LLM,D_judgement,Deferred: backend policy judgement
+retail,0,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,3,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,4,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,5,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,6,id_none,BACKEND-LLM,D_nolookup,Deferred: no external lookup reached
+retail,8,id_none,BACKEND-LLM,D_nolookup,Deferred: no external lookup reached
+retail,9,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+retail,14,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,18,breakdown,LATENCY,C3,Deferred: C3 key figure first
+retail,20,wrong_change,BACKEND-LLM,D_judgement,Deferred: backend policy judgement
+retail,21,wrong_change,BACKEND-LLM,D_judgement,Deferred: backend policy judgement
+retail,22,id_none,LATENCY,C1,Deferred: C1 frontend dead-air guards
+retail,23,id_late,ASR,I3,I3 Recovery hint after a failed lookup
+retail,26,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,27,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+retail,28,breakdown,LATENCY,C3,Deferred: C3 key figure first
+retail,29,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+retail,30,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,31,breakdown,LATENCY,C3,Deferred: C3 key figure first
+retail,33,breakdown,LATENCY,D_latency,Deferred: backend latency
+retail,35,id_misheard,BACKEND-LLM,I3,I3 Recovery hint after a failed lookup
+retail,38,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+retail,41,user_sim,USER-SIM,D_benchmark,Benchmark artifact (no agent fix)
+retail,42,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+retail,44,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,46,info_wrong,TURN-MANAGER,C3,Deferred: C3 key figure first
+retail,49,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+retail,59,breakdown,FRONTEND-LLM,C1,Deferred: C1 frontend dead-air guards
+retail,62,user_sim,USER-SIM,D_benchmark,Benchmark artifact (no agent fix)
+retail,63,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+retail,66,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,70,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,71,detail_misheard,ASR,D_judgement,Deferred: backend policy judgement
+retail,73,breakdown,LATENCY,D_latency,Deferred: backend latency
+retail,74,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+retail,75,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+retail,76,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+retail,78,id_misheard,ASR,I4,I4 Word-assisted spelling (later miss)
+retail,79,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,81,id_none,LATENCY,C1,Deferred: C1 frontend dead-air guards
+retail,84,wrong_change,BACKEND-LLM,D_judgement,Deferred: backend policy judgement
+retail,88,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,90,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,91,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,92,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,94,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,95,user_sim,USER-SIM,D_benchmark,Benchmark artifact (no agent fix)
+retail,98,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,99,breakdown,LATENCY,C3,Deferred: C3 key figure first
+retail,100,breakdown,LATENCY,C3,Deferred: C3 key figure first
+retail,103,info_wrong,BACKEND-LLM,D_judgement,Deferred: backend policy judgement
+retail,105,user_sim,USER-SIM,D_benchmark,Benchmark artifact (no agent fix)
+retail,106,id_none,LATENCY,C1,Deferred: C1 frontend dead-air guards
+retail,107,wrong_change,BACKEND-LLM,C2,Deferred: C2 same-item exchange guard
+retail,108,id_misheard,ASR,I3,I3 Recovery hint after a failed lookup
+retail,111,breakdown,LATENCY,C3,Deferred: C3 key figure first
+retail,112,breakdown,FRONTEND-LLM,C1,Deferred: C1 frontend dead-air guards
+telecom,#0,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#3,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#4,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#5,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#6,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#7,wrong_change,BACKEND-LLM,D_judgement,Deferred: backend policy judgement
+telecom,#8,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#9,transfer_wrong,BACKEND-LLM,D_transfer,Deferred: transfer rules
+telecom,#10,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#11,id_misheard,ASR,I1,I1 Telecom phone-number note (prompt)
+telecom,#12,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#13,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#16,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#17,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#18,id_misheard,ASR,I1,I1 Telecom phone-number note (prompt)
+telecom,#19,transfer_wrong,BACKEND-LLM,D_transfer,Deferred: transfer rules
+telecom,#20,wrong_change,BACKEND-LLM,D_judgement,Deferred: backend policy judgement
+telecom,#21,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#22,breakdown,LATENCY,D_latency,Deferred: backend latency
+telecom,#23,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#24,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#25,breakdown,LATENCY,D_latency,Deferred: backend latency
+telecom,#26,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#27,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#29,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#30,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#33,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#35,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#36,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#37,wrong_change,BACKEND-LLM,D_judgement,Deferred: backend policy judgement
+telecom,#38,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#39,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#40,transfer_wrong,BACKEND-LLM,D_transfer,Deferred: transfer rules
+telecom,#43,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#44,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#45,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#46,id_late,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#47,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#48,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#50,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#52,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#53,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#54,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#55,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#56,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#57,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#58,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#59,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#61,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#62,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#64,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#66,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#68,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#69,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#71,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#72,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#73,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#75,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#76,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#79,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#80,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#82,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#84,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#85,transfer_wrong,BACKEND-LLM,D_transfer,Deferred: transfer rules
+telecom,#86,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#87,transfer_wrong,BACKEND-LLM,D_transfer,Deferred: transfer rules
+telecom,#89,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#91,transfer_wrong,BACKEND-LLM,D_transfer,Deferred: transfer rules
+telecom,#92,id_misheard,ASR,I1,I1 Telecom phone-number note (prompt)
+telecom,#93,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#94,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#95,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#96,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#99,id_misheard,ASR,I1,I1 Telecom phone-number note (prompt)
+telecom,#100,transfer_wrong,BACKEND-LLM,D_transfer,Deferred: transfer rules
+telecom,#102,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#105,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#106,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#109,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#111,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)
+telecom,#113,id_format,BACKEND-LLM,I1,I1 Telecom phone-number note (prompt)

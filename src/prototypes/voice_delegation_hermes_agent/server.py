@@ -47,6 +47,7 @@ from prototypes.voice_delegation_hermes_agent.frontend.status_verbalizer import 
     StatusVerbalizer,
     TemplateVerbalizer,
 )
+from prototypes.voice_delegation_hermes_agent.tools.result_hints import ResultHints
 from prototypes.voice_frontend_backend_agent.engine.turn_api import TurnContext
 from prototypes.voice_frontend_backend_agent.normalization.arguments import ArgumentNormalizer
 from prototypes.voice_frontend_backend_agent.normalization.transcript import TranscriptNormalizer
@@ -70,6 +71,7 @@ class DelegationRuntime:
         voice = config.voice
         self._script = _load_script(config.frontend.script)
         self._argument_templates = ("", "", "")
+        self._hint_templates = ("", "")  # result_hints: (message_key, escalate_message_key) texts
         arguments = voice.normalization.tool_arguments
         if arguments.enabled:
             catalog = load_catalog(voice.agent.prompts_path, voice.agent.prompts.inline)
@@ -80,6 +82,12 @@ class DelegationRuntime:
                 catalog.get(guard.message_key) if guard.enabled else "",
                 catalog.get(escalate) if escalate else "",
             )
+            hints = arguments.result_hints
+            if hints.enabled:
+                self._hint_templates = (
+                    catalog.get(hints.message_key),
+                    catalog.get(hints.escalate_message_key) if hints.escalate_message_key else "",
+                )
         self.gateway_health: dict[str, Any] = {}
 
     def parts(self, context: TurnContext) -> SessionParts:
@@ -96,6 +104,12 @@ class DelegationRuntime:
             if voice.normalization.tool_arguments.enabled
             else None
         )
+        hints = voice.normalization.tool_arguments.result_hints
+        result_hints = (
+            ResultHints(hints, message=self._hint_templates[0], escalate_message=self._hint_templates[1])
+            if arguments is not None and hints.enabled
+            else None
+        )
         hold = config.delegation.spelling_hold
         return SessionParts(
             decider=self._decider(),
@@ -106,6 +120,7 @@ class DelegationRuntime:
             if voice.normalization.transcript.enabled
             else None,
             argument_normalizer=arguments,
+            result_hints=result_hints,
             local_tools=tuple(voice.tools.config_tool_specs) if config.tools.executor == "local" else (),
             spelling_hold=SpellingHoldPredicate(
                 voice.normalization.transcript, complete_patterns=hold.complete_patterns, arguments=arguments

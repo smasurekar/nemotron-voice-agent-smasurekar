@@ -4,7 +4,8 @@
 # Backend-side prompt catalog (Jinja2, StrictUndefined), rendered by the gateway.
 # The frontend keys live in prompts.yaml (voice server). See prototype-plan.md sections 7.3 and 7.4.
 # Prompt variants: {% if features.<name> %} blocks switched by prompt_features in gateway.yaml
-# (spelling_v2, spoken_output, write_consent; tau3-failure-fixes-plan.md). All off = the baseline prompts.
+# (spelling_v2, spoken_output, write_consent; tau3-failure-fixes-plan.md; domain_notes:
+# tau3-identity-fixes-plan.md). All off = the baseline prompts.
 
 # SOUL.md of every Hermes worker (loaded because load_soul_identity: true).
 backend_soul: |
@@ -38,6 +39,12 @@ backend_system: |
   {{ instructions }}
   </policy>
   {% endif %}
+  {%- if domain_note is defined and domain_note %}
+
+  <domain_notes>
+  {{ domain_note }}
+  </domain_notes>
+  {%- endif %}
   {%- if features.spoken_output %}
 
   <spoken_output>
@@ -58,6 +65,24 @@ backend_system: |
   that writes a name or an identifier the user spoke, spell it back and wait for a yes.
   </consent>
   {%- endif %}
+
+# Instructions for one domain only (tau3-identity-fixes-plan.md section 3.2), rendered into backend_system
+# as <domain_notes> right after the policy. The gateway picks the domain from the session's tool names
+# (gateway.yaml domains); a session with no domain, or a note that renders empty, gets no block.
+# Rules for a note: facts about data formats or tool behaviour, never policy; a few sentences at most,
+# with a generic example (not a benchmark value); each note behind its own prompt feature.
+backend_domain_notes:
+  # I1: telecom stores phone numbers with dashes and looks them up by exact match.
+  telecom: |-
+    {% if features.domain_notes -%}
+    Phone numbers are stored with dashes, in the form 555-123-4567. Always pass a phone number
+    to a tool in that form, even if the user did not say "dash". If a lookup by phone number
+    fails and the failed argument contains exactly ten digits with only the formatting wrong,
+    retry once with those same digits in XXX-XXX-XXXX form without asking the user anything;
+    this is a format correction, not a guess. Never add, remove or change digits. Otherwise,
+    or if that retry fails, read the digits you heard back in groups (for example "555, 123,
+    4567") and ask the user to correct the number before asking for any other identifier.
+    {%- endif %}
 
 # One context line per entry kind.
 context_user: '{% if during_run %}[while you were working] {% else %}[earlier] {% endif %}user: "{{ text }}"'

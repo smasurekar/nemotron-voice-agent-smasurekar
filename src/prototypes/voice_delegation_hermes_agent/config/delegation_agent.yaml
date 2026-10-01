@@ -7,7 +7,7 @@
 # delegation.prompts.path, backend.gateway_config) resolve against the file that declares them.
 # See misc/prototypes/frontend-delegation-hermes/prototype-plan.md, section 11.
 
-voice_profile: voice/tau3_spelling.yaml   # a voice-package profile: server, audio, VAD, ASR, TTS, normalization
+voice_profile: voice/tau3_fixes.yaml   # a voice-package profile: server, audio, VAD, ASR, TTS, normalization
 
 frontend:
   decider: llm                       # llm | scripted (tests, --stub-backend smoke runs)
@@ -45,6 +45,7 @@ delegation:
   # tau3-failure-fixes-plan.md: every fix is on here except M2 (experimental). tau3_eval_baseline.yaml
   # (the control) turns all of them off; the tau3_arm_*.yaml profiles turn on one each over the control.
   # M3.1 (spelled-run joining) and M3.3 (escalating "invalid ID" wording) are in voice/tau3_spelling.yaml.
+  # tau3-identity-fixes-plan.md I3/I4 (recovery notes on failed identity lookups) are in voice/tau3_fixes.yaml.
   # M3.2: wait hold_ms before deciding a turn that ends mid-spelling with strong evidence and an
   # incomplete value; speech during the wait merges into the next turn. complete_patterns: full-match
   # patterns of a complete spelled value (never held), e.g. ['^[A-Za-z0-9]{6}$'] for airline codes.

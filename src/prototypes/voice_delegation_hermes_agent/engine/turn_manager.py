@@ -65,6 +65,7 @@ from prototypes.voice_delegation_hermes_agent.frontend.prompts import PromptCata
 from prototypes.voice_delegation_hermes_agent.frontend.status_verbalizer import StatusVerbalizer
 from prototypes.voice_delegation_hermes_agent.prompt_features import sha256_text
 from prototypes.voice_delegation_hermes_agent.tools.relay import ToolRelay
+from prototypes.voice_delegation_hermes_agent.tools.result_hints import ResultHints
 from prototypes.voice_frontend_backend_agent.agent.filler import Stamp
 from prototypes.voice_frontend_backend_agent.agent.tools import capability_lines, realtime_tools_to_specs
 from prototypes.voice_frontend_backend_agent.engine.playback import ResponseProgress
@@ -88,6 +89,7 @@ class SessionParts:
     prompts: PromptCatalog
     transcript_normalizer: TranscriptNormalizer | None = None
     argument_normalizer: ArgumentNormalizer | None = None
+    result_hints: ResultHints | None = None
     local_tools: tuple[ToolSpec, ...] = ()
     spelling_hold: SpellingHoldPredicate | None = None
 
@@ -160,6 +162,7 @@ class DelegationTurnManager:
             emit_calls=self._push,
             log=self._log,
             normalizer=parts.argument_normalizer,
+            result_hints=parts.result_hints,
             local_tools=parts.local_tools,
             batch_window_ms=config.tools.batch_window_ms,
             per_call_delay_s=per_call_delay,
@@ -217,6 +220,7 @@ class DelegationTurnManager:
         if seed:
             self.transcript.seed_greeting(seed)
         arguments = self._voice.normalization.tool_arguments
+        hints_on = arguments.enabled and arguments.result_hints.enabled
         self._log(
             "fdh_session_start",
             config_hash=self._config.config_hash,
@@ -229,6 +233,8 @@ class DelegationTurnManager:
                 "already_failed": arguments.retry_guard.message_key
                 if arguments.enabled and arguments.retry_guard.enabled
                 else "",
+                "result_hint": arguments.result_hints.message_key if hints_on else "",
+                "result_hint_escalate": arguments.result_hints.escalate_message_key if hints_on else "",
             },
         )
         if self._config.output.proactive_status.enabled:
@@ -801,6 +807,7 @@ class DelegationTurnManager:
                 "backend_catalog_sha256",
                 "backend_soul_sha256",
                 "backend_system_sha256",
+                "backend_domain",
             ),
         )
         if self._backend.configured is not None and not self._backend.configured.done():

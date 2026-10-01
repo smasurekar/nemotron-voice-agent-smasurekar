@@ -18,7 +18,12 @@ from collections.abc import Mapping
 #: Frontend (``prompts.yaml``) variants and their defaults.
 FRONTEND_FEATURES: dict[str, bool] = {"replay_intent": False}
 #: Backend (``prompts.backend.yaml``) variants and their defaults.
-BACKEND_FEATURES: dict[str, bool] = {"spelling_v2": False, "spoken_output": False, "write_consent": False}
+BACKEND_FEATURES: dict[str, bool] = {
+    "spelling_v2": False,
+    "spoken_output": False,
+    "write_consent": False,
+    "domain_notes": False,
+}
 
 
 class PromptFeatures(dict[str, bool]):

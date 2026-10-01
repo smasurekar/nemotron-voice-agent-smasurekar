@@ -81,10 +81,14 @@ DEFAULTS: dict[str, Any] = {
     },
     # Backend prompt variants (tau3-failure-fixes-plan.md section 1): all off = the baseline prompts.
     "prompt_features": dict(BACKEND_FEATURES),
+    # Domain detection (tau3-identity-fixes-plan.md section 3.2): name -> {tools_any: [tool, ...]}; the first
+    # domain with one of its tools in the session's tool list wins. It selects the domain note of
+    # prompts.backend.yaml; no domains (or no match) = no note.
+    "domains": {},
 }
 
 #: Keys whose mapping value is free-form (no strict key check below them).
-FREE_FORM = {("hermes", "request_overrides")}
+FREE_FORM = {("hermes", "request_overrides"), ("domains",)}
 
 #: Path keys resolved against the declaring file (``in``) or the working directory (``out``).
 IN_PATH_KEYS = {("hermes", "prompts", "path")}
@@ -193,6 +197,8 @@ class GatewayConfig:
     hermes: HermesSection
     files: tuple[str, ...] = field(default=())
     prompt_features: Mapping[str, bool] = field(default_factory=lambda: dict(BACKEND_FEATURES))
+    #: ``(domain, tools_any)`` in detection order.
+    domains: tuple[tuple[str, tuple[str, ...]], ...] = ()
 
     def summary(self) -> dict[str, Any]:
         """Effective settings for the ``session_open`` log record (no secrets live here)."""
@@ -216,6 +222,7 @@ class GatewayConfig:
                 "max_respawns_per_session": self.recovery.max_respawns_per_session,
             },
             "prompt_features": dict(self.prompt_features),
+            "domains": [name for name, _ in self.domains],
         }
 
 
@@ -401,9 +408,36 @@ def build_gateway_config(merged: Mapping[str, Any], files: tuple[Path, ...] = ()
         prompt_features = dict(features(merged.get("prompt_features"), BACKEND_FEATURES))
     except ValueError as exc:
         raise GatewayConfigError(f"prompt_features: {exc}") from exc
-    config = GatewayConfig(gateway, workers, recovery, hermes, tuple(str(p) for p in files), prompt_features)
+    config = GatewayConfig(
+        gateway,
+        workers,
+        recovery,
+        hermes,
+        tuple(str(p) for p in files),
+        prompt_features,
+        _domains(merged.get("domains")),
+    )
     _cross_check(config)
     return config
+
+
+def _domains(raw: Any) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    if raw is None:
+        return ()
+    if not isinstance(raw, Mapping):
+        raise GatewayConfigError("domains must map domain names to {tools_any: [tool, ...]}")
+    out: list[tuple[str, tuple[str, ...]]] = []
+    for name, spec in raw.items():
+        key = f"domains.{name}"
+        if not isinstance(name, str) or not name.strip():
+            raise GatewayConfigError(f"{key}: the domain name must be a non-empty string")
+        if not isinstance(spec, Mapping) or set(spec) != {"tools_any"}:
+            raise GatewayConfigError(f"{key} must be a mapping with exactly one key, tools_any")
+        tools = spec["tools_any"]
+        if not isinstance(tools, list) or not tools or not all(isinstance(t, str) and t.strip() for t in tools):
+            raise GatewayConfigError(f"{key}.tools_any must be a non-empty list of tool names")
+        out.append((name.strip(), tuple(t.strip() for t in tools)))
+    return tuple(out)
 
 
 def _cross_check(config: GatewayConfig) -> None:

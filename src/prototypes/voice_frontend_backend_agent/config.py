@@ -42,6 +42,7 @@ from prototypes.voice_frontend_backend_agent.normalization.arguments import (
     GUARD_SCOPES,
     ON_INVALID,
     ArgumentRule,
+    ResultHintSettings,
     RetryGuardSettings,
     ToolArgumentSettings,
 )
@@ -176,6 +177,15 @@ DEFAULTS: dict[str, Any] = {
                 "scope": "rules",
                 "permanent_failure_pattern": "",
                 "message_key": "tool_call_already_failed",
+            },
+            "result_hints": {
+                "enabled": False,
+                "tools": [],
+                "failure_pattern": "",
+                "count_local_invalid": True,
+                "max_hints": 3,
+                "message_key": "identity_not_found_hint",
+                "escalate_message_key": "",
             },
         },
     },
@@ -735,6 +745,17 @@ def _normalization(reader: _Reader, tools: ToolsConfig, warnings: list[str]) -> 
         ),
         message_key=reader.str(f"{prefix}.retry_guard.message_key").strip(),
     )
+    hints = ResultHintSettings(
+        enabled=reader.bool(f"{prefix}.result_hints.enabled"),
+        tools=tuple(t.strip() for t in reader.str_list(f"{prefix}.result_hints.tools") if t.strip()),
+        failure_pattern=_regex(
+            f"{prefix}.result_hints.failure_pattern", reader.str(f"{prefix}.result_hints.failure_pattern").strip()
+        ),
+        count_local_invalid=reader.bool(f"{prefix}.result_hints.count_local_invalid"),
+        max_hints=reader.int(f"{prefix}.result_hints.max_hints", minimum=1),
+        message_key=reader.str(f"{prefix}.result_hints.message_key").strip(),
+        escalate_message_key=reader.str(f"{prefix}.result_hints.escalate_message_key").strip(),
+    )
     arguments = ToolArgumentSettings(
         enabled=reader.bool(f"{prefix}.enabled"),
         rules=tuple(_argument_rule(index, raw) for index, raw in enumerate(raw_rules)),
@@ -742,7 +763,17 @@ def _normalization(reader: _Reader, tools: ToolsConfig, warnings: list[str]) -> 
         escalate_invalid_message_key=reader.str(f"{prefix}.escalate_invalid_message_key").strip(),
         max_local_rounds=reader.int(f"{prefix}.max_local_rounds", minimum=1),
         retry_guard=guard,
+        result_hints=hints,
     )
+    if hints.enabled:
+        if not arguments.enabled:
+            raise VoiceConfigError(f"{prefix}.result_hints.enabled requires {prefix}.enabled")
+        if not hints.tools:
+            raise VoiceConfigError(f"{prefix}.result_hints.tools is required when result hints are enabled")
+        if not hints.failure_pattern:
+            raise VoiceConfigError(f"{prefix}.result_hints.failure_pattern is required when result hints are enabled")
+        if not hints.message_key:
+            raise VoiceConfigError(f"{prefix}.result_hints.message_key is required when result hints are enabled")
     if arguments.enabled:
         if tools.source != "client":
             raise VoiceConfigError(
@@ -753,7 +784,7 @@ def _normalization(reader: _Reader, tools: ToolsConfig, warnings: list[str]) -> 
             raise VoiceConfigError(
                 f"{prefix}.retry_guard.permanent_failure_pattern is required when the retry guard is enabled"
             )
-        if not arguments.rules and not (guard.enabled and guard.scope == "all"):
+        if not arguments.rules and not (guard.enabled and guard.scope == "all") and not hints.enabled:
             warnings.append(f"{prefix}.enabled has no effect without rules (or retry_guard.scope: all)")
     return NormalizationSettings(transcript=transcript, tool_arguments=arguments)
 
@@ -779,6 +810,13 @@ def _check_normalization_prompts(config: VoiceConfig) -> None:
                     settings.tool_arguments.retry_guard.message_key,
                 )
             )
+        hints = settings.tool_arguments.result_hints
+        if hints.enabled:
+            keys.append(("normalization.tool_arguments.result_hints.message_key", hints.message_key))
+            if hints.escalate_message_key:
+                keys.append(
+                    ("normalization.tool_arguments.result_hints.escalate_message_key", hints.escalate_message_key)
+                )
     if not keys:
         return
     catalog = load_catalog(config.agent.prompts_path, config.agent.prompts.inline)

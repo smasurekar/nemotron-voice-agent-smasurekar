@@ -178,6 +178,8 @@ class VoiceCatalogTests(unittest.TestCase):
             "tool_argument_invalid_readback",
             "tool_argument_invalid_spell_all",
             "tool_call_already_failed",
+            "identity_not_found_hint",
+            "identity_not_found_hint_words",
         }
         barge_in_keys = {"frontend_task_in_progress"}
         self.assertEqual(

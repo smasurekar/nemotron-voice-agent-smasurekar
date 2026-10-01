@@ -5,7 +5,7 @@ r"""Check that every session of an arm ran the arm's deployed fingerprint (tau3-
 
 The voice server logs its switches (``fdh_session_start.features``) and the hash of the
 rendered frontend prompt (``frontend_prompt``); the gateway reports its prompt variants,
-catalog hash and the per-session SOUL / system prompt hashes (``backend_configured``).
+catalog hash, the per-session SOUL / system prompt hashes and the detected domain (``backend_configured``).
 An arm is scorable only if every session has all of them, all sessions agree, and the
 switches match the arm's profile and gateway config. Exit 1 otherwise (re-run the arm).
 
@@ -24,7 +24,13 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
-BACKEND_KEYS = ("backend_features", "backend_catalog_sha256", "backend_soul_sha256", "backend_system_sha256")
+BACKEND_KEYS = (
+    "backend_features",
+    "backend_catalog_sha256",
+    "backend_soul_sha256",
+    "backend_system_sha256",
+    "backend_domain",  # tau3-identity-fixes-plan.md section 3.2: which domain note the session got
+)
 
 
 def session_fingerprints(events: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:

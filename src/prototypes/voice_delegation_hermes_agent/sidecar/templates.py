@@ -31,6 +31,9 @@ REQUIRED_KEYS = (
     "backend_unavailable",
 )
 
+#: The one mapping-valued key: domain name -> note template (tau3-identity-fixes-plan.md section 3.2).
+DOMAIN_NOTES_KEY = "backend_domain_notes"
+
 
 class TemplateError(ValueError):
     """A missing or broken template."""
@@ -60,10 +63,29 @@ class BackendTemplates:
             raise TemplateError(f"{self.path}: missing template(s) {missing}")
         env = jinja2.Environment(undefined=jinja2.StrictUndefined, autoescape=False, keep_trailing_newline=False)  # noqa: S701 - plain text prompts
         env.globals["features"] = self.features
+        notes = data.pop(DOMAIN_NOTES_KEY, None) or {}
+        if not isinstance(notes, dict):
+            raise TemplateError(f"{self.path}: {DOMAIN_NOTES_KEY} must map domain names to templates")
         try:
             self._templates = {key: env.from_string(str(value)) for key, value in data.items()}
+            self._domain_notes = {str(domain): env.from_string(str(value)) for domain, value in notes.items()}
         except jinja2.TemplateError as exc:
             raise TemplateError(f"{self.path}: {exc}") from exc
+
+    @property
+    def domains_with_notes(self) -> tuple[str, ...]:
+        """Domains that have a note template (rendered or not, depending on its feature)."""
+        return tuple(self._domain_notes)
+
+    def domain_note(self, domain: str) -> str:
+        """The rendered note of ``domain``; empty for no domain, no note, or a note whose feature is off."""
+        template = self._domain_notes.get(domain) if domain else None
+        if template is None:
+            return ""
+        try:
+            return template.render().strip()
+        except jinja2.TemplateError as exc:
+            raise TemplateError(f"{DOMAIN_NOTES_KEY}.{domain}: {exc}") from exc
 
     def render(self, key: str, **variables: Any) -> str:
         """Render ``key``; raises :class:`TemplateError` for unknown keys or undefined variables."""
