@@ -14,7 +14,7 @@ voice_profile: ../voice/tau3_fixes.yaml
 delegation:
   speak_when_delegating: true
   spelling_hold:
-    complete_patterns: ['^[A-Za-z0-9]{6}$']   # airline reservation code (e.g. IFOYYZ, K1NW8N)
+    complete_patterns: ['^[A-Za-z0-9]{6}$']   # a 6-character code (e.g. XB7TP2)
 backend:
   link: websocket
   simulated_delay: {seconds: 0, where: per_delegation}

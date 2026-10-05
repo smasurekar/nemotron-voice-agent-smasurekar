@@ -129,7 +129,7 @@ Environment knobs:
 `normalization` in `config/voice_agent.yaml` has two hooks. Both are off by default and run in `agent/runner.py`.
 
 - **Transcript hook** (`normalization.transcript`). It rewrites a spoken identifier in the text of each agent turn
-  into its written form, for example `Mia underscore Kim underscore four three nine seven` → `mia_kim_4397`
+  into its written form, for example `Jordan underscore Lee underscore eight two` → `jordan_lee_82`
   with `case: lower`. Only spans anchored by a separator word (`separator_words`, default `underscore`) change.
   The word lists come from the `ruleset` (`en`, the only one shipped). Loading warns when the ASR
   `language_code` does not match the ruleset's language. The wire keeps the raw ASR text; only the agent sees
@@ -139,7 +139,13 @@ Environment knobs:
   (`tool`, `argument`), it canonicalizes the value (`strip`, `collapse_separators`, `case`) before the call goes
   out, and stores the same value in the backend's history. A value that fails `pattern` is answered locally with
   `on_invalid: answer_locally`: the call never reaches the client, and the agent gets a local tool result. After
-  `max_local_rounds` all-local rounds, the calls go out with their canonical arguments.
+  `max_local_rounds` all-local rounds, the calls go out with their canonical arguments. Two optional rule keys
+  refine this: `restore_prefix` puts back a missing symbol prefix such as `#` (symbols only, never letters or
+  digits), and a value that matches `keep_pattern` is already well formed and stays unchanged.
+  `rules: auto` derives the rules per session from the client's tool schemas
+  (`normalization/schema_rules.py`): only read tools, and only `id` or `*_id` string arguments whose description
+  quotes an example. This voice server accepts `auto` but derives no rules itself; the delegation prototype
+  ([`voice_delegation_hermes_agent`](../voice_delegation_hermes_agent/README.md)) applies them.
 - **Retry guard** (`tool_arguments.retry_guard`). A repeat of a call whose client output matched
   `permanent_failure_pattern` (required when enabled) is answered locally. Transient errors and timed-out calls
   never block a retry.

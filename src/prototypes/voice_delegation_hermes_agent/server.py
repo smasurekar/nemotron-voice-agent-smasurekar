@@ -23,6 +23,7 @@ import json
 import sys
 import time
 import urllib.request
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
@@ -38,7 +39,11 @@ from prototypes.voice_delegation_hermes_agent.config import (
 )
 from prototypes.voice_delegation_hermes_agent.engine.backend_link import BackendLink, WebSocketBackendLink
 from prototypes.voice_delegation_hermes_agent.engine.spelling_hold import SpellingHoldPredicate
-from prototypes.voice_delegation_hermes_agent.engine.turn_manager import DelegationTurnManager, SessionParts
+from prototypes.voice_delegation_hermes_agent.engine.turn_manager import (
+    DelegationTurnManager,
+    SessionParts,
+    SessionRules,
+)
 from prototypes.voice_delegation_hermes_agent.frontend.decider import Decider, LLMDecider, RuleDecider
 from prototypes.voice_delegation_hermes_agent.frontend.llm import ChatModel, OpenAIChatModel
 from prototypes.voice_delegation_hermes_agent.frontend.prompts import PromptCatalog, load_prompts
@@ -50,6 +55,7 @@ from prototypes.voice_delegation_hermes_agent.frontend.status_verbalizer import 
 from prototypes.voice_delegation_hermes_agent.tools.result_hints import ResultHints
 from prototypes.voice_frontend_backend_agent.engine.turn_api import TurnContext
 from prototypes.voice_frontend_backend_agent.normalization.arguments import ArgumentNormalizer
+from prototypes.voice_frontend_backend_agent.normalization.schema_rules import SchemaRules, build_schema_rules
 from prototypes.voice_frontend_backend_agent.normalization.transcript import TranscriptNormalizer
 from prototypes.voice_frontend_backend_agent.server import ServerOptions, SessionHooks, build_app
 from prototypes.voice_frontend_backend_agent.speech.ports import SpeechServices
@@ -90,27 +96,57 @@ class DelegationRuntime:
                 )
         self.gateway_health: dict[str, Any] = {}
 
-    def parts(self, context: TurnContext) -> SessionParts:
-        """Per-session collaborators (plan 12.1: every one chosen by config)."""
+    def session_rules(self, tools: Sequence[Mapping[str, Any]] | None = None) -> SessionRules:
+        """The tool-dependent collaborators; ``auto`` switches derive their part from ``tools``.
+
+        Before the client's tools are known (``tools`` is None) the ``auto`` parts are empty.
+        """
         config, voice = self.config, self.config.voice
+        schema: SchemaRules | None = build_schema_rules(tools) if tools is not None else None
+        settings = voice.normalization.tool_arguments
+        if schema is not None and settings.schema_rules:
+            settings = replace(settings, rules=settings.rules + schema.rules)
         arguments = (
             ArgumentNormalizer(
-                voice.normalization.tool_arguments,
+                settings,
                 transcript=voice.normalization.transcript,
                 invalid_template=self._argument_templates[0],
                 already_failed_template=self._argument_templates[1],
                 escalate_invalid_template=self._argument_templates[2],
             )
-            if voice.normalization.tool_arguments.enabled
+            if settings.enabled
             else None
         )
-        hints = voice.normalization.tool_arguments.result_hints
+        hints = settings.result_hints
         result_hints = (
-            ResultHints(hints, message=self._hint_templates[0], escalate_message=self._hint_templates[1])
+            ResultHints(
+                hints,
+                message=self._hint_templates[0],
+                escalate_message=self._hint_templates[1],
+                read_tools=schema.read_tools if schema is not None else (),
+            )
             if arguments is not None and hints.enabled
             else None
         )
         hold = config.delegation.spelling_hold
+        spelling_hold = (
+            SpellingHoldPredicate(
+                voice.normalization.transcript,
+                complete_patterns=hold.complete_patterns,
+                schema_patterns=schema.complete_patterns if schema is not None and hold.auto_patterns else (),
+                arguments=arguments,
+            )
+            if hold.enabled
+            else None
+        )
+        return SessionRules(
+            argument_normalizer=arguments, result_hints=result_hints, spelling_hold=spelling_hold, schema=schema
+        )
+
+    def parts(self, context: TurnContext) -> SessionParts:
+        """Per-session collaborators (plan 12.1: every one chosen by config)."""
+        config, voice = self.config, self.config.voice
+        rules = self.session_rules()
         return SessionParts(
             decider=self._decider(),
             verbalizer=self._verbalizer(),
@@ -119,14 +155,11 @@ class DelegationRuntime:
             transcript_normalizer=TranscriptNormalizer(voice.normalization.transcript)
             if voice.normalization.transcript.enabled
             else None,
-            argument_normalizer=arguments,
-            result_hints=result_hints,
+            argument_normalizer=rules.argument_normalizer,
+            result_hints=rules.result_hints,
             local_tools=tuple(voice.tools.config_tool_specs) if config.tools.executor == "local" else (),
-            spelling_hold=SpellingHoldPredicate(
-                voice.normalization.transcript, complete_patterns=hold.complete_patterns, arguments=arguments
-            )
-            if hold.enabled
-            else None,
+            spelling_hold=rules.spelling_hold,
+            rebuild=self.session_rules if any(config.schema_auto.values()) else None,
         )
 
     def turn_manager(self, context: TurnContext) -> DelegationTurnManager:

@@ -23,6 +23,7 @@ BACKEND_FEATURES: dict[str, bool] = {
     "spoken_output": False,
     "write_consent": False,
     "domain_notes": False,
+    "phone_format": False,
 }
 
 

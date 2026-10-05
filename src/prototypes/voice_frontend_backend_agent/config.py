@@ -184,7 +184,7 @@ DEFAULTS: dict[str, Any] = {
                 "failure_pattern": "",
                 "count_local_invalid": True,
                 "max_hints": 3,
-                "message_key": "identity_not_found_hint",
+                "message_key": "lookup_not_found_hint",
                 "escalate_message_key": "",
             },
         },
@@ -203,6 +203,8 @@ _ARGUMENT_RULE_DEFAULTS: dict[str, Any] = {
     "case": "keep",
     "pattern": "",
     "on_invalid": "answer_locally",
+    "restore_prefix": "",
+    "keep_pattern": "",
 }
 
 _ENUMS: dict[str, tuple[str, ...]] = {
@@ -704,6 +706,9 @@ def _argument_rule(index: int, raw: Any) -> ArgumentRule:
     if values["on_invalid"] not in ON_INVALID:
         raise VoiceConfigError(f"{key}.on_invalid must be one of {ON_INVALID}, got {values['on_invalid']!r}")
     _regex(f"{key}.pattern", values["pattern"])
+    _regex(f"{key}.keep_pattern", values["keep_pattern"])
+    if any(ch.isalnum() for ch in values["restore_prefix"]):
+        raise VoiceConfigError(f"{key}.restore_prefix may contain symbols only, got {values['restore_prefix']!r}")
     return ArgumentRule(**values)
 
 
@@ -734,8 +739,13 @@ def _normalization(reader: _Reader, tools: ToolsConfig, warnings: list[str]) -> 
     )
     prefix = "normalization.tool_arguments"
     raw_rules = reader.raw(f"{prefix}.rules")
+    schema_rules = raw_rules == "auto"  # derived per session from the tool schemas (normalization/schema_rules.py)
+    if schema_rules:
+        raw_rules = []
     if not isinstance(raw_rules, list):
-        raise VoiceConfigError(f"{prefix}.rules must be a list")
+        raise VoiceConfigError(f"{prefix}.rules must be a list or 'auto'")
+    raw_hint_tools = reader.raw(f"{prefix}.result_hints.tools")
+    auto_hint_tools = raw_hint_tools == "auto"  # every read tool of the session
     guard = RetryGuardSettings(
         enabled=reader.bool(f"{prefix}.retry_guard.enabled"),
         scope=reader.enum(f"{prefix}.retry_guard.scope"),
@@ -747,7 +757,10 @@ def _normalization(reader: _Reader, tools: ToolsConfig, warnings: list[str]) -> 
     )
     hints = ResultHintSettings(
         enabled=reader.bool(f"{prefix}.result_hints.enabled"),
-        tools=tuple(t.strip() for t in reader.str_list(f"{prefix}.result_hints.tools") if t.strip()),
+        tools=()
+        if auto_hint_tools
+        else tuple(t.strip() for t in reader.str_list(f"{prefix}.result_hints.tools") if t.strip()),
+        auto_tools=auto_hint_tools,
         failure_pattern=_regex(
             f"{prefix}.result_hints.failure_pattern", reader.str(f"{prefix}.result_hints.failure_pattern").strip()
         ),
@@ -759,6 +772,7 @@ def _normalization(reader: _Reader, tools: ToolsConfig, warnings: list[str]) -> 
     arguments = ToolArgumentSettings(
         enabled=reader.bool(f"{prefix}.enabled"),
         rules=tuple(_argument_rule(index, raw) for index, raw in enumerate(raw_rules)),
+        schema_rules=schema_rules,
         invalid_message_key=reader.str(f"{prefix}.invalid_message_key").strip(),
         escalate_invalid_message_key=reader.str(f"{prefix}.escalate_invalid_message_key").strip(),
         max_local_rounds=reader.int(f"{prefix}.max_local_rounds", minimum=1),
@@ -768,7 +782,7 @@ def _normalization(reader: _Reader, tools: ToolsConfig, warnings: list[str]) -> 
     if hints.enabled:
         if not arguments.enabled:
             raise VoiceConfigError(f"{prefix}.result_hints.enabled requires {prefix}.enabled")
-        if not hints.tools:
+        if not hints.tools and not hints.auto_tools:
             raise VoiceConfigError(f"{prefix}.result_hints.tools is required when result hints are enabled")
         if not hints.failure_pattern:
             raise VoiceConfigError(f"{prefix}.result_hints.failure_pattern is required when result hints are enabled")
@@ -784,7 +798,12 @@ def _normalization(reader: _Reader, tools: ToolsConfig, warnings: list[str]) -> 
             raise VoiceConfigError(
                 f"{prefix}.retry_guard.permanent_failure_pattern is required when the retry guard is enabled"
             )
-        if not arguments.rules and not (guard.enabled and guard.scope == "all") and not hints.enabled:
+        if (
+            not arguments.rules
+            and not arguments.schema_rules
+            and not (guard.enabled and guard.scope == "all")
+            and not hints.enabled
+        ):
             warnings.append(f"{prefix}.enabled has no effect without rules (or retry_guard.scope: all)")
     return NormalizationSettings(transcript=transcript, tool_arguments=arguments)
 

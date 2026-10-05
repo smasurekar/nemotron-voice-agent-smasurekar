@@ -76,5 +76,5 @@ normalization:
     retry_guard:
       enabled: true
       scope: rules
-      # tau2's lookup error ("Error: User mia_kim_4397 not found"); transient errors never match.
+      # tau2's lookup error ("Error: User jordan_lee_82 not found"); transient errors never match.
       permanent_failure_pattern: '^Error: .*\bnot found\b'

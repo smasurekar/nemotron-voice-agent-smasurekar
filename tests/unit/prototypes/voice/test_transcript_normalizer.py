@@ -17,31 +17,31 @@ from prototypes.voice_frontend_backend_agent.normalization.transcript import (
 
 LOWER = TranscriptNormalizer(TranscriptSettings(enabled=True, case="lower"))
 
-#: ASR finals from the tau3 airline 800 ms run (logs/fba_voice_events.jsonl) and their written form.
+#: Modelled on ASR finals of a voice evaluation run (token structure kept, values invented) and their written form.
 CORPUS = (
-    ("my user ID is Mia underscore Kim underscore four three nine seven.", "my user ID is mia_kim_4397."),
-    ("M A underscore K im underscore nine nine five seven reason", "ma_kim_9957 reason"),
-    ("Underscore nine nine five seven .", "_9957 ."),
+    ("my user ID is Jordan underscore Lee underscore eight two six four.", "my user ID is jordan_lee_8264."),
+    ("J O underscore L ee underscore three one eight five reason", "jo_lee_3185 reason"),
+    ("Underscore three one eight five .", "_3185 ."),
     (
-        "Yeah sorry user ID is MIA underscore KIM underscore four three nine seven and the reservation code is H"
-        " nine ZU one C",
-        "Yeah sorry user ID is mia_kim_4397 and the reservation code is H nine ZU one C",
+        "Yeah sorry user ID is JORDAN underscore LEE underscore eight two six four and the reservation code is Q"
+        " four XB two T",
+        "Yeah sorry user ID is jordan_lee_8264 and the reservation code is Q four XB two T",
     ),
-    ("S O P H I A underscore S ilva underscore seven five five seven", "sophia_silva_7557"),
-    ("Sure it's S O P H I A underscore Sil v a underscore seven five five seven .", "Sure it's sophia_silva_7557 ."),
-    ("Yeah , it's O L I V I A underscore G O N Z A L E Z", "Yeah , it's olivia_gonzalez"),
-    ("Yeah M O H A M E D underscore Sil Z A underscore nine two six five .", "Yeah mohamed_silza_9265 ."),
+    ("Q U E N T I N underscore M orro underscore two zero four eight", "quentin_morro_2048"),
+    ("Sure it's Q U E N T I N underscore Mor r o underscore two zero four eight .", "Sure it's quentin_morro_2048 ."),
+    ("Yeah , it's P E N E L O underscore V A R D A M", "Yeah , it's penelo_vardam"),
+    ("Yeah T O B I A S underscore Wen Z O underscore five one seven three .", "Yeah tobias_wenzo_5173 ."),
     (
-        "Yeah , it's J am es underscore T A Y L O R underscore seven zero four three .",
-        "Yeah , it's james_taylor_7043 .",
+        "Yeah , it's R am os underscore F E R R I S underscore six zero two nine .",
+        "Yeah , it's ramos_ferris_6029 .",
     ),
-    ("A a rav underscore a h M E D underscore six six nine nine", "aarav_ahmed_6699"),
-    ("It's the same O M A R underscore R O S S I underscore one two four one", "It's the same omar_rossi_1241"),
-    ("Underscore seven five five seven . Did you get that ?", "_7557 . Did you get that ?"),
-    ("Yeah A M E L I A underscore", "Yeah amelia_"),
-    ("L E M N A underscore K im underscore nine nine five seven", "lemna_kim_9957"),
-    ("Whole thing R A J underscore S.A.N.", "Whole thing raj_san."),
-    ("Yeah A A R A V underscore A.H.", "Yeah aarav_ah."),  # dotted letters are spelled, not the filler "ah"
+    ("A a lto underscore a h L E N underscore four four one seven", "aalto_ahlen_4417"),
+    ("It's the same I V O underscore Q U I N N underscore nine three five two", "It's the same ivo_quinn_9352"),
+    ("Underscore two zero four eight . Did you get that ?", "_2048 . Did you get that ?"),
+    ("Yeah O D E T T E underscore", "Yeah odette_"),
+    ("D E V R A underscore L ee underscore three one eight five", "devra_lee_3185"),
+    ("Whole thing K A I underscore V.E.N.", "Whole thing kai_ven."),
+    ("Yeah A A L T O underscore A.H.", "Yeah aalto_ah."),  # dotted letters are spelled, not the filler "ah"
 )
 
 
@@ -64,11 +64,11 @@ class TranscriptNormalizerTests(unittest.TestCase):
             self.assertFalse(result.changed)
 
     def test_spans_record_spoken_and_written_forms(self) -> None:
-        result = LOWER.normalize("It's Mia underscore Kim underscore double four nine seven, thanks.")
-        self.assertEqual(result.text, "It's mia_kim_4497, thanks.")
+        result = LOWER.normalize("It's Jordan underscore Lee underscore double four nine seven, thanks.")
+        self.assertEqual(result.text, "It's jordan_lee_4497, thanks.")
         (span,) = result.spans
         self.assertEqual(
-            (span.spoken, span.written), ("Mia underscore Kim underscore double four nine seven", "mia_kim_4497")
+            (span.spoken, span.written), ("Jordan underscore Lee underscore double four nine seven", "jordan_lee_4497")
         )
 
     def test_stop_words_bound_the_left_part(self) -> None:
@@ -76,19 +76,19 @@ class TranscriptNormalizerTests(unittest.TestCase):
 
     def test_too_many_words_between_anchors_make_separate_spans(self) -> None:
         normalizer = TranscriptNormalizer(TranscriptSettings(enabled=True, case="lower", max_part_tokens=2))
-        text = "Mia underscore then we talked about many things underscore four"
-        self.assertEqual(normalizer.normalize(text).text, "mia_then we talked about many things_4")
+        text = "Jordan underscore then we talked about many things underscore four"
+        self.assertEqual(normalizer.normalize(text).text, "jordan_then we talked about many things_4")
 
     def test_case_keep_and_number_words_off(self) -> None:
         keep = TranscriptNormalizer(TranscriptSettings(enabled=True))
-        self.assertEqual(keep.normalize("Mia underscore Kim underscore four").text, "Mia_Kim_4")
+        self.assertEqual(keep.normalize("Jordan underscore Lee underscore four").text, "Jordan_Lee_4")
         words = TranscriptNormalizer(TranscriptSettings(enabled=True, number_words=False))
-        self.assertEqual(words.normalize("Mia underscore Kim underscore four").text, "Mia_Kim_four")
+        self.assertEqual(words.normalize("Jordan underscore Lee underscore four").text, "Jordan_Lee_four")
 
     def test_custom_separator_words(self) -> None:
         normalizer = TranscriptNormalizer(TranscriptSettings(enabled=True, separator_words={"dash": "-"}))
         self.assertEqual(normalizer.normalize("code A B dash four two").text, "code AB-42")
-        self.assertEqual(normalizer.normalize("Mia underscore Kim").text, "Mia underscore Kim")
+        self.assertEqual(normalizer.normalize("Jordan underscore Lee").text, "Jordan underscore Lee")
 
 
 SPELLED = TranscriptNormalizer(TranscriptSettings(enabled=True, case="lower", spelled_runs=SpelledRunSettings(True)))
@@ -97,10 +97,10 @@ SPELLED = TranscriptNormalizer(TranscriptSettings(enabled=True, case="lower", sp
 class SpelledRunTests(unittest.TestCase):
     def test_runs_are_joined_with_the_asr_case_and_stop_at_words(self) -> None:
         cases = {
-            "I, F, O, Y, Y, Z and N, Q, N, U, five, R": "IFOYYZ and NQNU5R",
-            "R O S S I": "ROSSI",
-            "my name is R, uh, O S S I.": "my name is ROSSI.",
-            "G V one N six four": "GV1N64",
+            "X, B, seven, T, P, two and Q, U, E, N, five, R": "XB7TP2 and QUEN5R",
+            "Q U I N N": "QUINN",
+            "my name is Q, uh, U I N N.": "my name is QUINN.",
+            "Z P four K nine one": "ZP4K91",
             "from J F K to L A X": "from JFK to LAX",
         }
         for spoken, written in cases.items():
@@ -117,7 +117,7 @@ class SpelledRunTests(unittest.TestCase):
             if not any(len(token.strip(".,")) == 1 for token in written.split()):
                 with self.subTest(spoken=spoken):
                     self.assertEqual(SPELLED.normalize(spoken).text, written)
-        self.assertEqual(SPELLED.normalize("Aarav underscore A H underscore one two three four").text, "aarav_ah_1234")
+        self.assertEqual(SPELLED.normalize("Aalto underscore A H underscore one two three four").text, "aalto_ah_1234")
 
     def test_off_is_byte_identical(self) -> None:
         for spoken, _ in CORPUS:

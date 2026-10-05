@@ -63,7 +63,7 @@ def predicate(config=None) -> SpellingHoldPredicate:
 
 TASK = {"delegate": True, "filler_text": "Sure, one moment.", "request": "task"}
 STATUS = {"delegate": True, "filler_text": "Let me check.", "request": "status"}
-ANSWER = "Your flight HAT045 is confirmed for May third. Would you like to add a checked bag?"
+ANSWER = "Your flight QV101 is confirmed for May third. Would you like to add a checked bag?"
 
 
 # -- M1 ---------------------------------------------------------------------------------------------
@@ -144,7 +144,7 @@ class ProactiveStatusTests(unittest.IsolatedAsyncioTestCase):
 class SpellingHoldPredicateTests(unittest.TestCase):
     def test_plan_examples(self) -> None:
         check = predicate().check
-        for text in ("A, A, R, A, V, underscore, A, H", "R O S S I", "G V one N six"):
+        for text in ("A, A, L, T, O, underscore, A, H", "Q U I N N", "Z P four K nine"):
             with self.subTest(text=text):
                 self.assertTrue(check(text).hold)
         for text in (
@@ -183,13 +183,13 @@ class SpellingHoldPredicateTests(unittest.TestCase):
 class SpellingHoldTurnTests(unittest.IsolatedAsyncioTestCase):
     async def test_speech_during_the_hold_merges_and_decides_once(self) -> None:
         harness = DelegationHarness(
-            with_hold(1500), transcripts=["A, A, R, A, V, underscore, A, H", "underscore one two three four"]
+            with_hold(1500), transcripts=["A, A, L, T, O, underscore, A, H", "underscore one two three four"]
         )
         await harness.start(tau2_session_update("airline"))
         await harness.speak()
         await harness.speak()
         delegate = await harness.wait_sent("delegate")
-        self.assertEqual(delegate["run_input"][0]["text"], "aarav_ah_1234")
+        self.assertEqual(delegate["run_input"][0]["text"], "aalto_ah_1234")
         await asyncio.sleep(0.1)
         self.assertEqual(len(harness.link.of_type("delegate")), 1)
         holds = harness.logged("spelling_hold")
@@ -198,20 +198,20 @@ class SpellingHoldTurnTests(unittest.IsolatedAsyncioTestCase):
         await harness.close()
 
     async def test_a_hold_without_speech_decides_after_hold_ms(self) -> None:
-        harness = DelegationHarness(with_hold(200), transcripts=["R O S S I"])
+        harness = DelegationHarness(with_hold(200), transcripts=["Q U I N N"])
         await harness.start(tau2_session_update("airline"))
         await harness.speak()
         delegate = await harness.wait_sent("delegate")
-        self.assertEqual(delegate["run_input"][0]["text"], "ROSSI")  # spelled run joined, ASR case kept
+        self.assertEqual(delegate["run_input"][0]["text"], "QUINN")  # spelled run joined, ASR case kept
         self.assertEqual(harness.logged("spelling_hold")[0]["merged"], False)
         await harness.close()
 
     async def test_off_never_holds_and_keeps_the_letters(self) -> None:
-        harness = DelegationHarness(transcripts=["R O S S I"])
+        harness = DelegationHarness(transcripts=["Q U I N N"])
         await harness.start(tau2_session_update("airline"))
         await harness.speak()
         delegate = await harness.wait_sent("delegate")
-        self.assertEqual(delegate["run_input"][0]["text"], "R O S S I")
+        self.assertEqual(delegate["run_input"][0]["text"], "Q U I N N")
         self.assertEqual(harness.logged("spelling_hold"), [])
         await harness.close()
 
@@ -225,12 +225,12 @@ class InvalidWordingTests(unittest.IsolatedAsyncioTestCase):
         harness.link.deliver("state", state="WORKING", epoch=1, run_id="run_1")
         for index in (1, 2):
             harness.link.deliver(
-                "tool.call", call_id=f"c{index}", epoch=1, name="get_user_details", arguments='{"user_id": "aarav_ah"}'
+                "tool.call", call_id=f"c{index}", epoch=1, name="get_user_details", arguments='{"user_id": "aalto_ah"}'
             )
             await harness.wait_sent("tool.result", count=index)
         results = harness.link.of_type("tool.result")
         self.assertTrue(all(result["local"] for result in results))
-        self.assertIn("character by character (a, a, r, a, v, underscore, a, h)", results[0]["output"])
+        self.assertIn("character by character (a, a, l, t, o, underscore, a, h)", results[0]["output"])
         self.assertIn("spell the whole user ID slowly", results[1]["output"])
         keys = [log["message_key"] for log in harness.logged("call_answered_locally")]
         self.assertEqual(keys, ["tool_argument_invalid_readback", "tool_argument_invalid_spell_all"])
@@ -319,7 +319,7 @@ class ReplayTests(unittest.IsolatedAsyncioTestCase):
     async def test_partial_replays_from_the_cut_sentence_or_not_when_the_question_was_heard(self) -> None:
         self.assertEqual(_unheard_part(ANSWER, "Your flight"), ANSWER)
         self.assertEqual(
-            _unheard_part(ANSWER, "Your flight HAT045 is confirmed for May third. Would you"),
+            _unheard_part(ANSWER, "Your flight QV101 is confirmed for May third. Would you"),
             "Would you like to add a checked bag?",
         )
         self.assertEqual(_unheard_part(ANSWER, ANSWER.rstrip("?")), "")
@@ -415,26 +415,26 @@ class FillerDedupeTests(unittest.IsolatedAsyncioTestCase):
 
 CONFIRMATIONS = [
     (
-        "Here is the booking:\n1. **Flight HAT045** from JFK to SFO on May 3, economy, $120\n"
-        "2. **Flight HAT046** from SFO to JFK on May 9, economy, $135\n"
-        "Payment: credit_card_7815, total $255. Shall I book it?",
-        [["HAT045", "JFK", "May 3", "$120"], ["HAT046", "May 9", "$135"], ["credit_card_7815", "$255"]],
+        "Here is the booking:\n1. **Flight QV101** from JFK to SFO on May 3, economy, $120\n"
+        "2. **Flight QV102** from SFO to JFK on May 9, economy, $135\n"
+        "Payment: credit_card_1029, total $255. Shall I book it?",
+        [["QV101", "JFK", "May 3", "$120"], ["QV102", "May 9", "$135"], ["credit_card_1029", "$255"]],
     ),
     (
-        "To modify reservation IFOYYZ:\n- New flight: *HAT112* on May 12\n- Fare difference: $80 to gift_card_42\n"
+        "To modify reservation XB7TP2:\n- New flight: *QV215* on May 12\n- Fare difference: $80 to gift_card_42\n"
         "Do you confirm?",
-        [["HAT112", "May 12"], ["$80", "gift_card_42"]],
+        [["QV215", "May 12"], ["$80", "gift_card_42"]],
     ),
     (
-        "Cancelling reservation K1NW8N: refund of $310 to credit_card_7815. Proceed?",
-        [["K1NW8N", "$310", "credit_card_7815"]],
+        "Cancelling reservation ZT4M9Q: refund of $310 to credit_card_1029. Proceed?",
+        [["ZT4M9Q", "$310", "credit_card_1029"]],
     ),
     (
-        "Return for order #W2378156:\n- Water Bottle (item 6777246137), $48.02\n- Desk Lamp (item 8384507844), "
+        "Return for order #W2378156:\n- Water Bottle (item 4021937755), $48.02\n- Desk Lamp (item 5530172984), "
         "$137.94\nRefund of $185.96 to paypal_3024827. Confirm?",
         [
-            ["Water Bottle", "6777246137", "$48.02"],
-            ["Desk Lamp", "8384507844", "$137.94"],
+            ["Water Bottle", "4021937755", "$48.02"],
+            ["Desk Lamp", "5530172984", "$137.94"],
             ["$185.96", "paypal_3024827"],
         ],
     ),
@@ -462,7 +462,7 @@ class SpokenTextTests(unittest.TestCase):
 
     def test_markdown_urls_and_identifiers(self) -> None:
         self.assertEqual(
-            clean_for_speech("## Summary\n`mia_kim_4397` is **verified**."), "Summary. mia_kim_4397 is verified."
+            clean_for_speech("## Summary\n`jordan_lee_8264` is **verified**."), "Summary. jordan_lee_8264 is verified."
         )
         self.assertEqual(clean_for_speech("See https://example.com/x for more."), "See for more.")
         self.assertEqual(clean_for_speech("Plain answer."), "Plain answer.")
@@ -479,10 +479,10 @@ class CleanAnswersTurnTests(unittest.IsolatedAsyncioTestCase):
         await harness.idle(1500)
         harness.link.deliver(
             "answer", answer_id="a1", run_id="run_1", epoch=1, kind="hermes", turn_ids=[1],
-            text="Options:\n- **HAT045** at $120\n- **HAT046** at $135",
+            text="Options:\n- **QV101** at $120\n- **QV102** at $135",
         )  # fmt: skip
         await harness.wait_for("response.done", count=2)
-        self.assertEqual(harness.transcripts()[-1], "Options. HAT045 at $120. HAT046 at $135.")
+        self.assertEqual(harness.transcripts()[-1], "Options. QV101 at $120. QV102 at $135.")
         self.assertEqual(len(harness.logged("answer_cleaned")), 1)
         await harness.close()
 
@@ -531,7 +531,7 @@ class FingerprintCheckTests(unittest.IsolatedAsyncioTestCase):
         await harness.close()
         events = [{"kind": name, "session_id": "s1", **data} for name, data in harness.events_log]
         backend = {"backend_features": {"spelling_v2": True}, "backend_catalog_sha256": "c", "backend_soul_sha256": "s",
-                   "backend_system_sha256": "y", "backend_domain": "airline"}  # fmt: skip
+                   "backend_system_sha256": "y", "backend_domain": "", "session_tools_sha256": "t"}  # fmt: skip
         events.append({"kind": "backend_configured", "session_id": "s1", **backend})
         prints = fc.session_fingerprints(events)
         self.assertEqual(fc.check(prints), [])

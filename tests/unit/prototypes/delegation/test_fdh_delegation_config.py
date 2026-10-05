@@ -27,6 +27,7 @@ class ShippedProfileTests(unittest.TestCase):
             [p.name for p in SHIPPED],
             [
                 "browser_demo.yaml",
+                "realtime_eval.yaml",
                 "stub.yaml",
                 "stub_gate.yaml",
                 "tau3_airline_canary.yaml",
@@ -82,15 +83,15 @@ class ShippedProfileTests(unittest.TestCase):
         )
         hints = tau3.voice.normalization.tool_arguments.result_hints
         self.assertEqual(hints.tools, ("find_user_id_by_name_zip", "find_user_id_by_email", "get_user_details"))
-        self.assertNotIn("get_customer_by_phone", hints.tools)  # telecom is I1's
         self.assertEqual(
             (hints.message_key, hints.escalate_message_key),
-            ("identity_not_found_hint", "identity_not_found_hint_words"),
+            ("lookup_not_found_hint", "lookup_not_found_hint_words"),
         )
 
     def test_gateway_defaults_turn_on_every_backend_variant_and_the_baseline_none(self) -> None:
         config_dir = PROFILES.parent
-        self.assertTrue(all(gc.load_gateway_config(config_dir / "gateway.yaml").prompt_features.values()))
+        defaults = gc.load_gateway_config(config_dir / "gateway.yaml").prompt_features
+        self.assertEqual({k for k, v in defaults.items() if not v}, {"domain_notes"})  # no domain notes ship
         self.assertFalse(any(gc.load_gateway_config(config_dir / "gateway.baseline.yaml").prompt_features.values()))
         for name in ("spelling_v2", "spoken_output", "write_consent"):
             with self.subTest(variant=name):
@@ -137,12 +138,12 @@ class ShippedProfileTests(unittest.TestCase):
         i3 = load_delegation_config(PROFILES / "tau3_arm_i3_recovery_hint.yaml").voice.normalization.tool_arguments
         i4 = load_delegation_config(PROFILES / "tau3_arm_i4_word_spelling.yaml").voice.normalization.tool_arguments
         self.assertEqual(i3.result_hints.escalate_message_key, "")  # I3 alone: the same note on every miss
-        self.assertEqual(i4.result_hints.escalate_message_key, "identity_not_found_hint_words")
+        self.assertEqual(i4.result_hints.escalate_message_key, "lookup_not_found_hint_words")
         self.assertEqual(i3.invalid_message_key, "tool_argument_invalid_readback")  # M3 stays on, as in the control
         config_dir = PROFILES.parent
         full = dict(gc.load_gateway_config(config_dir / "gateway.yaml").prompt_features)
         identity_control = dict(gc.load_gateway_config(config_dir / "gateway.identity_control.yaml").prompt_features)
-        self.assertEqual({k for k in full if full[k] != identity_control[k]}, {"domain_notes"})
+        self.assertEqual({k for k in full if full[k] != identity_control[k]}, {"phone_format"})
 
     def test_delay_is_env_configurable_in_the_browser_profile(self) -> None:
         with mock.patch.dict(os.environ, {"FDH_BACKEND_DELAY_S": "2.5"}):

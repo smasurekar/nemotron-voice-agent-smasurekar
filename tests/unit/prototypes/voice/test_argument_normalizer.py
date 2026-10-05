@@ -55,32 +55,32 @@ class CanonicalTests(unittest.TestCase):
     def test_case_separators_and_spoken_form(self) -> None:
         gate = normalizer()
         cases = {
-            "Mia_Kim_4397": "mia_kim_4397",
-            "MIA_KIM_4397": "mia_kim_4397",
-            "mia__kim_4397_": "mia_kim_4397",
-            "mia.kim_4397": "miakim_4397",
-            "Mia underscore Kim underscore four three nine seven": "mia_kim_4397",
-            "A_A_R_A_V_G_A_R_C_I_A_1177": "a_a_r_a_v_g_a_r_c_i_a_1177",
+            "Jordan_Lee_8264": "jordan_lee_8264",
+            "JORDAN_LEE_8264": "jordan_lee_8264",
+            "jordan__lee_8264_": "jordan_lee_8264",
+            "jordan.lee_8264": "jordanlee_8264",
+            "Jordan underscore Lee underscore eight two six four": "jordan_lee_8264",
+            "A_A_L_T_O_B_E_L_L_O_3170": "a_a_l_t_o_b_e_l_l_o_3170",
         }
         for raw, expected in cases.items():
             with self.subTest(raw=raw):
                 self.assertEqual(gate.canonical(RULE, raw), expected)
 
     def test_pattern(self) -> None:
-        self.assertTrue(ArgumentNormalizer.valid(RULE, "mia_kim_4397"))
-        for value in ("ya", "699", "_7340", "a_a_r_a_v_g_a_r_c_i_a_1177", "miakim_4397"):
+        self.assertTrue(ArgumentNormalizer.valid(RULE, "jordan_lee_8264"))
+        for value in ("ya", "699", "_7340", "a_a_l_t_o_b_e_l_l_o_3170", "jordanlee_8264"):
             self.assertFalse(ArgumentNormalizer.valid(RULE, value), value)
         self.assertTrue(ArgumentNormalizer.valid(replace(RULE, pattern=""), "anything"))
 
 
 class ScreenTests(unittest.TestCase):
     def test_rewrite_is_sent_with_canonical_arguments(self) -> None:
-        screening = normalizer().screen([call("Mia_Kim_4397")], frozenset())
+        screening = normalizer().screen([call("Jordan_Lee_8264")], frozenset())
         (sent,) = screening.sent
-        self.assertEqual(json.loads(sent.arguments_json), {"user_id": "mia_kim_4397"})
+        self.assertEqual(json.loads(sent.arguments_json), {"user_id": "jordan_lee_8264"})
         (rewrite,) = screening.rewrites
-        self.assertEqual((rewrite.before, rewrite.after), ("Mia_Kim_4397", "mia_kim_4397"))
-        self.assertEqual(screening.keys["c1"], ("get_user_details", canonical_json({"user_id": "mia_kim_4397"})))
+        self.assertEqual((rewrite.before, rewrite.after), ("Jordan_Lee_8264", "jordan_lee_8264"))
+        self.assertEqual(screening.keys["c1"], ("get_user_details", canonical_json({"user_id": "jordan_lee_8264"})))
 
     def test_invalid_is_answered_locally_and_asks_for_the_whole_value(self) -> None:
         screening = normalizer().screen([call("YA")], frozenset())
@@ -120,11 +120,11 @@ class ScreenTests(unittest.TestCase):
         self.assertEqual(screening.local, ())
 
     def test_already_failed_is_answered_locally_with_a_read_back(self) -> None:
-        key = ("get_user_details", canonical_json({"user_id": "mia_kim_4397"}))
-        screening = normalizer().screen([call("MIA_KIM_4397")], frozenset({key}))
+        key = ("get_user_details", canonical_json({"user_id": "jordan_lee_8264"}))
+        screening = normalizer().screen([call("JORDAN_LEE_8264")], frozenset({key}))
         (answer,) = screening.local
         self.assertEqual(answer.reason, REASON_ALREADY_FAILED)
-        self.assertIn("m, i, a, underscore, k, i, m, underscore, 4, 3, 9, 7", answer.message)
+        self.assertIn("j, o, r, d, a, n, underscore, l, e, e, underscore, 8, 2, 6, 4", answer.message)
 
     def test_other_tools_and_malformed_arguments_pass_through(self) -> None:
         other = ToolCall(id="c2", name="get_reservation_details", arguments_json='{"reservation_id": "h9z1c"}')
@@ -144,9 +144,9 @@ class ScreenTests(unittest.TestCase):
 
     def test_only_permanent_failures_count(self) -> None:
         gate = normalizer()
-        self.assertTrue(gate.is_permanent_failure("Error: User mia_kim_4397 not found"))
+        self.assertTrue(gate.is_permanent_failure("Error: User jordan_lee_8264 not found"))
         self.assertFalse(gate.is_permanent_failure("Error: service unavailable, try again"))
-        self.assertFalse(gate.is_permanent_failure('{"user_id": "mia_kim_4397"}'))
+        self.assertFalse(gate.is_permanent_failure('{"user_id": "jordan_lee_8264"}'))
         disabled = normalizer(replace(SETTINGS, retry_guard=RetryGuardSettings()))
         self.assertFalse(disabled.is_permanent_failure("Error: User x not found"))
 

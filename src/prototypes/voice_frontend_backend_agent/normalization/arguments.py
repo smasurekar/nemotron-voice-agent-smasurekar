@@ -58,6 +58,12 @@ class ArgumentRule:
     case: str = "keep"
     pattern: str = ""
     on_invalid: str = "answer_locally"
+    #: Literal symbols (never letters or digits) put back in front of a value that lacks them, e.g. ``#``.
+    restore_prefix: str = ""
+    #: A value full-matching this is already well formed and never rewritten (idempotence).
+    keep_pattern: str = ""
+    #: ``config`` (YAML) or ``schema`` (derived from the session's tools; :mod:`.schema_rules`).
+    source: str = "config"
 
     @property
     def display_label(self) -> str:
@@ -88,10 +94,12 @@ class ResultHintSettings:
 
     enabled: bool = False
     tools: tuple[str, ...] = ()
+    #: ``tools: auto``: watch every read tool of the session (selection is then by ``failure_pattern``).
+    auto_tools: bool = False
     failure_pattern: str = ""
     count_local_invalid: bool = True
     max_hints: int = 3
-    message_key: str = "identity_not_found_hint"
+    message_key: str = "lookup_not_found_hint"
     escalate_message_key: str = ""
 
 
@@ -101,6 +109,8 @@ class ToolArgumentSettings:
 
     enabled: bool = False
     rules: tuple[ArgumentRule, ...] = ()
+    #: ``rules: auto``: rules derived per session from the tool schemas (:mod:`.schema_rules`).
+    schema_rules: bool = False
     invalid_message_key: str = "tool_argument_invalid"
     #: Message for the 2nd+ invalid answer of the same tool in a session ("" = always ``invalid_message_key``).
     escalate_invalid_message_key: str = ""
@@ -193,7 +203,9 @@ class ArgumentNormalizer:
     # -- values ----------------------------------------------------------------
 
     def canonical(self, rule: ArgumentRule, value: str) -> str:
-        """The canonical form of ``value`` under ``rule``."""
+        """The canonical form of ``value`` under ``rule`` (unchanged when it full-matches ``keep_pattern``)."""
+        if rule.keep_pattern and re.fullmatch(rule.keep_pattern, value):
+            return value
         text = value
         if rule.spoken_form:
             text = self._spoken.normalize(text).text
@@ -201,7 +213,10 @@ class ArgumentNormalizer:
             text = text.replace(char, "")
         if separator := rule.collapse_separators:
             text = re.sub(f"{re.escape(separator)}{{2,}}", separator, text).strip(separator)
-        return apply_case(text, rule.case)
+        text = apply_case(text, rule.case)
+        if rule.restore_prefix and text and not text.startswith(rule.restore_prefix):
+            text = rule.restore_prefix + text.lstrip(rule.restore_prefix)
+        return text
 
     @staticmethod
     def valid(rule: ArgumentRule, value: str) -> bool:

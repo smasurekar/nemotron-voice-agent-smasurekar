@@ -164,8 +164,10 @@ class SpellingHoldSettings:
 
     enabled: bool = False
     hold_ms: int = 1500
-    #: Full-match patterns of a complete spelled value (e.g. a 6-character reservation code): not held.
+    #: Full-match patterns of a complete spelled value (e.g. a 6-character code): not held.
     complete_patterns: tuple[str, ...] = ()
+    #: ``complete_patterns: auto``: derived per session from the identifier examples in the tool schemas.
+    auto_patterns: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -273,6 +275,20 @@ class DelegationConfig:
             "spelled_runs": self.voice.normalization.transcript.spelled_runs.enabled,
             "result_hints": self.voice.normalization.tool_arguments.enabled
             and self.voice.normalization.tool_arguments.result_hints.enabled,
+            **{f"schema_{name}": on for name, on in self.schema_auto.items()},
+        }
+
+    @property
+    def schema_auto(self) -> dict[str, bool]:
+        """Which collaborators are derived per session from the tool schemas (``auto`` in config)."""
+        arguments = self.voice.normalization.tool_arguments
+        return {
+            "rules": arguments.enabled and arguments.schema_rules,
+            "result_hint_tools": arguments.enabled
+            and arguments.result_hints.enabled
+            and arguments.result_hints.auto_tools,
+            "spelling_hold_patterns": self.delegation.spelling_hold.enabled
+            and self.delegation.spelling_hold.auto_patterns,
         }
 
     @property
@@ -336,10 +352,13 @@ def build_delegation_config(merged: dict[str, Any], files: tuple[Path, ...] = ()
         spelling_hold=SpellingHoldSettings(
             enabled=_bool(dl["spelling_hold"]["enabled"], "delegation.spelling_hold.enabled"),
             hold_ms=_int(dl["spelling_hold"]["hold_ms"], "delegation.spelling_hold.hold_ms"),
-            complete_patterns=tuple(
+            complete_patterns=()
+            if dl["spelling_hold"]["complete_patterns"] == "auto"
+            else tuple(
                 _regex(pattern, "delegation.spelling_hold.complete_patterns")
                 for pattern in dl["spelling_hold"]["complete_patterns"] or ()
             ),
+            auto_patterns=dl["spelling_hold"]["complete_patterns"] == "auto",
         ),
         replay=ReplaySettings(
             enabled=_bool(dl["replay_unheard_answer"]["enabled"], "delegation.replay_unheard_answer.enabled"),

@@ -58,12 +58,11 @@ prompt_features:
   spelling_v2: true                          # M3.4: after a failed lookup, read back and ask to spell
   spoken_output: true                        # G2: at most two sentences, confirmation override
   write_consent: true                        # G4: consent only to a heard question; read back written names
-  domain_notes: true                         # I1 (tau3-identity-fixes-plan.md): the telecom phone-number note
+  phone_format: true                         # <phone_numbers>: lookups XXX-XXX-XXXX plus one format retry
+  domain_notes: false                        # no domain notes ship (prompts.backend.yaml backend_domain_notes)
 
-# Domain detection by tool names (tau3-identity-fixes-plan.md section 3.2): the first domain with one of
-# its tools in the session's tool list wins; it picks the <domain_notes> block of prompts.backend.yaml and
-# is reported as backend_domain. A session with no match gets no note.
-domains:
-  telecom: {tools_any: [get_customer_by_phone]}
-  retail: {tools_any: [find_user_id_by_name_zip, find_user_id_by_email]}
-  airline: {tools_any: [get_reservation_details]}
+# Domain detection by tool names: the first domain with one of its tools in the session's tool list wins;
+# it picks the <domain_notes> block of prompts.backend.yaml and is reported as backend_domain. Empty: no
+# behaviour depends on a domain; sessions are fingerprinted by session_tools_sha256 (voice server log).
+# Format: <domain>: {tools_any: [<tool>, ...]}
+domains: {}

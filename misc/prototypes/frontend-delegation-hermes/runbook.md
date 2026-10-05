@@ -56,6 +56,21 @@ Verified offline only: unit tests, and a replay of the 2026-09-30 tool outputs t
 on the plan's 11 airline and 27 retail passing tasks with a miss, none on telecom or on a session whose first
 lookup succeeded). The stack has not been restarted with this change and no arm has run.
 
+**Changed 2026-10-05:** the τ³-specific rules are now domain-generic
+([`tau3-voice-domain-specific-changes-genericization.md`](tau3-voice-domain-specific-changes-genericization.md)):
+- **I1** is now a generic `<phone_numbers>` block in the Hermes system prompt (`prompt_features.phone_format`),
+  rendered in every session. The telecom `<domain_notes>` note and the domain detection are gone
+  (`domains: {}`, `domain_notes: false`), so `backend_domain` is always `""`.
+- Prompt examples use invented values (`QUENTIN`, `XB7TP2`, `jordan_lee_82`), and the I3/I4 notes are renamed
+  `lookup_not_found_hint` and `lookup_not_found_hint_words` and reworded generically.
+- The new submission pair `realtime_eval.yaml` with `gateway.eval.yaml` derives tool-argument rules,
+  result-hint targets, and spelling-hold patterns from each session's tool schemas (§6.2). The `tau3_*`
+  profiles stay as historical and control configurations.
+- The deployed fingerprint adds `session_tools_sha256`, the hash of the session's tool schemas.
+
+Verified offline only (unit tests). The stack has not been restarted with this change, and its effect on
+reward has not been measured; it requires validation before a reportable run.
+
 ## 0. What runs where
 
 ```
@@ -73,7 +88,7 @@ lookup succeeded). The stack has not been restarted with this change and no arm 
 |---|---|---|---|
 | `nemo-speech` | container (Compose profile `frontend-backend-agent/single-gpu`) | 50051 | `docker/docker-compose.nemo-speech-cpp.yaml` |
 | Backend gateway + Hermes workers | host process | 8790, bound to the `docker0` address | `config/gateway.yaml` (an arm may use `config/gateway.<variant>.yaml`, §6.1) |
-| τ³ Realtime voice server `fdh-voice` | container (`nemotron-voice-agent:latest`, `src/` mounted read-only) | 8775 | `config/profiles/tau3_eval.yaml` (or an arm profile, §6.1) |
+| τ³ Realtime voice server `fdh-voice` | container (`nemotron-voice-agent:latest`, `src/` mounted read-only) | 8775 | `config/profiles/tau3_eval.yaml`, `config/profiles/realtime_eval.yaml` (§6.2), or an arm profile (§6.1) |
 | Browser voice server `fdh-voice-web` | container | 8776 (https) | `config/profiles/browser_demo.yaml` |
 
 Why the gateway runs on the host: Hermes needs its own venv and Python (3.13 or 3.14, whichever the
@@ -90,7 +105,8 @@ Both profiles use:
 - the frontend tool `delegate(delegate, filler_text, request)`, with the filler spoken.
 
 The τ³ profile also normalizes tool arguments, with the escalating local "invalid ID" wording (M3.3), and
-never holds a complete airline code (`spelling_hold.complete_patterns`). The browser profile cannot normalize tool arguments,
+never holds a complete six-character code (`spelling_hold.complete_patterns`; `realtime_eval.yaml` derives
+the patterns from the tool schemas, §6.2). The browser profile cannot normalize tool arguments,
 because its tools run in the server (`tools.source: config`).
 
 ## 1. Prerequisites (once)
@@ -164,8 +180,9 @@ docker logs -f nemotron-voice-agent-nemo-speech-1 2>&1 | grep -m1 'listening on 
 
 The gateway binds only to the `docker0` address: it has no authentication, so it must not be reachable
 from the LAN. The backend model is pinned on the command line. `FDH_GATEWAY_CONFIG` selects the gateway
-file: `gateway.yaml` (every backend prompt variant on) for normal runs, `gateway.baseline.yaml` (every
-variant off) for the control, or the gateway config an arm needs (§6.1).
+file: `gateway.yaml` (every backend prompt variant on) for normal runs, `gateway.eval.yaml` (the same
+variants, pinned) with `realtime_eval.yaml` (§6.2), `gateway.baseline.yaml` (every variant off) for the
+control, or the gateway config an arm needs (§6.1).
 
 ```bash
 export FDH_GATEWAY_CONFIG=${FDH_GATEWAY_CONFIG:-gateway.yaml}
@@ -187,12 +204,11 @@ Expected health:
 - `"agent_kind": "hermes"`;
 - `"hermes": {"model": "nvidia/nvidia/nemotron-3-ultra", "base_url": "https://inference-api.nvidia.com/v1",
   "reasoning": true}`;
-- `"backend_features": {"spelling_v2": true, "spoken_output": true, "write_consent": true, "domain_notes": true}`
-  with `gateway.yaml` (all `false` with `gateway.baseline.yaml`, one `true` with a `gateway.<variant>.yaml`,
-  only `domain_notes` `false` with `gateway.identity_control.yaml`),
-  and `"backend_catalog_sha256"`, the hash of `prompts.backend.yaml`;
-- `"domains": ["telecom", "retail", "airline"]`, the domain detection order (every gateway config extends
-  `gateway.yaml`, so the control has it too; only `domain_notes` decides whether a note renders).
+- `"backend_features"` with `spelling_v2`, `spoken_output`, `write_consent` and `phone_format` `true` and
+  `domain_notes` `false` with `gateway.yaml` and `gateway.eval.yaml` (all `false` with `gateway.baseline.yaml`,
+  one `true` with a `gateway.<variant>.yaml`, `phone_format` and `domain_notes` `false` with
+  `gateway.identity_control.yaml`), and `"backend_catalog_sha256"`, the hash of `prompts.backend.yaml`;
+- `"domains": []`: no domain detection (every gateway config extends `gateway.yaml`, which sets `domains: {}`).
 
 The gateway loads its code and prompts at startup: restart it (§10, then this section) after a code or
 prompt change, or to switch `FDH_GATEWAY_CONFIG`.
@@ -208,9 +224,9 @@ PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.bac
 
 ## 4. Start the τ³ Realtime voice server (`fdh-voice`, port 8775)
 
-`FDH_PROFILE` selects the profile: `tau3_eval.yaml` for normal runs (every τ³ failure fix except M2), or
-the control or an arm profile (§6.1). `FDH_PROACTIVE_AFTER_S` sets the M1 delay; calibrate it per host
-(§6.1).
+`FDH_PROFILE` selects the profile: `tau3_eval.yaml` for normal runs (every τ³ failure fix except M2),
+`realtime_eval.yaml` for the domain-agnostic submission profile (§6.2), or the control or an arm profile
+(§6.1). `FDH_PROACTIVE_AFTER_S` sets the M1 delay; calibrate it per host (§6.1).
 
 ```bash
 export FDH_PROFILE=${FDH_PROFILE:-tau3_eval.yaml}
@@ -231,8 +247,9 @@ Expected:
 - `/health` shows `"status": "ok"`, `"prototype": "frontend-delegation-hermes"`,
   `"backend": {"link": "websocket", ...}` and `"features"`: with `tau3_eval.yaml`, `proactive_status`,
   `clean_answers`, `spelling_hold`, `filler_dedupe`, `spelled_runs` and `result_hints` `true`, `replay_unheard_answer` and
-  `prompt_features.replay_intent` `false`; with `tau3_eval_baseline.yaml`, every switch `false`; with an arm
-  profile, only the arm's own switches `true`.
+  `prompt_features.replay_intent` `false`; with `realtime_eval.yaml`, also `schema_rules`,
+  `schema_result_hint_tools` and `schema_spelling_hold_patterns` `true`; with `tau3_eval_baseline.yaml`, every
+  switch `false`; with an arm profile, only the arm's own switches `true`.
 - The logs show `frontend warm-up done in …s`, `backend gateway http://host.docker.internal:8790/health:
   {... 'ok': True ... 'hermes': {'model': 'nvidia/nvidia/nemotron-3-ultra', ... 'reasoning': True}}` and
   `VAD silence=800ms`.
@@ -365,15 +382,15 @@ a fresh control on the same host (plan §8). The following table lists the pairs
 | Default (every fix except M2) | `tau3_eval.yaml` | `gateway.yaml` | M1, M3, G1, G2, G4, I1, I3 and I4 together; not an evaluated arm |
 | Control | `tau3_eval_baseline.yaml` | `gateway.baseline.yaml` | nothing: prompts byte-identical to agent commit `3a7e04a` |
 | M1 proactive status | `tau3_arm_m1_status.yaml` | `gateway.baseline.yaml` | one short status line per run after `FDH_PROACTIVE_AFTER_S` (default 15) s of silence while WORKING |
-| M3 spelling | `tau3_arm_m3_spelling.yaml` | `gateway.spelling_v2.yaml` | spelled-run joining, spelling hold (airline code pattern), escalating local "invalid ID" wording, backend variant `spelling_v2` |
+| M3 spelling | `tau3_arm_m3_spelling.yaml` | `gateway.spelling_v2.yaml` | spelled-run joining, spelling hold (six-character code pattern), escalating local "invalid ID" wording, backend variant `spelling_v2` |
 | Airline canary (M1 + M3) | `tau3_airline_canary.yaml` | `gateway.spelling_v2.yaml` | M1 and M3 together, after each passed its own arm |
 | M2 replay (experimental) | `tau3_arm_m2_replay.yaml` | `gateway.baseline.yaml` | replays an unheard answer on a "status" request in IDLE (RC2), frontend variant `replay_intent` |
 | G1 filler de-duplication | `tau3_arm_g1_filler_dedupe.yaml` | `gateway.baseline.yaml` | a repeated filler is dropped (WORKING) or replaced |
 | G2 short answers | `tau3_arm_g2_short_answers.yaml` | `gateway.spoken_output.yaml` | markdown cleanup before TTS, backend variant `spoken_output` |
 | G4 write consent | `tau3_eval_baseline.yaml` | `gateway.write_consent.yaml` | backend variant `write_consent` |
 | Identity control | `tau3_identity_control.yaml` | `gateway.identity_control.yaml` | the default without I1, I3 and I4 (M1, M3, G1, G2 and G4 on): the deployment of the runs the identity plan analysed |
-| I1 telecom phone-number note | `tau3_identity_control.yaml` | `gateway.yaml` | backend variant `domain_notes`: a `<domain_notes>` block after the policy in telecom sessions only (dashed numbers; one silent retry only for exactly ten digits; else a grouped read-back) |
-| I3 recovery note | `tau3_arm_i3_recovery_hint.yaml` | `gateway.identity_control.yaml` | `result_hints`: the I3 note appended to every failed airline/retail identity lookup's result (no escalation) |
+| I1 phone-number rule | `tau3_identity_control.yaml` | `gateway.yaml` | backend variant `phone_format`: a `<phone_numbers>` block in every session (lookups as XXX-XXX-XXXX unless the tool description shows another format, one retry in the other common form, else a grouped read-back; numbers passed unchanged to tools that store or change them). Before 2026-10-05, this arm rendered a telecom-only `<domain_notes>` block instead |
+| I3 recovery note | `tau3_arm_i3_recovery_hint.yaml` | `gateway.identity_control.yaml` | `result_hints`: the I3 note appended to every failed lookup result of `find_user_id_by_name_zip`, `find_user_id_by_email` or `get_user_details` (no escalation) |
 | I4 word-assisted spelling (on top of I3) | `tau3_arm_i4_word_spelling.yaml` | `gateway.identity_control.yaml` | I3 on the first miss, the I4 note ("S as in Sam") on later misses; compare it with the I3 arm |
 
 `tau3_eval.yaml` and `tau3_eval_baseline.yaml` no longer behave the same: the baseline pins every new
@@ -407,11 +424,11 @@ PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.del
   --config src/prototypes/voice_delegation_hermes_agent/config/profiles/tau3_arm_m2_replay.yaml --only replay
 ```
 
-**I1, I3 and I4: what to check in a run.** Run I1 on telecom and I3/I4 on airline and retail (the other domains
-are unchanged by construction), each against a fresh identity control. The arms add one identity fix to the
-identity control, not to the all-off control. In `backend_configured`, `backend_domain` must be the run's
-domain. For I3/I4, `result_hint` events (`message_key`, `n`) show each appended note; a session whose first
-lookup succeeded has none. Gate each arm per task against a fresh control (plan §7.3): no repeatable loss, and
+**I1, I3 and I4: what to check in a run.** Run I1 on telecom and I3/I4 on airline and retail, each against a fresh
+identity control. I1 now renders in every domain, so also check the other domains for regressions. The arms add
+one identity fix to the identity control, not to the all-off control. In `backend_configured`, `backend_domain`
+is `""` and `session_tools_sha256` must be the same for every session of one domain. For I3/I4, `result_hint`
+events (`message_key`, `n`) show each appended note; a session whose first lookup succeeded has none. Gate each arm per task against a fresh control (plan §7.3): no repeatable loss, and
 inspect every changed sentinel, first the 6 that passed without ever being identified (airline 0, 26; retail
 25, 60, 65, 80).
 
@@ -430,6 +447,43 @@ PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.fin
 Use one event log per arm and domain (`-e FDH_EVENT_LOG=...` in §4): the prompt hashes include the τ² policy
 and tools. Events written before this change have no fingerprint, and the check fails on them. Since the
 identity fixes, the check also compares `backend_domain`: logs written before 2026-10-01 report it missing.
+Since 2026-10-05, it also requires `session_tools_sha256`, so logs written before that date fail the check.
+
+### 6.2 Domain-Agnostic Evaluation Profile
+
+`realtime_eval.yaml` with `gateway.eval.yaml` is the single frozen profile for every domain. No setting names a
+tool or a domain. The voice profile `voice/realtime_eval.yaml` derives three things per session from the tool
+schemas in the client's `session.update`, after the gateway applies the tools:
+
+- **Tool-argument rules** (`normalization.tool_arguments.rules: auto`): for read tools only (name prefix
+  `get_`, `find_`, `search_`, `list_`, `lookup_`, `check_` or `calculate`, or a description that starts with
+  Get, Find, Search, List or Look up), each `id` or `*_id` string argument whose description quotes an example
+  gets a rule from that example. Write tools are never rewritten. A well-formed value stays unchanged, and only a
+  clearly incomplete value is answered locally.
+- **Result-hint targets** (`result_hints.tools: auto`): every read tool. A note is appended only when the
+  not-found text names a user, customer, member, client or profile, and a local "invalid" answer counts as a
+  miss only for a person argument such as `user_id` or `customer_id`.
+- **Spelling-hold patterns** (`delegation.spelling_hold.complete_patterns: auto`): the strict shapes of the
+  `id`, `*_id` and `*_ids` examples, matched case-insensitively. Examples with a name-like part (such as
+  `ab_cd_12`) give no pattern: their length varies, so no pattern ever rules a spelled user ID complete
+  after the example's digit count. Such a turn waits at most `hold_ms` when the hold's evidence rules apply.
+
+The retry guard covers every tool (`scope: all`) with the pattern `(?i)\b(not found|no such|does not exist)\b`.
+`gateway.eval.yaml` pins `spelling_v2`, `spoken_output`, `write_consent` and `phone_format` on, and
+`domain_notes` off, so a later edit to `gateway.yaml` cannot change an evaluation. Before the first
+`session.update`, a session has no schema-derived rules.
+
+To start it, set the two variables and follow §3 and §4:
+
+```bash
+export FDH_PROFILE=realtime_eval.yaml FDH_GATEWAY_CONFIG=gateway.eval.yaml
+# then §3 (gateway) and §4 (fdh-voice)
+```
+
+In the event log, each session has a `session_rules` event with `session_tools_sha256`, the `schema_auto`
+switches and the derived rules. Review them per domain, and run `fingerprint_check` (§6.1) with
+`--profile .../profiles/realtime_eval.yaml --gateway-config .../gateway.eval.yaml`. This profile has not been
+evaluated: compare it with `tau3_eval.yaml` on non-scored data before reporting any reward.
 
 **Reporting.** `fba_voice_metrics.py` expects one backend operation per turn. Convert the event log first;
 the adapter credits each run to the turn that started it and exits 1 on an orphaned tool call:
@@ -443,7 +497,7 @@ PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.rep
 
 | File | Content |
 |---|---|
-| `logs/fdh_voice_events.jsonl`, `logs/fdh_voice_web_events.jsonl` | Voice server events per session: `fdh_session_start` (config hash, `features`, `invalid_message_keys`), `frontend_prompt` (prompt hash), `backend_configured` (backend fingerprint), `delegation_decision`, `backend_action`, `tool_calls_out`, `tool_output_in`, `call_answered_locally` (`reason`, `message_key`), `backend_answer`, `status_spoken`, `playback_outcome`, `delivery_note`, `history_sync`, `turn_latency`, `filler_timing`, `barge_in`. Only with the fix's switch on (the defaults or an arm): `status_proactive` (M1), `spelling_hold` (M3), `answer_replayed` / `answer_replay_skipped` (M2), `filler_deduped` (G1), `answer_cleaned` (G2), `result_hint` (I3/I4: `tool`, `message_key`, `n`). `backend_configured` carries `backend_domain` (I1) |
+| `logs/fdh_voice_events.jsonl`, `logs/fdh_voice_web_events.jsonl` | Voice server events per session: `fdh_session_start` (config hash, `features`, `invalid_message_keys`), `frontend_prompt` (prompt hash), `backend_configured` (backend fingerprint), `delegation_decision`, `backend_action`, `tool_calls_out`, `tool_output_in`, `call_answered_locally` (`reason`, `message_key`), `backend_answer`, `status_spoken`, `playback_outcome`, `delivery_note`, `history_sync`, `turn_latency`, `filler_timing`, `barge_in`. Only with the fix's switch on (the defaults or an arm): `status_proactive` (M1), `spelling_hold` (M3), `answer_replayed` / `answer_replay_skipped` (M2), `filler_deduped` (G1), `answer_cleaned` (G2), `result_hint` (I3/I4: `tool`, `message_key`, `n`). `backend_configured` carries `backend_domain` (always `""`) and `session_tools_sha256`. With an `auto` switch on (`realtime_eval.yaml`): `session_rules` (`session_tools_sha256`, `schema_auto`, the derived rules) |
 | `logs/fdh_gateway_events.jsonl` | Gateway: `gateway_start` (`backend_features`, `backend_catalog_sha256`), sessions, `backend_fingerprint`, worker spawn/ready/exit (`start_ms`, `rss_mb`), run epochs and outcomes, context delivery states, watchdog, respawns |
 | `logs/fdh_workers/*.log` | Each Hermes worker's stdout/stderr. "Auxiliary Nous client unavailable" lines are harmless |
 | `logs/fdh_gateway.out` | Gateway process output |
@@ -485,7 +539,7 @@ Profiles are in `src/prototypes/voice_delegation_hermes_agent/config/`. Unknown 
 | Setting | Where | Default |
 |---|---|---|
 | End-of-turn silence | `voice/base.yaml` `turn_detection.silence_duration_ms` | 800 (client values ignored) |
-| Transcript / tool-argument normalization | `voice/base.yaml`, `voice/tau3.yaml`, `voice/tau3_spelling.yaml`, `voice/tau3_fixes.yaml` (the default) `normalization.*` | on / on (τ³), off (browser) |
+| Transcript / tool-argument normalization | `voice/base.yaml`, `voice/tau3.yaml`, `voice/tau3_spelling.yaml`, `voice/tau3_fixes.yaml` (the default), `voice/realtime_eval.yaml` `normalization.*` | on / on (τ³), off (browser); `rules: auto` in `voice/realtime_eval.yaml` |
 | Simulated backend delay | `backend.simulated_delay.{seconds,where}`, env `FDH_BACKEND_DELAY_S` (browser profile) | 0, 5 in `browser_demo` |
 | Frontend model | env `FRONTEND_LLM_MODEL`, `FRONTEND_LLM_BASE_URL`; `frontend.llm.*` | `nvidia/nvidia/nemotron-3.5-lightning`, thinking off |
 | Frontend tool choice, hedging, timeout | `frontend.tool_choice`, `frontend.hedge_after_ms`, `frontend.timeout_ms` | `named`, 1500, 4000 |
@@ -500,16 +554,17 @@ Profiles are in `src/prototypes/voice_delegation_hermes_agent/config/`. Unknown 
 | Hermes budgets | `hermes.max_iterations`, `run_budget_seconds`, `run_hard_deadline_s` | 30, 300 (soft), 330 (hard, kills the worker) |
 | Worker processes | `workers.start_timeout_s`, `stop_timeout_s`, `kill_grace_s`, `warm`, `recovery.*` | 15, 12, 3, 0; respawn at most 2 per session |
 | M1 proactive status | `output.proactive_status.{enabled,after_s,max_per_run}` (`after_s` from env `FDH_PROACTIVE_AFTER_S`); lines in `prompts.yaml` `status_proactive_lines` | on, 15 s, 1 per run |
-| M3 spelled runs | `voice/*.yaml` `normalization.transcript.spelled_runs.{enabled,min_tokens,case}` | on, 3, `keep` (`voice/tau3_spelling.yaml`, `voice/browser.yaml`; off in `voice/tau3.yaml`) |
-| M3 spelling hold | `delegation.spelling_hold.{enabled,hold_ms,complete_patterns}` | on, 1500 ms, `[]` (airline code pattern in `tau3_eval.yaml` and `tau3_arm_m3_spelling.yaml`) |
-| M3 local "invalid ID" wording | `voice/*.yaml` `normalization.tool_arguments.invalid_message_key`, `escalate_invalid_message_key` | `tool_argument_invalid_readback`, `tool_argument_invalid_spell_all` (`voice/tau3_spelling.yaml`, which the default voice profile `voice/tau3_fixes.yaml` extends); `tool_argument_invalid`, none in `voice/tau3.yaml` |
-| I3/I4 recovery notes | `voice/*.yaml` `normalization.tool_arguments.result_hints.{enabled,tools,failure_pattern,count_local_invalid,max_hints,message_key,escalate_message_key}`; texts in `voice_frontend_backend_agent/config/prompts.voice.yaml` | on in `voice/tau3_fixes.yaml` (the default; `voice/tau3_recovery_hint.yaml` is I3 without escalation): `find_user_id_by_name_zip`, `find_user_id_by_email`, `get_user_details`; `^Error: .*\bnot found\b`; local invalid answers count; 3; `identity_not_found_hint`, `identity_not_found_hint_words`. Off in `voice/tau3.yaml`, `voice/tau3_spelling.yaml` and the code defaults |
-| I1 domain notes | `gateway.yaml` `prompt_features.domain_notes`, `domains.<name>.tools_any`; note texts in `prompts.backend.yaml` `backend_domain_notes` | on (off in `gateway.baseline.yaml` and `gateway.identity_control.yaml`); telecom (`get_customer_by_phone`), retail, airline; a note only for telecom |
+| M3 spelled runs | `voice/*.yaml` `normalization.transcript.spelled_runs.{enabled,min_tokens,case}` | on, 3, `keep` (`voice/tau3_spelling.yaml`, `voice/browser.yaml`, `voice/realtime_eval.yaml`; off in `voice/tau3.yaml`) |
+| M3 spelling hold | `delegation.spelling_hold.{enabled,hold_ms,complete_patterns}` | on, 1500 ms, `[]` (six-character code pattern in `tau3_eval.yaml` and `tau3_arm_m3_spelling.yaml`; `auto` in `realtime_eval.yaml`) |
+| M3 local "invalid ID" wording | `voice/*.yaml` `normalization.tool_arguments.invalid_message_key`, `escalate_invalid_message_key` | `tool_argument_invalid_readback`, `tool_argument_invalid_spell_all` (`voice/tau3_spelling.yaml`, which the default voice profile `voice/tau3_fixes.yaml` extends, and `voice/realtime_eval.yaml`); `tool_argument_invalid`, none in `voice/tau3.yaml` |
+| I3/I4 recovery notes | `voice/*.yaml` `normalization.tool_arguments.result_hints.{enabled,tools,failure_pattern,count_local_invalid,max_hints,message_key,escalate_message_key}`; texts in `voice_frontend_backend_agent/config/prompts.voice.yaml` | on in `voice/tau3_fixes.yaml` (the default; `voice/tau3_recovery_hint.yaml` is I3 without escalation): `find_user_id_by_name_zip`, `find_user_id_by_email`, `get_user_details`; `^Error: .*\bnot found\b`; local invalid answers count; 3; `lookup_not_found_hint`, `lookup_not_found_hint_words`. In `voice/realtime_eval.yaml`: `tools: auto`, a not-found text that names a user, customer, member, client or profile, local invalid answers only for a person argument. Off in `voice/tau3.yaml`, `voice/tau3_spelling.yaml` and the code defaults |
+| I1 phone numbers | `gateway.yaml` `prompt_features.phone_format`; text in `prompts.backend.yaml` `backend_system` (`<phone_numbers>`) | on (off in `gateway.baseline.yaml` and `gateway.identity_control.yaml`) |
+| Domain notes | `gateway.yaml` `prompt_features.domain_notes`, `domains.<name>.tools_any`; note texts in `prompts.backend.yaml` `backend_domain_notes` | off, `domains: {}`, no notes ship |
 | M2 replay an unheard answer | `delegation.replay_unheard_answer.{enabled,ttl_s}` (needs `prompt_features.replay_intent`) | off, 30 s |
 | G1 filler de-duplication | `delegation.filler_dedupe.{enabled,recent}`; lines in `prompts.yaml` `filler_alternatives` | on, 3 |
 | G2 answer cleanup | `output.clean_answers` | on |
 | Frontend prompt variants | `delegation_agent.yaml` `prompt_features.replay_intent` | off |
-| Backend prompt variants | `gateway.yaml` `prompt_features.{spelling_v2,spoken_output,write_consent,domain_notes}` (`gateway.baseline.yaml` turns all off; `gateway.<variant>.yaml` turns one on over it) | all on |
+| Backend prompt variants | `gateway.yaml` `prompt_features.{spelling_v2,spoken_output,write_consent,phone_format,domain_notes}` (`gateway.baseline.yaml` turns all off; `gateway.<variant>.yaml` turns one on over it; `gateway.eval.yaml` pins them) | all on except `domain_notes` |
 
 ## 10. Stop and clean up
 

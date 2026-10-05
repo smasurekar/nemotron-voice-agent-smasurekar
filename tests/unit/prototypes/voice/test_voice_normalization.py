@@ -37,9 +37,9 @@ from prototypes.voice_frontend_backend_agent.errors import VoiceConfigError
 from prototypes.voice_frontend_backend_agent.speech.stubs import StubRecognizer
 
 PROFILES = PACKAGE_DIR / "config" / "profiles"
-SPOKEN = "my user ID is Mia underscore Kim underscore four three nine seven"
-WRITTEN = "my user ID is mia_kim_4397"
-NOT_FOUND = "Error: User mia_kim_4397 not found"
+SPOKEN = "my user ID is Jordan underscore Lee underscore eight two six four"
+WRITTEN = "my user ID is jordan_lee_8264"
+NOT_FOUND = "Error: User jordan_lee_8264 not found"
 TOOLS = [
     {
         "type": "function",
@@ -135,12 +135,12 @@ class TranscriptHookTests(_Base):
 class ArgumentHookTests(_Base):
     async def test_a_rewritten_call_goes_out_canonical_and_is_stored_canonical(self) -> None:
         harness = await self.start()
-        self.frontend.queue(delegate_response("Look up Mia_Kim_4397."))
-        self.backend.queue(lookup("Mia_Kim_4397"))
+        self.frontend.queue(delegate_response("Look up Jordan_Lee_8264."))
+        self.backend.queue(lookup("Jordan_Lee_8264"))
         await harness.speak()
         await harness.wait_for("response.done")
         (wire,) = self.wire_calls()
-        self.assertEqual(json.loads(wire["arguments"]), {"user_id": "mia_kim_4397"})
+        self.assertEqual(json.loads(wire["arguments"]), {"user_id": "jordan_lee_8264"})
         stored = harness.runners[0].state.pending.backend_history.messages[-1].tool_calls[0]
         self.assertEqual(stored.arguments_json, wire["arguments"])
 
@@ -180,12 +180,14 @@ class ArgumentHookTests(_Base):
 
     async def test_a_permanently_failed_id_is_not_sent_again(self) -> None:
         harness = await self.start()
-        self.frontend.queue(delegate_response("Look up mia_kim_4397."), delegate_response("Look up MIA_KIM_4397."))
+        self.frontend.queue(
+            delegate_response("Look up jordan_lee_8264."), delegate_response("Look up JORDAN_LEE_8264.")
+        )
         self.backend.queue(
-            lookup("mia_kim_4397", "c1"),
+            lookup("jordan_lee_8264", "c1"),
             text_response("I could not find that ID."),
-            lookup("MIA_KIM_4397", "c2"),
-            text_response("Is that m, i, a, underscore, k, i, m?"),
+            lookup("JORDAN_LEE_8264", "c2"),
+            text_response("Is that j, o, r, d, a, n, underscore, l, e, e?"),
         )
         await harness.speak()
         await harness.wait_for("response.done")
@@ -201,11 +203,11 @@ class ArgumentHookTests(_Base):
 
     async def test_a_transient_error_does_not_block_a_retry(self) -> None:
         harness = await self.start()
-        self.frontend.queue(delegate_response("Look up mia_kim_4397."), delegate_response("Try again."))
+        self.frontend.queue(delegate_response("Look up jordan_lee_8264."), delegate_response("Try again."))
         self.backend.queue(
-            lookup("mia_kim_4397", "c1"),
+            lookup("jordan_lee_8264", "c1"),
             text_response("The system is busy."),
-            lookup("mia_kim_4397", "c2"),
+            lookup("jordan_lee_8264", "c2"),
         )
         await harness.speak()
         await harness.wait_for("response.done")
@@ -257,11 +259,11 @@ class ArgumentHookTests(_Base):
 
     async def test_backend_only_mode_rewrites_the_same_way(self) -> None:
         harness = await self.start(config=_config(BACKEND_ONLY))
-        self.backend.queue(lookup("Mia_Kim_4397"))
+        self.backend.queue(lookup("Jordan_Lee_8264"))
         await harness.speak()
         await harness.wait_for("response.done")
         (wire,) = self.wire_calls()
-        self.assertEqual(json.loads(wire["arguments"]), {"user_id": "mia_kim_4397"})
+        self.assertEqual(json.loads(wire["arguments"]), {"user_id": "jordan_lee_8264"})
         stored = harness.runners[0].state.pending.backend_history.messages[-1].tool_calls[0]
         self.assertEqual(stored.arguments_json, wire["arguments"])
 
@@ -402,11 +404,11 @@ class ReplayCliTests(unittest.TestCase):
 
         records = [
             {"kind": "asr_final", "transcript": SPOKEN},
-            calls("c1", "Mia_Kim_4397"),
-            {"kind": "tool_output_in", "call_id": "c1", "output": "Error: User Mia_Kim_4397 not found"},
-            calls("c2", "mia_kim_4397"),  # the recorded failure was for another string: not blocked
+            calls("c1", "Jordan_Lee_8264"),
+            {"kind": "tool_output_in", "call_id": "c1", "output": "Error: User Jordan_Lee_8264 not found"},
+            calls("c2", "jordan_lee_8264"),  # the recorded failure was for another string: not blocked
             {"kind": "tool_output_in", "call_id": "c2", "output": NOT_FOUND},
-            calls("c3", "MIA_KIM_4397"),  # same canonical arguments as c2, which failed: blocked
+            calls("c3", "JORDAN_LEE_8264"),  # same canonical arguments as c2, which failed: blocked
             calls("c4", "YA"),
         ]
         out = StringIO()
@@ -414,5 +416,5 @@ class ReplayCliTests(unittest.TestCase):
         rows = [json.loads(line) for line in out.getvalue().splitlines()]
         self.assertEqual(rows[0]["normalized"], WRITTEN)
         self.assertEqual([row["decision"] for row in rows[1:]], ["sent", "sent", "already_failed", "invalid"])
-        self.assertEqual(rows[1]["canonical"], {"user_id": "mia_kim_4397"})
+        self.assertEqual(rows[1]["canonical"], {"user_id": "jordan_lee_8264"})
         self.assertEqual((counts["asr_rewritten"], counts["calls_rewritten"]), (1, 3))

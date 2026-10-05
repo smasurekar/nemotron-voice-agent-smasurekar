@@ -5,6 +5,9 @@
 
 """Golden prompt renders of the baseline (every feature off), captured at agent commit 3a7e04a.
 
+Regenerated once with only the example values changed to invented ones (prompts.yaml
+normalization_note; tau3-voice-domain-specific-changes-genericization.md item 2).
+
 ``render_all()`` renders every prompt the agents see with the shipped catalogs and the tau2 airline
 ``session.update``: the frontend system prompt and state block, the backend SOUL, system prompt and
 context lines, the status prompts and the local tool-result messages. ``test_fdh_golden_prompts``
@@ -113,9 +116,9 @@ def _local_messages() -> str:
     normalizer = harness.runtime.parts(None).argument_normalizer  # type: ignore[arg-type]
     assert normalizer is not None
     invalid = normalizer.screen(
-        [ToolCall(id="c1", name="get_user_details", arguments_json='{"user_id": "aarav_ah"}')], frozenset()
+        [ToolCall(id="c1", name="get_user_details", arguments_json='{"user_id": "aalto_ah"}')], frozenset()
     )
-    call = ToolCall(id="c2", name="get_user_details", arguments_json='{"user_id": "mia_kim_4397"}')
+    call = ToolCall(id="c2", name="get_user_details", arguments_json='{"user_id": "jordan_lee_8264"}')
     key = normalizer.screen([call], frozenset()).keys["c2"]
     failed = normalizer.screen([call], frozenset({key}))
     return "\n---\n".join(answer.message for answer in (*invalid.local, *failed.local))

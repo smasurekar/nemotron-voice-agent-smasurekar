@@ -4,8 +4,8 @@
 # Backend-side prompt catalog (Jinja2, StrictUndefined), rendered by the gateway.
 # The frontend keys live in prompts.yaml (voice server). See prototype-plan.md sections 7.3 and 7.4.
 # Prompt variants: {% if features.<name> %} blocks switched by prompt_features in gateway.yaml
-# (spelling_v2, spoken_output, write_consent; tau3-failure-fixes-plan.md; domain_notes:
-# tau3-identity-fixes-plan.md). All off = the baseline prompts.
+# (spelling_v2, spoken_output, write_consent: tau3-failure-fixes-plan.md; phone_format; domain_notes).
+# All off = the baseline prompts.
 
 # SOUL.md of every Hermes worker (loaded because load_soul_identity: true).
 backend_soul: |
@@ -25,7 +25,7 @@ backend_system: |
   context, do not read them out.
   {% if features.spelling_v2 -%}
   Spoken identifiers and names may arrive spelled out; spelled letters are already joined
-  (for example ROSSI or IFOYYZ). If a lookup by an identifier or a name fails, do not retry
+  (for example QUENTIN or XB7TP2). If a lookup by an identifier or a name fails, do not retry
   with a guess or a variant: read back what you heard, letter by letter, and ask the user to
   spell it. If you already found the user's account in this conversation, do not ask for
   their identifier again.
@@ -44,6 +44,18 @@ backend_system: |
   <domain_notes>
   {{ domain_note }}
   </domain_notes>
+  {%- endif %}
+  {%- if features.phone_format %}
+
+  <phone_numbers>
+  When you look something up by phone number, write a ten-digit number as XXX-XXX-XXXX unless
+  the tool's description shows a different format. If the lookup fails, retry it once with the
+  same digits in the other common form (with or without dashes) before asking the user; this is
+  a format correction, not a guess. Never add, remove or change digits. If that also fails, read
+  the digits back in groups and ask the user to confirm the number.
+  When a tool will store or change a phone number, pass it exactly as the user confirmed it or
+  as a tool returned it; do not reformat it.
+  </phone_numbers>
   {%- endif %}
   {%- if features.spoken_output %}
 
@@ -66,23 +78,12 @@ backend_system: |
   </consent>
   {%- endif %}
 
-# Instructions for one domain only (tau3-identity-fixes-plan.md section 3.2), rendered into backend_system
-# as <domain_notes> right after the policy. The gateway picks the domain from the session's tool names
-# (gateway.yaml domains); a session with no domain, or a note that renders empty, gets no block.
-# Rules for a note: facts about data formats or tool behaviour, never policy; a few sentences at most,
-# with a generic example (not a benchmark value); each note behind its own prompt feature.
-backend_domain_notes:
-  # I1: telecom stores phone numbers with dashes and looks them up by exact match.
-  telecom: |-
-    {% if features.domain_notes -%}
-    Phone numbers are stored with dashes, in the form 555-123-4567. Always pass a phone number
-    to a tool in that form, even if the user did not say "dash". If a lookup by phone number
-    fails and the failed argument contains exactly ten digits with only the formatting wrong,
-    retry once with those same digits in XXX-XXX-XXXX form without asking the user anything;
-    this is a format correction, not a guess. Never add, remove or change digits. Otherwise,
-    or if that retry fails, read the digits you heard back in groups (for example "555, 123,
-    4567") and ask the user to correct the number before asking for any other identifier.
-    {%- endif %}
+# Instructions for one domain only, rendered into backend_system as <domain_notes> right after the
+# policy when the gateway detects the domain from the session's tool names (gateway.yaml domains).
+# A session with no domain, or a note that renders empty, gets no block. Rules for a note: facts the
+# tools or policy state, never policy; a few sentences at most; invented examples only. No notes ship:
+# domain-agnostic rules (such as <phone_numbers>) belong in backend_system.
+backend_domain_notes: {}
 
 # One context line per entry kind.
 context_user: '{% if during_run %}[while you were working] {% else %}[earlier] {% endif %}user: "{{ text }}"'

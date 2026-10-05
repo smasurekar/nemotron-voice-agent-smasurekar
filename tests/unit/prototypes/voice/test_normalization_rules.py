@@ -59,9 +59,9 @@ class TokenTests(unittest.TestCase):
         self.assertEqual(join_part(tokenize("nine nine"), EN, number_words=False, compound=True), "ninenine")
 
     def test_case_and_spelled_out(self) -> None:
-        self.assertEqual(apply_case("Mia_Kim", "lower"), "mia_kim")
-        self.assertEqual(apply_case("Mia_Kim", "upper"), "MIA_KIM")
-        self.assertEqual(apply_case("Mia_Kim", "keep"), "Mia_Kim")
+        self.assertEqual(apply_case("Jordan_Lee", "lower"), "jordan_lee")
+        self.assertEqual(apply_case("Jordan_Lee", "upper"), "JORDAN_LEE")
+        self.assertEqual(apply_case("Jordan_Lee", "keep"), "Jordan_Lee")
         self.assertEqual(spelled_out("mi_4", {"underscore": "_"}), "m, i, underscore, 4")
 
 

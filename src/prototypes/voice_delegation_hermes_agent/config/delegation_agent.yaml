@@ -48,7 +48,8 @@ delegation:
   # tau3-identity-fixes-plan.md I3/I4 (recovery notes on failed identity lookups) are in voice/tau3_fixes.yaml.
   # M3.2: wait hold_ms before deciding a turn that ends mid-spelling with strong evidence and an
   # incomplete value; speech during the wait merges into the next turn. complete_patterns: full-match
-  # patterns of a complete spelled value (never held), e.g. ['^[A-Za-z0-9]{6}$'] for airline codes.
+  # patterns of a complete spelled value (never held), e.g. ['^[A-Za-z0-9]{6}$'] for 6-character codes,
+  # or auto: the shapes of the identifier examples in the session's tool schemas.
   spelling_hold: {enabled: true, hold_ms: 1500, complete_patterns: []}
   # M2 (experimental, RC2): on request=status while IDLE, speak the unheard last answer again instead
   # of delegating, if it belongs to the last finished run, no task came since and it is <= ttl_s old.

@@ -14,8 +14,10 @@ only if all three conditions hold:
    (two or more words, all single characters or separators, with a letter) or
    ``accumulator`` (the previous turn was merged by a hold).
 3. **The value looks incomplete:** the value at the end of the turn (the last anchored
-   span, else the joined trailing run) full-matches neither a tool-argument rule pattern
-   nor one of ``complete_patterns``.
+   span, else the joined trailing run) full-matches neither a configured tool-argument
+   rule pattern nor one of ``complete_patterns`` (``schema_patterns``, derived from the
+   session's identifier examples, match case-insensitively). Schema-derived rules only
+   reject clearly incomplete values, so their patterns are never used here.
 
 If speech starts during the hold, the turn manager's cancel-and-merge path joins the
 words to the next turn. Pure: no I/O, no clock.
@@ -59,6 +61,7 @@ class SpellingHoldPredicate:
         transcript: TranscriptSettings,
         *,
         complete_patterns: Sequence[str] = (),
+        schema_patterns: Sequence[str] = (),
         arguments: ArgumentNormalizer | None = None,
     ) -> None:
         """``transcript`` supplies the separator words and word lists; ``arguments`` the ID patterns."""
@@ -66,7 +69,9 @@ class SpellingHoldPredicate:
         self._anchored = TranscriptNormalizer(replace(transcript, enabled=True, spelled_runs=SpelledRunSettings()))
         self._rules = transcript.resolved_ruleset()
         self._separators = {word.lower() for word in transcript.separator_words}
-        self._patterns = tuple(re.compile(pattern) for pattern in complete_patterns)
+        self._patterns = tuple(re.compile(pattern) for pattern in complete_patterns) + tuple(
+            re.compile(pattern, re.IGNORECASE) for pattern in schema_patterns
+        )
         self._arguments = arguments
 
     def check(self, text: str, *, accumulator: bool = False) -> HoldCheck:
@@ -131,6 +136,10 @@ class SpellingHoldPredicate:
         if self._arguments is None:
             return False
         for rule in self._arguments.settings.rules:
-            if rule.pattern and self._arguments.valid(rule, self._arguments.canonical(rule, value)):
+            if (
+                rule.source == "config"
+                and rule.pattern
+                and self._arguments.valid(rule, self._arguments.canonical(rule, value))
+            ):
                 return True
         return False

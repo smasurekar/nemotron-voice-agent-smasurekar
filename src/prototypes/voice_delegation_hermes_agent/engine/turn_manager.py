@@ -27,6 +27,7 @@ import asyncio
 import contextlib
 import re
 from collections import deque
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -73,15 +74,31 @@ from prototypes.voice_frontend_backend_agent.engine.turn_api import SessionChang
 from prototypes.voice_frontend_backend_agent.engine.turn_manager import UserInput
 from prototypes.voice_frontend_backend_agent.errors import WireProtocolError
 from prototypes.voice_frontend_backend_agent.normalization.arguments import ArgumentNormalizer
+from prototypes.voice_frontend_backend_agent.normalization.schema_rules import SchemaRules, tools_sha256
 from prototypes.voice_frontend_backend_agent.normalization.transcript import TranscriptNormalizer
 from prototypes.voice_frontend_backend_agent.wire import server_events as ev
 from prototypes.voice_frontend_backend_agent.wire.response_writer import ResponseWriter
 from prototypes.voice_frontend_backend_agent.wire.session_view import SessionSettings
 
 
+@dataclass(frozen=True, slots=True)
+class SessionRules:
+    """The tool-dependent collaborators, rebuilt once the client's tools are known."""
+
+    argument_normalizer: ArgumentNormalizer | None = None
+    result_hints: ResultHints | None = None
+    spelling_hold: SpellingHoldPredicate | None = None
+    schema: SchemaRules | None = None
+
+
 @dataclass(slots=True)
 class SessionParts:
-    """Per-session collaborators built by the factory (all swappable, plan 12.1)."""
+    """Per-session collaborators built by the factory (all swappable, plan 12.1).
+
+    The tool-dependent ones (normalizer, result hints, spelling hold) start without schema
+    rules; ``rebuild`` (set when a config switch is ``auto``) derives them from the tools of
+    each applied ``session.update``.
+    """
 
     decider: Decider
     verbalizer: StatusVerbalizer
@@ -92,6 +109,7 @@ class SessionParts:
     result_hints: ResultHints | None = None
     local_tools: tuple[ToolSpec, ...] = ()
     spelling_hold: SpellingHoldPredicate | None = None
+    rebuild: Callable[[Sequence[Mapping[str, Any]]], SessionRules] | None = None
 
 
 @dataclass(slots=True)
@@ -170,6 +188,8 @@ class DelegationTurnManager:
         self._backend = _Backend(activity=deque(maxlen=max(1, config.frontend.activity_max_items)))
         self._system_prompt = ""
         self._configured_with: tuple[list[dict[str, Any]], str] | None = None
+        self._tools_sha256 = ""  # the tools the backend runs with (session_tools_sha256)
+        self._pending_tools_sha256 = ""  # the tools of the session.configure in flight
         self._turns: dict[int, _Turn] = {}
         self._turn_counter = 0
         self._awaiting = 0  # utterances started (speech_started) whose transcript has not arrived
@@ -304,8 +324,11 @@ class DelegationTurnManager:
         if change.first or self._backend.configured is None or sent != self._configured_with:
             # Only a real change reaches the gateway: a browser re-sending the same (or ignored) tools
             # must not trip session.update_after_start.
-            await self._configure(tools, policy)
+            self._pending_tools_sha256 = tools_sha256(tools)
+            configured = await self._configure(tools, policy)
             self._configured_with = sent
+            if configured.get("applied", True):
+                self._rebuild_session_rules(tools)
         if system_prompt != self._system_prompt:
             self._log(
                 "frontend_prompt",
@@ -314,7 +337,24 @@ class DelegationTurnManager:
             )
         self._system_prompt = system_prompt
 
-    async def _configure(self, tools: list[dict[str, Any]], instructions: str) -> None:
+    def _rebuild_session_rules(self, tools: list[dict[str, Any]]) -> None:
+        """Derive the tool-dependent collaborators from the tools the backend now runs with."""
+        rebuild = self._parts.rebuild
+        if rebuild is None:
+            return
+        rules = rebuild(tools)
+        self._parts.argument_normalizer = rules.argument_normalizer
+        self._parts.result_hints = rules.result_hints
+        self._parts.spelling_hold = rules.spelling_hold
+        self._relay.reconfigure(rules.argument_normalizer, rules.result_hints)
+        self._log(
+            "session_rules",
+            session_tools_sha256=self._tools_sha256,
+            schema_auto=self._config.schema_auto,
+            **(rules.schema.snapshot() if rules.schema is not None else {}),
+        )
+
+    async def _configure(self, tools: list[dict[str, Any]], instructions: str) -> dict[str, Any]:
         if self._backend.unavailable:
             raise WireProtocolError(self._backend.unavailable, code="backend_unavailable", param="session")
         timeout = self._config.backend.open_timeout_s
@@ -331,7 +371,7 @@ class DelegationTurnManager:
         self._backend.configured = asyncio.get_running_loop().create_future()
         self._send("session.configure", tools=tools, instructions=instructions)
         try:
-            await asyncio.wait_for(asyncio.shield(self._backend.configured), timeout=timeout)
+            return await asyncio.wait_for(asyncio.shield(self._backend.configured), timeout=timeout)
         except TimeoutError as exc:
             raise WireProtocolError(
                 f"the backend was not configured within {timeout:g}s", code="backend_timeout"
@@ -797,8 +837,11 @@ class DelegationTurnManager:
             self._backend.ready.set_result(data)
 
     def _gw_session_configured(self, data: dict[str, Any]) -> None:
+        if data.get("applied", True):
+            self._tools_sha256 = self._pending_tools_sha256
         self._log(
             "backend_configured",
+            session_tools_sha256=self._tools_sha256,
             **_pick(
                 data,
                 "applied",

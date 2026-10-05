@@ -6,8 +6,9 @@
 * Calls arriving within ``batch_window_ms`` form one batch.
 * ``ArgumentNormalizer.screen`` runs first (when configured): invalid or already-failed
   lookups are answered locally and never reach the client.
-* ``ResultHints`` (when configured) appends a recovery note to a failed identity lookup's
-  output before it goes to the gateway (tau3-identity-fixes-plan.md I3, I4).
+* ``ResultHints`` (when configured) appends a recovery note to a failed user or customer
+  lookup's output before it goes to the gateway (I3, I4).
+* :meth:`ToolRelay.reconfigure` swaps both once the session's tools are known (schema rules).
 * ``executor: wire`` emits the batch as one Realtime response of ``function_call`` items;
   ``function_call_output`` goes back to the gateway, and a later ``response.create`` is the
   batch's acknowledgement (:meth:`ToolRelay.take_ack`).
@@ -140,6 +141,11 @@ class ToolRelay:
             if call_id in batch.call_ids:
                 batch.outputs[call_id] = output
 
+    def reconfigure(self, normalizer: ArgumentNormalizer | None, result_hints: ResultHints | None) -> None:
+        """Use a normalizer and result hints rebuilt for new session tools (failed calls stay known)."""
+        self._normalizer = normalizer
+        self._hints = result_hints
+
     def take_ack(self) -> bool:
         """``response.create``: consume one tool batch's acknowledgement, if a batch awaits one."""
         for index, batch in enumerate(self._batches):
@@ -218,7 +224,7 @@ class ToolRelay:
             if answer.reason == "invalid":
                 self._invalid_counts[answer.tool] = self._invalid_counts.get(answer.tool, 0) + 1
                 if self._hints is not None:
-                    self._hints.on_local_invalid(answer.tool)
+                    self._hints.on_local_invalid(answer.tool, answer.argument)
             self._log(
                 "call_answered_locally",
                 call_id=answer.call_id,

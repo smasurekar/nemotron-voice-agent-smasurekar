@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Gateway of profiles/realtime_eval.yaml: gateway.yaml with every backend prompt variant pinned, so a
+# later edit to the defaults cannot change an evaluation. No domain detection and no domain notes.
+
+extends: gateway.yaml
+
+prompt_features:
+  spelling_v2: true
+  spoken_output: true
+  write_consent: true
+  phone_format: true
+  domain_notes: false
+
+domains: {}

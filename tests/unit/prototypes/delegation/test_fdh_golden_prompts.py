@@ -3,7 +3,10 @@
 
 # ruff: noqa: D100, D101, D102, D103, D107
 
-"""With every feature off, every prompt is byte-identical to agent commit 3a7e04a (plan section 1, rule 2)."""
+"""With every feature off, every prompt is byte-identical to agent commit 3a7e04a (plan section 1, rule 2).
+
+Except the frontend normalization note's example value, now invented (genericization item 2).
+"""
 
 from __future__ import annotations
 

@@ -120,7 +120,7 @@ status_template: >-
   {% if current_tool %}I'm still working on it: I'm {{ current_tool_phrase }} right now{% else %}I'm still working on it{% endif %}{% if done_count %}, and I've finished {{ done_count }} step{{ "s" if done_count != 1 else "" }} so far{% endif %}. It should not be long.
 
 normalization_note: |
-  Identifiers in user turns may already be written out (for example mia_kim_4397 or a booking code).
+  Identifiers in user turns may already be written out (for example jordan_lee_82 or a booking code).
   If an earlier user turn gave a complete identifier and a later one gives only part of it, the user
   is continuing or correcting the same identifier: delegate the turn so the backend can use it.
 

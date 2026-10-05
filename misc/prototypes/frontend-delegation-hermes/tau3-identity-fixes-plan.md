@@ -1,5 +1,7 @@
 # Plan: identity fixes for the FDH agent after the τ³ fixes-on runs
 
+> **Note (2026-10-05):** this plan is a historical record. The I1 telecom `<domain_notes>` note and the domain detection were removed, and the I3/I4 keys were renamed and reworded; refer to [`tau3-voice-domain-specific-changes-genericization.md`](tau3-voice-domain-specific-changes-genericization.md) for the current behavior.
+
 **Status:** I1, I3 and I4 implemented and on by default (§8.1); no arm has run yet · **Date:** 2026-10-01 ·
 **Revision:** 4 (reviews 1 and 2 applied, §12 and §13)
 **Agent:** `src/prototypes/voice_delegation_hermes_agent/` at `8498abe` (profile `tau3_eval.yaml`,

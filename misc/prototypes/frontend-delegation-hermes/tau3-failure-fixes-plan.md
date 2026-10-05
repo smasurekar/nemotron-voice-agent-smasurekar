@@ -1,5 +1,7 @@
 # Plan: τ³-voice failure fixes for the Frontend Delegation Agent (FDH)
 
+> **Note (2026-10-05):** this plan is a historical record. The prompt examples and the airline spelling-hold pattern it quotes were replaced by invented values and schema-derived rules; refer to [`tau3-voice-domain-specific-changes-genericization.md`](tau3-voice-domain-specific-changes-genericization.md) for the current behavior.
+
 **Status:** implemented behind switches; every fix except M2 on by default in the FDH YAML defaults (§14),
 off in code; not yet evaluated (§8) · **Date:** 2026-09-30 ·
 **Revision:** 5 (defaults on except M2, §14; implementation in revision 4, §13; review 2 findings and

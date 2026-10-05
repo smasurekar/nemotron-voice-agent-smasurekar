@@ -14,4 +14,4 @@ delegation:
   spelling_hold:
     enabled: true
     hold_ms: 1500
-    complete_patterns: ['^[A-Za-z0-9]{6}$']   # airline reservation code (e.g. IFOYYZ, K1NW8N)
+    complete_patterns: ['^[A-Za-z0-9]{6}$']   # a 6-character code (e.g. XB7TP2)

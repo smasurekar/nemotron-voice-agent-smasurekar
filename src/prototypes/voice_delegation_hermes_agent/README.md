@@ -19,6 +19,10 @@ An OpenAI Realtime (GA) voice agent with two agents that are decoupled in time:
   code defaults stay off (refer to "Failure-Fix Switches" below).
 - **τ³ identity fixes:** [`tau3-identity-fixes-plan.md`](../../../misc/prototypes/frontend-delegation-hermes/tau3-identity-fixes-plan.md).
   I1, I3, and I4 follow the same switch rules and are on in the YAML defaults.
+- **Domain-generic rules:** [`tau3-voice-domain-specific-changes-genericization.md`](../../../misc/prototypes/frontend-delegation-hermes/tau3-voice-domain-specific-changes-genericization.md).
+  The I1 telecom note is replaced by a generic `<phone_numbers>` block, and `profiles/realtime_eval.yaml`
+  derives tool-argument rules, result-hint targets, and spelling-hold patterns from each session's tool
+  schemas instead of tool or domain names. Its effect on reward is not measured yet and requires validation.
 
 ## Layout
 
@@ -29,18 +33,19 @@ An OpenAI Realtime (GA) voice agent with two agents that are decoupled in time:
 | `engine/` | voice server | `turn_manager.py` (frontend, backend and output lanes), `transcript.py` (shared history, playback outcomes), `output_scheduler.py` (hold and stale rules), `backend_link.py` (WebSocket to the gateway), `spelling_hold.py` (M3.2 predicate), `spoken_text.py` (G2 answer cleanup) |
 | `frontend/` | voice server | `delegate_tool.py` (the tool contract), `decider.py` (LLM decider with repair, hedging and guards; the rule-based stub), `status_verbalizer.py`, `prompts.py` |
 | `tools/relay.py` | voice server | Backend tool calls as Realtime `function_call` batches (τ³) or local callables (browser); argument normalization |
-| `tools/result_hints.py` | voice server | I3 and I4: the per-session miss counter and the recovery note appended to a failed identity lookup's result |
+| `tools/result_hints.py` | voice server | I3 and I4: the per-session miss counter and the recovery note appended to a failed lookup's result (`tools: auto` watches every read tool of the session) |
 | `backend/` | all (stdlib only) | The shared contract (`protocol.py`, `writer.py`), `controller.py` (state machine, run epochs, outcome table), `context_queue.py` (exactly-once history delivery), `agent_like.py` (`FakeAgent`) |
 | `sidecar/` | gateway (host) | `gateway_server.py` (`WS /v1/backend`, `/health`), `session_runtime.py`, `worker_pool.py` (spawn / stop / kill / respawn), `homes.py` (per-worker `HERMES_HOME`), `inprocess_link.py` (stub backend) |
 | `worker/` | Hermes worker (Py 3.14) | `worker_main.py` (Unix-socket control loop), `tool_futures.py` (keyed result futures), `hermes_adapter.py` (the only Hermes import), `fake_host.py` |
 | `cli/` | tools | `delegation_replay.py` (frontend decision gate), `backend_probe.py` (gateway without audio), `report_adapter.py` (event log → `fba_voice_metrics.py` records), `fingerprint_check.py` (deployed fingerprint of an arm; exit 1 on a mismatch), `spelling_hold_replay.py` (spelling-hold predicate over an event log) |
-| `config/` | — | `delegation_agent.yaml`, `gateway.yaml` (+ `gateway.fake.yaml`, `gateway.stub_gate.yaml`, the control `gateway.baseline.yaml`, and the backend prompt variants `gateway.spelling_v2.yaml`, `gateway.spoken_output.yaml`, `gateway.write_consent.yaml`; the identity-fix control `gateway.identity_control.yaml`), `prompts.yaml` (frontend), `prompts.backend.yaml` (backend), `voice/*.yaml` (voice-package profiles), `profiles/*.yaml` |
+| `config/` | — | `delegation_agent.yaml`, `gateway.yaml` (+ `gateway.fake.yaml`, `gateway.stub_gate.yaml`, the control `gateway.baseline.yaml`, the pinned evaluation gateway `gateway.eval.yaml`, and the backend prompt variants `gateway.spelling_v2.yaml`, `gateway.spoken_output.yaml`, `gateway.write_consent.yaml`; the identity-fix control `gateway.identity_control.yaml`), `prompts.yaml` (frontend), `prompts.backend.yaml` (backend), `voice/*.yaml` (voice-package profiles), `profiles/*.yaml` |
 
 ## Profiles
 
 | Profile | Use |
 |---|---|
-| `profiles/tau3_eval.yaml` | τ³ / OpenAI Realtime clients: client-executed tools, no greeting, argument normalization, every failure fix except M2 (airline code as a complete spelled value), every identity fix (`voice/tau3_fixes.yaml`), port 8775. Pair it with `gateway.yaml` |
+| `profiles/realtime_eval.yaml` | The single domain-agnostic evaluation profile for OpenAI Realtime clients (`voice/realtime_eval.yaml`), port 8775. Same fixes as `tau3_eval.yaml`, but tool-argument rules (`rules: auto`), result-hint targets (`tools: auto`), and spelling-hold patterns (`complete_patterns: auto`) come from the session's tool schemas; the retry guard covers every tool. Pair it with `gateway.eval.yaml` |
+| `profiles/tau3_eval.yaml` | Historical τ³ profile, kept as a control: client-executed tools, no greeting, argument normalization with a name-keyed `get_user_details` rule, every failure fix except M2 (a six-character code as a complete spelled value), every identity fix (`voice/tau3_fixes.yaml`), port 8775. Pair it with `gateway.yaml` |
 | `profiles/browser_demo.yaml` | Browser page: TLS, greeting, demo tools run in the server, `FDH_BACKEND_DELAY_S` (default 5 s) before each backend run, port 8776 |
 | `profiles/tau3_eval_silent_ack.yaml` | Ablation: the filler of a delegated turn is not spoken |
 | `profiles/stub.yaml`, `profiles/stub_gate.yaml` | No GPU / LLM / Hermes (with `--stub-speech`); `stub_gate` makes the fake backend call a tool so τ³ Gate A passes |
@@ -64,18 +69,23 @@ table lists the switches:
 |---|---|---|
 | `output.proactive_status` | `delegation_agent.yaml` | M1: one `status_proactive_lines` line after `after_s` of silence while WORKING (`FDH_PROACTIVE_AFTER_S`, default 15; calibrate it per host) |
 | `normalization.transcript.spelled_runs`, `normalization.tool_arguments.escalate_invalid_message_key` | `voice/tau3_spelling.yaml` (extended by the default voice profile `voice/tau3_fixes.yaml`; `voice/browser.yaml` has spelled runs only) | M3.1 and M3.3: spelled letters and digits are joined; the local "invalid ID" answer asks for a read-back, then for the whole ID |
-| `delegation.spelling_hold` | `delegation_agent.yaml` | M3.2: wait `hold_ms` before deciding a turn that ends mid-spelling (`tau3_eval.yaml` never holds a complete six-character airline code) |
+| `delegation.spelling_hold` | `delegation_agent.yaml` | M3.2: wait `hold_ms` before deciding a turn that ends mid-spelling (`tau3_eval.yaml` never holds a complete six-character code; with `complete_patterns: auto`, `realtime_eval.yaml` never holds a value in the strict shape of an `id`, `*_id`, or `*_ids` example from the tool schemas, matched case-insensitively; examples with a name-like part, such as `ab_cd_12`, give no pattern because their length varies) |
 | `delegation.replay_unheard_answer` + `prompt_features.replay_intent` | `delegation_agent.yaml` | M2 (experimental, RC2, off by default): replay an unheard answer on `request=status` in IDLE |
 | `delegation.filler_dedupe` | `delegation_agent.yaml` | G1: drop or replace a repeated filler (`filler_alternatives`) |
 | `output.clean_answers` | `delegation_agent.yaml` | G2: strip markdown and make one sentence per list item before TTS |
 | `prompt_features.spelling_v2`, `spoken_output`, `write_consent` | `gateway.yaml` | M3.4, G2 and G4: backend prompt variants, all on; `gateway.baseline.yaml` turns all off, and `gateway.<name>.yaml` turns one on over it |
-| `prompt_features.domain_notes` + `domains` | `gateway.yaml`, `prompts.backend.yaml` (`backend_domain_notes`) | I1: the gateway detects the domain from the session's tool names (first match wins) and renders its note as `<domain_notes>` after `</policy>`. The telecom note asks for dashed phone numbers and allows one silent retry only when exactly ten digits have only the formatting wrong. Each note has its own switch inside its template |
-| `normalization.tool_arguments.result_hints` | `voice/tau3_fixes.yaml` (schema in the voice package's `voice_agent.yaml`) | I3 and I4: after a failed `find_user_id_by_name_zip`, `find_user_id_by_email`, or `get_user_details` (not telecom), append `identity_not_found_hint` on the first miss and `identity_not_found_hint_words` on later misses, at most 3 until a lookup succeeds. A local "invalid ID" answer counts as a miss. Logged as `result_hint` events |
+| `prompt_features.phone_format` | `gateway.yaml`, `gateway.eval.yaml` (off in `gateway.baseline.yaml` and `gateway.identity_control.yaml`) | I1, now domain-generic: a `<phone_numbers>` block in `backend_system`. Lookups by a ten-digit phone number use XXX-XXX-XXXX unless the tool description shows another format, with one retry in the other common form; tools that store or change a number get it unchanged |
+| `prompt_features.domain_notes` + `domains` | `gateway.yaml`, `prompts.backend.yaml` (`backend_domain_notes`) | The mechanism remains, but no note ships: `backend_domain_notes: {}`, `domains: {}`, and `domain_notes: false`, so `backend_domain` is always `""` |
+| `normalization.tool_arguments.result_hints` | `voice/tau3_fixes.yaml`, `voice/realtime_eval.yaml` (schema in the voice package's `voice_agent.yaml`) | I3 and I4: after a failed lookup, append `lookup_not_found_hint` on the first miss and `lookup_not_found_hint_words` on later misses, at most 3 until a lookup succeeds. `voice/tau3_fixes.yaml` watches `find_user_id_by_name_zip`, `find_user_id_by_email`, and `get_user_details`, and a local "invalid ID" answer counts as a miss. `voice/realtime_eval.yaml` uses `tools: auto` (every read tool); its `failure_pattern` fires only when the not-found text names a user, customer, member, client, or profile, and a local "invalid" answer counts only for a person argument such as `user_id`. Logged as `result_hint` events |
 
 The voice server and the gateway log a deployed fingerprint (`fdh_session_start.features`, `frontend_prompt`,
-`backend_configured`, which includes `backend_domain`). Adding these default keys changed the `config_hash` of
-every profile compared to earlier runs. `features.result_hints` and `invalid_message_keys.result_hint` /
-`result_hint_escalate` tell I3 from I4.
+`backend_configured`, which includes `backend_domain` and `session_tools_sha256`). `session_tools_sha256` is the
+first 16 hex characters of the SHA-256 of the session's sorted `session.update` tool schemas. With an `auto`
+switch on, the voice server also logs a `session_rules` event after the gateway applies the tools, with the
+same hash and the derived rules. Adding these default keys changed the `config_hash` of every profile
+compared to earlier runs. `features.result_hints` and `invalid_message_keys.result_hint` /
+`result_hint_escalate` tell I3 from I4; `features.schema_rules`, `schema_result_hint_tools`, and
+`schema_spelling_hold_patterns` report the `auto` switches.
 To check that every session of an arm ran the expected switches and prompts, run `fingerprint_check`:
 
 ```bash
@@ -100,5 +110,7 @@ uv run pytest tests/unit/prototypes/delegation tests/unit/prototypes/voice -q
 - `test_fdh_hermes_adapter.py` needs the Hermes interpreter; the command is in its docstring.
 - `test_fdh_golden_prompts.py` checks the baseline prompts against `fixtures/golden_prompts.json`, and
   `test_fdh_tau3_fixes.py` and `test_fdh_identity_fixes.py` cover the failure-fix and identity-fix switches.
+- `test_fdh_schema_rules.py` checks the rules derived from the recorded tool schemas against
+  `fixtures/schema_rules_snapshot.json`.
   After an intended baseline change, regenerate the golden files with
   `PYTHONPATH=src uv run python tests/unit/prototypes/delegation/_fdh_golden.py --write`.

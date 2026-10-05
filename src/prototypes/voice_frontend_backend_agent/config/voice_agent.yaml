@@ -137,7 +137,9 @@ normalization:
   tool_arguments:                   # tool-argument hook (requires tools.source: client)
     enabled: false
     rules: []                       # {tool, argument, label, format_hint, spoken_form, strip,
-                                    #  collapse_separators, case, pattern, on_invalid: answer_locally | send}
+                                    #  collapse_separators, case, pattern, on_invalid: answer_locally | send,
+                                    #  restore_prefix, keep_pattern}; or auto: derived per session from the
+                                    #  tool schemas (read tools only; the delegation prototype implements it)
     invalid_message_key: tool_argument_invalid
     max_local_rounds: 3             # consecutive all-local rounds; then the canonical calls go out
     retry_guard:                    # answer a repeat of a permanently failed call locally
@@ -145,11 +147,11 @@ normalization:
       scope: rules                  # rules (tools with a rule) | all
       permanent_failure_pattern: "" # regex searched in the client's output; required when enabled
       message_key: tool_call_already_failed
-    result_hints:                   # a note appended to a failed lookup's result (tau3-identity-fixes-plan.md 4)
+    result_hints:                   # a note appended to a failed lookup's result
       enabled: false
-      tools: []                     # the lookups it watches (one shared miss counter per session)
+      tools: []                     # the lookups it watches (one shared miss counter per session); auto = every read tool
       failure_pattern: ""           # regex searched in the client's output; required when enabled
       count_local_invalid: true     # a local "invalid" answer for these tools counts as a miss
       max_hints: 3                  # notes per session until a lookup of these tools succeeds
-      message_key: identity_not_found_hint          # the first miss
+      message_key: lookup_not_found_hint            # the first miss
       escalate_message_key: ""      # later misses ("" = message_key again)

@@ -240,6 +240,6 @@ def join_part(tokens: Sequence[Token], ruleset: Ruleset, *, number_words: bool, 
 
 
 def spelled_out(value: str, separator_names: Mapping[str, str]) -> str:
-    """``mia_kim_4397`` -> ``m, i, a, underscore, k, i, m, underscore, 4, 3, 9, 7`` (for read-backs)."""
+    """``jordan_lee_82`` -> ``j, o, r, d, a, n, underscore, l, e, e, underscore, 8, 2`` (for read-backs)."""
     names = {char: word for word, char in separator_names.items()}
     return ", ".join(names.get(char, char) for char in value if not char.isspace())

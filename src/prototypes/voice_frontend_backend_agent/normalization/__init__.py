@@ -5,6 +5,7 @@
 
 * :mod:`.transcript`: the ASR hook (spoken identifiers -> written form);
 * :mod:`.arguments`: the tool-argument hook (canonicalize, validate, retry guard);
+* :mod:`.schema_rules`: tool-argument rules derived from the session's tool schemas (``rules: auto``);
 * :mod:`.rules`: the pure, language-specific token rules both hooks share;
 * :mod:`.prompts`: the optional frontend prompt note.
 
@@ -39,6 +40,7 @@ class NormalizationSettings:
         return {
             "transcript": self.transcript.enabled,
             "tool_arguments": [f"{rule.tool}.{rule.argument}" for rule in self.tool_arguments.rules]
+            + (["auto"] if self.tool_arguments.schema_rules else [])
             if self.tool_arguments.enabled
             else [],
             "retry_guard": self.tool_arguments.enabled and guard.enabled,

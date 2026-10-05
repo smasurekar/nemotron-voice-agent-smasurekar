@@ -7,8 +7,8 @@ Inverse text normalization scoped to identifiers. Only a span anchored by a
 separator word ("underscore") is rewritten, so ordinary speech ("I need two
 passengers") is never touched::
 
-    "my user ID is Mia underscore Kim underscore four three nine seven."
-    -> "my user ID is mia_kim_4397."        (case: lower)
+    "my user ID is Jordan underscore Lee underscore eight two."
+    -> "my user ID is jordan_lee_82."       (case: lower)
 
 A span is built around a run of anchors: every token between two anchors is part
 of the ID; left of the first anchor, the adjacent word plus any spelled letters
@@ -21,7 +21,7 @@ Optionally (``spelled_runs``, off by default), a run of spelled single character
 the text the anchor pass left alone is joined too; the run needs at least one letter,
 and any word of two or more letters ends it::
 
-    "I, F, O, Y, Y, Z and N, Q, N, U, five, R" -> "IFOYYZ and NQNU5R"   (case: keep)
+    "X, B, seven, T, P, two and Q, U, E, N" -> "XB7TP2 and QUEN"   (case: keep)
 """
 
 from __future__ import annotations

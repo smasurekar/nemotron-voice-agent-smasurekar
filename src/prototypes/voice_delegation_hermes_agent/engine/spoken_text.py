@@ -9,7 +9,7 @@ merges items. :func:`clean_for_speech`:
 * strips emphasis markers (``**``, ``__``, ``*``), heading marks, code ticks and URLs;
 * turns every list item into its own sentence, keeping the item's values in it, so no
   item is merged with its neighbour's price or quantity;
-* never touches a single underscore, so identifiers such as ``mia_kim_4397`` survive.
+* never touches a single underscore, so identifiers such as ``jordan_lee_82`` survive.
 
 Pure; the turn manager applies it before the answer enters the transcript, so the
 transcript records what was spoken.

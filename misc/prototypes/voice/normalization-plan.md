@@ -2,6 +2,12 @@
 
 **Status:** implemented; offline replay done (§9.1), τ³ runs pending (§9.2) · **Date:** 2026-09-26 · **Revision:** 4
 
+Revision 5 (2026-10-05). Domain-generic additions for the frontend-delegation prototype
+(`misc/prototypes/frontend-delegation-hermes/tau3-voice-domain-specific-changes-genericization.md` §4.5):
+- `normalization.tool_arguments.rules: auto` derives rules per session from the client's tool schemas (§4.3).
+- Two optional rule keys, `restore_prefix` and `keep_pattern` (§4.3).
+- The examples below use invented values instead of benchmark identifiers.
+
 Revision 4 (2026-09-30). Two additive settings, both off by default, for the frontend-delegation prototype's τ³
 failure fixes (`misc/prototypes/frontend-delegation-hermes/tau3-failure-fixes-plan.md` §3.1 and §3.3):
 - `normalization.transcript.spelled_runs` joins spelled letters and digits outside anchored spans (§4.2).
@@ -149,14 +155,14 @@ A **span** is built around each run of anchors:
    word, or a run of short tokens, as in step 2.
 4. The span is replaced in place by its written form. Text outside spans is untouched.
 
-Examples (from the observation doc):
+Examples (invented values in the shape of the observation doc's transcripts):
 
 | Raw ASR | Normalized (`case: lower`) |
 |---|---|
-| `my user ID is Mia underscore Kim underscore four three nine seven.` | `my user ID is mia_kim_4397.` |
-| `M A underscore K im underscore nine nine five seven reason` | `ma_kim_9957 reason` (the ASR error `ma` stays: not ours to fix) |
-| `Em ma underscore Kim underscore nine nine five seven` | `emma_kim_9957` |
-| `Underscore nine nine five seven .` | `_9957 .` (an incomplete ID, visible as such) |
+| `my user ID is Jordan underscore Lee underscore eight two.` | `my user ID is jordan_lee_82.` |
+| `J O underscore L ee underscore eight two reason` | `jo_lee_82 reason` (an ASR error such as `jo` stays: not ours to fix) |
+| `Ja ne underscore L ee underscore eight two` | `jane_lee_82` |
+| `Underscore eight two .` | `_82 .` (an incomplete ID, visible as such) |
 | `I need two passengers` | unchanged (no anchor) |
 
 **Spelled runs** (`spelled_runs`, off by default). After the anchor pass, a run of at least `min_tokens`
@@ -171,8 +177,8 @@ the normalizer cannot tell a name from a reservation code:
 
 | Raw ASR | Normalized (`spelled_runs.case: keep`) |
 |---|---|
-| `I, F, O, Y, Y, Z and N, Q, N, U, five, R` | `IFOYYZ and NQNU5R` |
-| `R O S S I` | `ROSSI` |
+| `X, B, seven, T, P, two and Q, four, R, nine, K, M` | `XB7TP2 and Q4R9KM` |
+| `Q U E N T I N` | `QUENTIN` |
 | `five zero zero` | unchanged (no letter) |
 
 The tool-argument hook's `spoken_form` clean-up never uses spelled runs. With the switch off, every output is
@@ -196,7 +202,21 @@ Rule shape (one per tool argument, profile config):
   case: lower                          # keep | lower | upper
   pattern: '^[a-z]+_[a-z]+_\d{4}$'     # full match after clean-up; "" = no check
   on_invalid: answer_locally           # answer_locally | send
+  restore_prefix: ""                   # revision 5: a missing symbol prefix to put back (for example "#"); symbols only
+  keep_pattern: ""                     # revision 5: a value that already full-matches it is never changed
 ```
+
+**Schema-derived rules** (revision 5, `rules: auto`). Instead of a list, `rules: auto` derives the rules per
+session from the client's `session.update` tool schemas (`normalization/schema_rules.py`). No tool or domain
+name is configured. Only read tools get a rule: a name that starts with `get_`, `find_`, `search_`, `list_`,
+`lookup_`, `check_`, or `calculate`, or a description that starts with Get, Find, Search, List, or Look up.
+Every other tool counts as a write tool, and its arguments are never rewritten. A rule covers each string
+argument named `id` or `*_id` whose description quotes an example (`such as 'x'`, `e.g. 'x'`). From that
+example the rule takes the case and separator, strips only those of `" .-"` that the example does not contain,
+and restores a symbol prefix such as `#`, never a letter or digit. A value already in the example's shape stays
+unchanged (`keep_pattern`). The rule answers locally only for a clearly incomplete value. Only the
+frontend-delegation prototype applies `auto` (after the gateway accepts the tools); this voice server accepts
+the setting but derives no rules itself.
 
 In the runner, after each agent step that returns tool calls (in `respond` and in `resume`):
 
@@ -238,7 +258,7 @@ Invariants:
 
 Local messages are catalog keys with literal placeholders `{label}`, `{value}`, `{format_hint}`,
 `{spelled}` and `{tool}`. `{spelled}` is the value read out character by character
-(`m, i, a, underscore, k, i, m, underscore, 4, 3, 9, 7`). Proposed wording:
+(`j, o, r, d, a, n, underscore, l, e, e, underscore, 8, 2`). Proposed wording:
 - `tool_argument_invalid`: "Not looked up: "{value}" is not a complete {label} (format
   {format_hint}). No tool was called. Ask the user to say their complete {label} again. Do not guess
   or fill in any part of it."
@@ -269,12 +289,12 @@ the transcript hook is enabled (`normalization/prompts.py`, applied in `TextAgen
 through the per-session inline prompts, so `rendered_prompts()` shows it). Proposed
 `identifier_note_voice`:
 
-- User turns may already contain an identifier in written form, such as `mia_kim_4397`. Copy it into
+- User turns may already contain an identifier in written form, such as `jordan_lee_82`. Copy it into
   query exactly, character for character.
 - For identifiers only, this refines "the latest user turn overrides older values": if an earlier
   turn gave a complete identifier and a later turn gives only part of it, or a different spelling
   that is not stated as a correction, keep the earlier one and add the later wording, for example
-  "user ID mia_kim_4397 (latest attempt: mia_fancy_4739)". An explicit correction still overrides.
+  "user ID jordan_lee_82 (latest attempt: jordan_leigh_28)". An explicit correction still overrides.
 
 This addresses task 26 (`Amelia_Sanchez` → `Amelia_Fancy`). The backend needs no note: the local
 tool results explain themselves.
@@ -318,7 +338,7 @@ normalization:
     spelled_runs: {enabled: false, min_tokens: 3, case: keep}   # revision 4 (§4.2)
   tool_arguments:
     enabled: false
-    rules: []                        # §4.3
+    rules: []                        # §4.3; or auto (revision 5)
     invalid_message_key: tool_argument_invalid
     escalate_invalid_message_key: ""   # revision 4: message for the 2nd+ invalid answer of a tool; "" = none
     max_local_rounds: 3

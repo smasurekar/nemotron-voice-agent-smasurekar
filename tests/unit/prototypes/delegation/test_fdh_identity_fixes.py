@@ -3,7 +3,7 @@
 
 # ruff: noqa: D100, D101, D102, D103, D107
 
-"""tau3-identity-fixes-plan.md: I1 (telecom domain note) and I3/I4 (recovery notes on failed lookups)."""
+"""I1 (now the domain-agnostic <phone_numbers> block; no domain notes ship) and I3/I4 (recovery notes)."""
 
 from __future__ import annotations
 
@@ -24,106 +24,131 @@ from prototypes.voice_frontend_backend_agent.normalization.arguments import Resu
 
 CONFIG = PACKAGE / "config"
 BACKEND_PROMPTS = CONFIG / "prompts.backend.yaml"
-ALL_ON = {"spelling_v2": True, "spoken_output": True, "write_consent": True, "domain_notes": True}
-ALL_ON_BUT_NOTES = {**ALL_ON, "domain_notes": False}
+ALL_ON = {"spelling_v2": True, "spoken_output": True, "write_consent": True, "phone_format": True}
+ALL_ON_BUT_PHONE = {**ALL_ON, "phone_format": False}
 NOT_FOUND = "Error: User not found"
 FOUND = '"sara_doe_496"'
-
-
-def _tools(domain: str) -> list[str]:
-    return [t["name"] for t in tau2_session_update(domain)["session"]["tools"]]
+DOMAINS = ("airline", "retail", "telecom", "mock")
 
 
 def _instructions(domain: str) -> str:
     return tau2_session_update(domain)["session"]["instructions"]
 
 
-# -- I1: domain detection and the telecom note -----------------------------------------------------
+def _phone_block(text: str) -> str:
+    return text[text.index("<phone_numbers>") : text.index("</phone_numbers>") + len("</phone_numbers>")]
 
 
-class DomainNoteTests(unittest.TestCase):
-    def test_shipped_detection_maps_each_tau2_domain(self) -> None:
-        domains = gc.load_gateway_config(CONFIG / "gateway.yaml").domains
-        detected = {}
-        for domain in ("airline", "retail", "telecom", "mock"):
-            names = set(_tools(domain))
-            detected[domain] = next((name for name, tools in domains if names.intersection(tools)), "")
-        self.assertEqual(detected, {"airline": "airline", "retail": "retail", "telecom": "telecom", "mock": ""})
+def _catalog_with_note(tmp: str) -> Path:
+    """The shipped backend catalog plus one invented domain note (the mechanism, not a shipped note)."""
+    text = BACKEND_PROMPTS.read_text(encoding="utf-8")
+    assert "backend_domain_notes: {}" in text  # noqa: S101 - no shipped note
+    path = Path(tmp) / "prompts.backend.yaml"
+    path.write_text(
+        text.replace(
+            "backend_domain_notes: {}",
+            "backend_domain_notes:\n  widgets: |-\n"
+            "    {% if features.domain_notes %}Widget codes are case-sensitive.{% endif %}",
+        ),
+        encoding="utf-8",
+    )
+    return path
 
-    def test_note_renders_only_for_telecom_and_only_with_its_feature(self) -> None:
-        on, off = BackendTemplates(BACKEND_PROMPTS, prompt_features=ALL_ON), BackendTemplates(BACKEND_PROMPTS)
-        self.assertIn("555-123-4567", on.domain_note("telecom"))
-        self.assertIn("exactly ten digits", on.domain_note("telecom"))
-        self.assertIn("Never add, remove or change digits", on.domain_note("telecom"))
-        self.assertNotIn("555-123-2002", on.domain_note("telecom"))  # never the benchmark's number
-        for domain in ("airline", "retail", "mock", ""):
-            self.assertEqual(on.domain_note(domain), "")
-        self.assertEqual(off.domain_note("telecom"), "")
-        self.assertEqual(on.domains_with_notes, ("telecom",))
 
-    def test_note_changes_only_the_telecom_prompt_and_only_by_its_block(self) -> None:
-        for features in (ALL_ON, {"domain_notes": True}):
-            on = BackendTemplates(BACKEND_PROMPTS, prompt_features=features)
-            without = BackendTemplates(BACKEND_PROMPTS, prompt_features={**features, "domain_notes": False})
-            for domain in ("airline", "retail", "mock"):
-                with self.subTest(features=features, domain=domain):
-                    self.assertEqual(
-                        on.render("backend_system", instructions=_instructions(domain), domain_note=""),
-                        without.render("backend_system", instructions=_instructions(domain)),
-                    )
-            telecom = _instructions("telecom")
-            note = on.domain_note("telecom")
-            with_note = on.render("backend_system", instructions=telecom, domain_note=note)
-            plain = without.render("backend_system", instructions=telecom)
-            block = f"\n\n<domain_notes>\n{note}\n</domain_notes>"
-            self.assertIn(block, with_note)
-            self.assertEqual(with_note.replace(block, "", 1).rstrip(), plain)
-            self.assertLess(with_note.index("</policy>"), with_note.index("<domain_notes>"))
+# -- I1: the phone-number block, and no domain notes ------------------------------------------------
+
+
+class PhoneFormatTests(unittest.TestCase):
+    def test_no_domain_detection_and_no_note_ships(self) -> None:
+        for name in ("gateway.yaml", "gateway.eval.yaml"):
+            with self.subTest(gateway=name):
+                self.assertEqual(gc.load_gateway_config(CONFIG / name).domains, ())
+        self.assertEqual(BackendTemplates(BACKEND_PROMPTS, prompt_features=ALL_ON).domains_with_notes, ())
+
+    def test_block_renders_only_with_its_feature_and_identically_in_every_domain(self) -> None:
+        on = BackendTemplates(BACKEND_PROMPTS, prompt_features=ALL_ON)
+        off = BackendTemplates(BACKEND_PROMPTS, prompt_features=ALL_ON_BUT_PHONE)
+        blocks = set()
+        for domain in DOMAINS:
+            with self.subTest(domain=domain):
+                with_block = on.render("backend_system", instructions=_instructions(domain))
+                without = off.render("backend_system", instructions=_instructions(domain))
+                block = _phone_block(with_block)
+                blocks.add(block)
+                self.assertEqual(with_block.replace(f"\n\n{block}", "", 1), without)
+                self.assertLess(with_block.index("</policy>"), with_block.index("<phone_numbers>"))
+                self.assertNotIn("<phone_numbers>", without)
+        self.assertEqual(len(blocks), 1)
+
+    def test_block_formats_lookups_only_and_states_no_data_fact(self) -> None:
+        block = _phone_block(
+            BackendTemplates(BACKEND_PROMPTS, prompt_features=ALL_ON).render("backend_system", instructions="")
+        )
+        self.assertIn("look something up by phone number", block)
+        self.assertIn("XXX-XXX-XXXX", block)
+        self.assertIn("retry it once with the\nsame digits in the other common form", block)
+        self.assertIn("Never add, remove or change digits", block)
+        self.assertIn("pass it exactly as the user confirmed it or\nas a tool returned it; do not reformat it", block)
+        self.assertNotIn("stored", block)  # a preference, not a statement about the data
+        self.assertNotRegex(block, r"\d{3}")  # no example number at all
 
     def test_gateway_domains_are_validated(self) -> None:
-        for bad in ({"telecom": ["get_customer_by_phone"]}, {"telecom": {"tools_any": []}},
-                    {"telecom": {"tools_any": ["x"], "tools_all": ["y"]}}, ["telecom"]):  # fmt: skip
+        for bad in ({"widgets": ["lookup_widget"]}, {"widgets": {"tools_any": []}},
+                    {"widgets": {"tools_any": ["x"], "tools_all": ["y"]}}, ["widgets"]):  # fmt: skip
             with self.subTest(bad=bad), self.assertRaises(gc.GatewayConfigError):
                 gc.load_gateway_config(None, overrides={"domains": bad})
         self.assertEqual(gc.load_gateway_config(None).domains, ())
 
+    def test_the_note_mechanism_still_works_with_an_invented_note(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = _catalog_with_note(tmp)
+            on = BackendTemplates(path, prompt_features={"domain_notes": True})
+            self.assertEqual(on.domain_note("widgets"), "Widget codes are case-sensitive.")
+            self.assertEqual(on.domain_note(""), "")
+            self.assertEqual(BackendTemplates(path).domain_note("widgets"), "")
+
 
 class ControllerDomainTests(unittest.IsolatedAsyncioTestCase):
-    async def _configure(self, domain: str, features: dict[str, bool]) -> ControllerHarness:
-        domains = gc.load_gateway_config(CONFIG / "gateway.yaml").domains
-        h = ControllerHarness(domains=domains)
+    async def _configure(
+        self, tools: list[dict], instructions: str, features: dict[str, bool], **settings: object
+    ) -> ControllerHarness:
+        h = ControllerHarness(domains=gc.load_gateway_config(CONFIG / "gateway.yaml").domains, **settings)
         h.controller._templates = BackendTemplates(BACKEND_PROMPTS, prompt_features=features)  # noqa: SLF001
         await h.controller.open({"steer_mode": "auto"})
-        tools = tau2_session_update(domain)["session"]["tools"]
-        await h.controller.configure(tools, _instructions(domain))
+        await h.controller.configure(tools, instructions)
         return h
 
-    async def test_telecom_worker_gets_the_note_and_the_fingerprint_hashes_what_it_got(self) -> None:
-        h = await self._configure("telecom", ALL_ON)
-        system = h.worker.of_type("configure")[0]["instructions"]
-        self.assertIn("<domain_notes>", system)
-        configured = h.of_type("session.configured")[0]
-        self.assertEqual(configured["backend_domain"], "telecom")
-        self.assertEqual(configured["backend_system_sha256"], sha256_text(system))
+    async def test_every_domain_gets_the_same_prompt_shape_and_no_domain(self) -> None:
+        for domain in DOMAINS:
+            for features in (ALL_ON, ALL_ON_BUT_PHONE):
+                with self.subTest(domain=domain, features=features):
+                    instructions = _instructions(domain)
+                    h = await self._configure(tau2_session_update(domain)["session"]["tools"], instructions, features)
+                    system = h.worker.of_type("configure")[0]["instructions"]
+                    self.assertNotIn("<domain_notes>", system)
+                    self.assertEqual(features["phone_format"], "<phone_numbers>" in system)
+                    plain = BackendTemplates(BACKEND_PROMPTS, prompt_features=features).render(
+                        "backend_system", instructions=instructions
+                    )
+                    self.assertEqual(system, plain)
+                    configured = h.of_type("session.configured")[0]
+                    self.assertEqual(configured["backend_domain"], "")
+                    self.assertEqual(configured["backend_system_sha256"], sha256_text(system))
 
-    async def test_other_domains_and_the_control_get_no_note(self) -> None:
-        for domain, features, expected in (
-            ("retail", ALL_ON, "retail"),
-            ("airline", ALL_ON, "airline"),
-            ("mock", ALL_ON, ""),
-            ("telecom", ALL_ON_BUT_NOTES, "telecom"),
-        ):
-            with self.subTest(domain=domain, features=features):
-                h = await self._configure(domain, features)
-                system = h.worker.of_type("configure")[0]["instructions"]
-                self.assertNotIn("<domain_notes>", system)
-                plain = BackendTemplates(BACKEND_PROMPTS, prompt_features=features).render(
-                    "backend_system", instructions=_instructions(domain)
-                )
-                self.assertEqual(system, plain)
-                configured = h.of_type("session.configured")[0]
-                self.assertEqual(configured["backend_domain"], expected)
-                self.assertEqual(configured["backend_system_sha256"], sha256_text(system))
+    async def test_an_invented_domain_gets_its_note_and_the_fingerprint_hashes_it(self) -> None:
+        tools = [{"type": "function", "name": "lookup_widget", "description": "Look up a widget.", "parameters": {}}]
+        with tempfile.TemporaryDirectory() as tmp:
+            h = ControllerHarness(domains=(("widgets", ("lookup_widget",)),))
+            h.controller._templates = BackendTemplates(  # noqa: SLF001
+                _catalog_with_note(tmp), prompt_features={"domain_notes": True}
+            )
+            await h.controller.open({"steer_mode": "auto"})
+            await h.controller.configure(tools, "POLICY")
+        system = h.worker.of_type("configure")[0]["instructions"]
+        self.assertIn("<domain_notes>\nWidget codes are case-sensitive.\n</domain_notes>", system)
+        configured = h.of_type("session.configured")[0]
+        self.assertEqual(configured["backend_domain"], "widgets")
+        self.assertEqual(configured["backend_system_sha256"], sha256_text(system))
 
 
 # -- I3 / I4: the per-session miss counter ---------------------------------------------------------
@@ -166,12 +191,12 @@ class ResultHintsTests(unittest.TestCase):
     def test_local_invalid_counts_toward_the_next_miss(self) -> None:
         hints = _hints()
         hints.on_local_invalid("get_user_details")
-        hint = hints.on_output("get_user_details", "Error: User aarav_ahmed_6699 not found")
+        hint = hints.on_output("get_user_details", "Error: User aalto_ahlen_4417 not found")
         assert hint is not None
         self.assertEqual((hint.message_key, hint.miss), ("i4", 2))
         uncounted = _hints(count_local_invalid=False)
         uncounted.on_local_invalid("get_user_details")
-        hint = uncounted.on_output("get_user_details", "Error: User aarav_ahmed_6699 not found")
+        hint = uncounted.on_output("get_user_details", "Error: User aalto_ahlen_4417 not found")
         assert hint is not None
         self.assertEqual(hint.message_key, "i3")
 
@@ -183,7 +208,7 @@ class ResultHintsTests(unittest.TestCase):
     def test_unwatched_tools_and_other_errors_are_untouched(self) -> None:
         hints = _hints()
         self.assertIsNone(
-            hints.on_output("get_customer_by_phone", "Error: Customer with phone number 5551232002 not found")
+            hints.on_output("get_customer_by_phone", "Error: Customer with phone number 3034971268 not found")
         )
         self.assertIsNone(hints.on_output("get_order_details", "Error: Order not found"))
         hints.on_output("find_user_id_by_name_zip", NOT_FOUND)
@@ -227,7 +252,7 @@ class RelayHintTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_default_profile_annotates_retail_misses_and_leaves_successes(self) -> None:
         harness = await self._session("tau3_eval.yaml", "retail")
-        args = '{"first_name": "Isabela", "last_name": "Johansson", "zip": "32286"}'
+        args = '{"first_name": "Maren", "last_name": "Oakhurst", "zip": "40917"}'
         first = await self._round_trip(harness, 1, "find_user_id_by_name_zip", args, NOT_FOUND)
         second = await self._round_trip(harness, 2, "find_user_id_by_name_zip", args, NOT_FOUND)
         found = await self._round_trip(harness, 3, "find_user_id_by_name_zip", args, FOUND)
@@ -236,18 +261,18 @@ class RelayHintTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('"S as in Sam', second)
         self.assertEqual(found, FOUND)
         logged = [(e["message_key"], e["n"]) for e in harness.logged("result_hint")]
-        self.assertEqual(logged, [("identity_not_found_hint", 1), ("identity_not_found_hint_words", 2)])
+        self.assertEqual(logged, [("lookup_not_found_hint", 1), ("lookup_not_found_hint_words", 2)])
         start = harness.logged("fdh_session_start")[0]
         self.assertTrue(start["features"]["result_hints"])
-        self.assertEqual(start["invalid_message_keys"]["result_hint_escalate"], "identity_not_found_hint_words")
+        self.assertEqual(start["invalid_message_keys"]["result_hint_escalate"], "lookup_not_found_hint_words")
         await harness.close()
 
     async def test_control_and_telecom_outputs_are_byte_identical(self) -> None:
         for profile, domain, name, args, output in (
             ("tau3_eval_baseline.yaml", "retail", "find_user_id_by_email", '{"email": "a@b.com"}', NOT_FOUND),
             ("tau3_identity_control.yaml", "retail", "find_user_id_by_email", '{"email": "a@b.com"}', NOT_FOUND),
-            ("tau3_eval.yaml", "telecom", "get_customer_by_phone", '{"phone_number": "5551232002"}',
-             "Error: Customer with phone number 5551232002 not found"),
+            ("tau3_eval.yaml", "telecom", "get_customer_by_phone", '{"phone_number": "3034971268"}',
+             "Error: Customer with phone number 3034971268 not found"),
         ):  # fmt: skip
             with self.subTest(profile=profile, domain=domain):
                 harness = await self._session(profile, domain)
@@ -263,13 +288,13 @@ class RelayHintTests(unittest.IsolatedAsyncioTestCase):
             epoch=1,
             run_id="run_1",
             name="get_user_details",
-            arguments='{"user_id": "aarav_ah"}',
+            arguments='{"user_id": "aalto_ah"}',
         )
         local = await harness.wait_sent("tool.result")
         self.assertTrue(local["local"])
         self.assertNotIn("[Not found", local["output"])  # a local answer is never annotated
         output = await self._round_trip(
-            harness, 1, "get_user_details", '{"user_id": "aarav_ahmed_6699"}', "Error: User aarav_ahmed_6699 not found"
+            harness, 1, "get_user_details", '{"user_id": "aalto_ahlen_4417"}', "Error: User aalto_ahlen_4417 not found"
         )
         self.assertIn("[Not found again.", output)
         await harness.close()
@@ -321,7 +346,7 @@ class ResultHintConfigTests(unittest.TestCase):
             for p in voice.glob("*.yaml")
             if load_voice_config(p).normalization.tool_arguments.result_hints.enabled
         }
-        self.assertEqual(on, {"tau3_fixes.yaml", "tau3_recovery_hint.yaml"})
+        self.assertEqual(on, {"realtime_eval.yaml", "tau3_fixes.yaml", "tau3_recovery_hint.yaml"})
         self.assertTrue((PROFILES / "tau3_arm_i3_recovery_hint.yaml").exists())
 
 
