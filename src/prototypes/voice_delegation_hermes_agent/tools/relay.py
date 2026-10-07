@@ -7,8 +7,14 @@
 * ``ArgumentNormalizer.screen`` runs first (when configured): invalid or already-failed
   lookups are answered locally and never reach the client.
 * ``ResultHints`` (when configured) appends a recovery note to a failed user or customer
-  lookup's output before it goes to the gateway (I3, I4).
-* :meth:`ToolRelay.reconfigure` swaps both once the session's tools are known (schema rules).
+  lookup's output before it goes to the gateway (I3, I4); with ``FieldProvenance`` the 2nd and
+  later note also says which values the user spelled or only said (A3).
+* ``FormatRetry`` (when configured) handles a not-found lookup by a phone field (A1 / A1-lite,
+  tau3-geval-failure-fixes-plan.md section 4): on a tool that declares read-only semantics the
+  relay looks up the same digits in the other format itself (a synthetic call ``<id>.fmt`` in its
+  own batch, emitted after the original batch's acknowledgement; the original result is withheld
+  until it settles); on any other read tool it appends a hint.
+* :meth:`ToolRelay.reconfigure` swaps them once the session's tools are known (schema rules).
 * ``executor: wire`` emits the batch as one Realtime response of ``function_call`` items;
   ``function_call_output`` goes back to the gateway, and a later ``response.create`` is the
   batch's acknowledgement (:meth:`ToolRelay.take_ack`).
@@ -27,12 +33,20 @@ from typing import Any
 from prototypes.text_frontend_backend_agent.messages import ToolCall
 from prototypes.text_frontend_backend_agent.tools import ToolRegistry, ToolSpec
 from prototypes.voice_delegation_hermes_agent.engine.output_scheduler import CallsItem
+from prototypes.voice_delegation_hermes_agent.tools.field_provenance import FieldProvenance
+from prototypes.voice_delegation_hermes_agent.tools.format_retry import Candidate, FormatRetry
 from prototypes.voice_delegation_hermes_agent.tools.result_hints import ResultHints
 from prototypes.voice_frontend_backend_agent.errors import WireProtocolError
-from prototypes.voice_frontend_backend_agent.normalization.arguments import ArgumentNormalizer, FailureKey
+from prototypes.voice_frontend_backend_agent.normalization.arguments import (
+    ArgumentNormalizer,
+    FailureKey,
+    render_message,
+)
 
 SendResult = Callable[[str, int, str, bool], None]  # call_id, epoch, output, local
 Log = Callable[..., None]
+#: Suffix of the relay's own format-retry call ids (A1).
+RETRY_SUFFIX = ".fmt"
 
 _BATCH_IDS = itertools.count(1)
 
@@ -58,6 +72,27 @@ class _Batch:
         return all(call_id in self.outputs for call_id in self.call_ids)
 
 
+@dataclass(frozen=True, slots=True)
+class FormatRetryMessages:
+    """The catalog texts of ``format_retry``'s three message keys (``{value}``: the other form)."""
+
+    hint: str = ""
+    found: str = ""
+    not_found: str = ""
+
+
+@dataclass(slots=True)
+class _Retry:
+    """An A1 format retry in flight: the withheld original result and the synthetic call."""
+
+    original: _Call
+    output: str  # the original (not-found) output, withheld
+    candidate: Candidate
+    call: _Call
+    emitted: bool = False
+    timer: asyncio.TimerHandle | None = None
+
+
 class ToolRelay:
     """One session's tool round trips."""
 
@@ -73,6 +108,10 @@ class ToolRelay:
         local_tools: Sequence[ToolSpec] = (),
         batch_window_ms: int = 30,
         per_call_delay_s: float = 0.0,
+        format_retry: FormatRetry | None = None,
+        format_messages: FormatRetryMessages | None = None,
+        provenance: FieldProvenance | None = None,
+        result_timeout_s: float = 120.0,
     ) -> None:
         """Bind the session's sinks and settings."""
         self._executor = executor
@@ -92,6 +131,11 @@ class ToolRelay:
         self._failed: frozenset[FailureKey] = frozenset()
         self._invalid_counts: dict[str, int] = {}  # tool -> invalid answers so far (escalating wording)
         self._tasks: set[asyncio.Task[None]] = set()
+        self._format = format_retry
+        self._format_messages = format_messages or FormatRetryMessages()
+        self._provenance = provenance
+        self._result_timeout_s = result_timeout_s
+        self._retries: dict[str, _Retry] = {}  # synthetic call id -> retry
 
     # -- from the gateway -------------------------------------------------------------------
 
@@ -113,10 +157,10 @@ class ToolRelay:
         call = self._open.pop(call_id, None)
         self._cancelled.add(call_id)
         if call is not None:
-            for batch in self._batches:
-                if call_id in batch.call_ids and call_id not in batch.outputs:
-                    batch.outputs[call_id] = ""
+            self._mark_output(call_id, "")
         self._log("tool_cancelled", call_id=call_id, reason=reason)
+        for retry in [r for r in self._retries.values() if r.original.call_id == call_id]:
+            self._drop_retry(retry, outcome="cancelled")
 
     # -- from the client --------------------------------------------------------------------
 
@@ -133,18 +177,36 @@ class ToolRelay:
                 param="item.call_id",
             )
         self._log("tool_output_in", call_id=call_id, output=output)
-        if call.key is not None and self._normalizer is not None and self._normalizer.is_permanent_failure(output):
+        retry = self._retries.get(call_id)
+        if retry is not None:
+            self._settle_retry(retry, output)
+            return
+        permanent = (
+            call.key is not None and self._normalizer is not None and self._normalizer.is_permanent_failure(output)
+        )
+        if permanent and call.key is not None:
             self._failed = self._failed | {call.key}
+        candidate = self._format_candidate(call) if permanent else None
+        if candidate is not None and candidate.call:
+            self._mark_output(call_id, output)
+            self._start_retry(call, output, candidate)
+            return
+        if candidate is not None:
+            output = self._format_hint(call, output, candidate)
         output = self._annotate(call, output)
         self._send_result(call_id, call.epoch, output, False)
-        for batch in self._batches:
-            if call_id in batch.call_ids:
-                batch.outputs[call_id] = output
+        self._mark_output(call_id, output)
 
-    def reconfigure(self, normalizer: ArgumentNormalizer | None, result_hints: ResultHints | None) -> None:
-        """Use a normalizer and result hints rebuilt for new session tools (failed calls stay known)."""
+    def reconfigure(
+        self,
+        normalizer: ArgumentNormalizer | None,
+        result_hints: ResultHints | None,
+        format_retry: FormatRetry | None = None,
+    ) -> None:
+        """Use the collaborators rebuilt for new session tools (failed calls stay known)."""
         self._normalizer = normalizer
         self._hints = result_hints
+        self._format = format_retry
 
     def take_ack(self) -> bool:
         """``response.create``: consume one tool batch's acknowledgement, if a batch awaits one."""
@@ -152,10 +214,12 @@ class ToolRelay:
             if batch.complete or batch.outputs:
                 del self._batches[index]
                 self._log("tool_batch_ack", batch_id=batch.batch_id, complete=batch.complete)
+                self._emit_ready_retries()
                 return True
         if self._batches:
             batch = self._batches.pop(0)
             self._log("tool_batch_ack", batch_id=batch.batch_id, complete=False, early=True)
+            self._emit_ready_retries()
             return True
         return False
 
@@ -169,6 +233,10 @@ class ToolRelay:
         if self._flush_handle is not None:
             self._flush_handle.cancel()
             self._flush_handle = None
+        for retry in list(self._retries.values()):
+            if retry.timer is not None:
+                retry.timer.cancel()
+        self._retries.clear()
         for task in list(self._tasks):
             task.cancel()
         for task in list(self._tasks):
@@ -197,7 +265,13 @@ class ToolRelay:
         for call in sent:
             self._open[call.call_id] = call
         self._batches.append(_Batch(batch_id=batch_id, call_ids=tuple(call.call_id for call in sent)))
-        self._log("tool_calls_out", batch_id=batch_id, calls=[call.name for call in sent])
+        self._log(
+            "tool_calls_out",
+            batch_id=batch_id,
+            calls=[call.name for call in sent],
+            call_ids=[call.call_id for call in sent],
+            arguments=[call.arguments for call in sent],
+        )
         self._emit_calls(CallsItem(batch_id=batch_id, calls=[(c.call_id, c.name, c.arguments) for c in sent]))
 
     def _screen(self, calls: list[_Call]) -> list[_Call]:
@@ -251,12 +325,136 @@ class ToolRelay:
         self._log("tool_output_in", call_id=call.call_id, output=result.content, local_executor=True)
         self._send_result(call.call_id, call.epoch, self._annotate(call, result.content), False)
 
-    def _annotate(self, call: _Call, output: str) -> str:
-        """The output with a recovery note appended when ``ResultHints`` asks for one."""
+    def _annotate(self, call: _Call, output: str, *, hint_output: str | None = None) -> str:
+        """The output with a recovery note appended when ``ResultHints`` asks for one.
+
+        ``hint_output`` is what the hints judge (the lookup's own result), when ``output`` carries more.
+        """
         if self._hints is None:
             return output
-        hint = self._hints.on_output(call.name, output)
+        hint = self._hints.on_output(call.name, output if hint_output is None else hint_output)
         if hint is None:
             return output
         self._log("result_hint", call_id=call.call_id, tool=call.name, message_key=hint.message_key, n=hint.miss)
-        return hint.output
+        note = hint.note
+        if self._provenance is not None and self._hints.field_provenance and hint.miss >= 2:
+            line = self._provenance.describe(call.arguments)
+            if line:
+                note = f"{note}\n{line}"
+                self._log("field_provenance", call_id=call.call_id, tool=call.name, line=line)
+        return f"{output.rstrip()}\n\n{note}"
+
+    def _mark_output(self, call_id: str, output: str) -> None:
+        for batch in self._batches:
+            if call_id in batch.call_ids and call_id not in batch.outputs:
+                batch.outputs[call_id] = output
+
+    # -- format retry (A1 / A1-lite) ------------------------------------------------------------
+
+    def _format_candidate(self, call: _Call) -> Candidate | None:
+        if self._format is None or self._normalizer is None:
+            return None
+        return self._format.candidate(
+            call.name, call.arguments, has_rule=self._normalizer.has_rule, failed=self._failed
+        )
+
+    def _format_hint(self, call: _Call, output: str, candidate: Candidate) -> str:
+        """A1-lite: the not-found output with the other form, for the backend to look up once."""
+        self._log_format(call, candidate, outcome="hint")
+        note = render_message(self._format_messages.hint, value=candidate.after)
+        return f"{output.rstrip()}\n\n{note}" if note else output
+
+    def _start_retry(self, original: _Call, output: str, candidate: Candidate) -> None:
+        """A1: withhold ``output`` and look up the other form (emitted after the original batch's ack)."""
+        call = _Call(
+            call_id=f"{original.call_id}{RETRY_SUFFIX}",
+            epoch=original.epoch,
+            name=original.name,
+            arguments=candidate.arguments,
+            key=candidate.key,
+        )
+        retry = _Retry(original=original, output=output, candidate=candidate, call=call)
+        self._retries[call.call_id] = retry
+        retry.timer = asyncio.get_running_loop().call_later(self._result_timeout_s, self._retry_timed_out, call.call_id)
+        if not any(b.batch_id == original.batch_id for b in self._batches):
+            self._emit_retry(retry)
+
+    def _emit_ready_retries(self) -> None:
+        """Emit retries whose original batch has been acknowledged."""
+        pending = {batch.batch_id for batch in self._batches}
+        for retry in list(self._retries.values()):
+            if not retry.emitted and retry.original.batch_id not in pending:
+                self._emit_retry(retry)
+
+    def _emit_retry(self, retry: _Retry) -> None:
+        retry.emitted = True
+        call = retry.call
+        call.batch_id = f"batch_{next(_BATCH_IDS)}"
+        self._open[call.call_id] = call
+        self._batches.append(_Batch(batch_id=call.batch_id, call_ids=(call.call_id,)))
+        self._log(
+            "tool_calls_out",
+            batch_id=call.batch_id,
+            calls=[call.name],
+            call_ids=[call.call_id],
+            arguments=[call.arguments],
+            format_retry=True,
+        )
+        self._emit_calls(CallsItem(batch_id=call.batch_id, calls=[(call.call_id, call.name, call.arguments)]))
+
+    def _settle_retry(self, retry: _Retry, output: str) -> None:
+        """The other form's output: return the original call's result (outcome table, plan A1)."""
+        del self._retries[retry.call.call_id]
+        if retry.timer is not None:
+            retry.timer.cancel()
+        self._mark_output(retry.call.call_id, output)
+        original, candidate = retry.original, retry.candidate
+        assert self._normalizer is not None  # noqa: S101 - a retry starts only with a normalizer
+        if self._normalizer.is_permanent_failure(output):
+            self._failed = self._failed | {candidate.key}
+            note = render_message(self._format_messages.not_found, value=candidate.after)
+            combined = f"{retry.output.rstrip()}\n\n{note}" if note else retry.output
+            result = self._annotate(original, combined, hint_output=retry.output)
+            outcome = "not_found"
+        elif not output.strip() or output.lstrip().startswith("Error"):
+            result = self._annotate(original, retry.output)  # transient: the other form stays unmarked
+            outcome = "transient"
+        else:
+            note = render_message(self._format_messages.found, value=candidate.after)
+            combined = f"{note}\n{output}" if note else output
+            result = self._annotate(original, combined, hint_output=output)
+            outcome = "found"
+        self._log_format(original, candidate, outcome=outcome)
+        self._send_result(original.call_id, original.epoch, result, False)
+
+    def _retry_timed_out(self, call_id: str) -> None:
+        retry = self._retries.get(call_id)
+        if retry is None:
+            return
+        self._drop_retry(retry, outcome="timeout")
+        self._send_result(
+            retry.original.call_id, retry.original.epoch, self._annotate(retry.original, retry.output), False
+        )
+
+    def _drop_retry(self, retry: _Retry, *, outcome: str) -> None:
+        """Forget a retry: its call is cancelled and a late output is ignored like any cancelled id."""
+        self._retries.pop(retry.call.call_id, None)
+        if retry.timer is not None:
+            retry.timer.cancel()
+        call_id = retry.call.call_id
+        self._cancelled.add(call_id)
+        if self._open.pop(call_id, None) is not None:
+            self._mark_output(call_id, "")
+        self._log_format(retry.original, retry.candidate, outcome=outcome)
+
+    def _log_format(self, call: _Call, candidate: Candidate, *, outcome: str) -> None:
+        self._log(
+            "format_retry",
+            call_id=call.call_id,
+            tool=candidate.tool,
+            argument=candidate.argument,
+            before=candidate.before,
+            after=candidate.after,
+            mode="call" if candidate.call else "hint",
+            outcome=outcome,
+        )

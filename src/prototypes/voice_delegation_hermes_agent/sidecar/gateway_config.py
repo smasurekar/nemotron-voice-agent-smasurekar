@@ -74,6 +74,9 @@ DEFAULTS: dict[str, Any] = {
         "steer_timeout_s": 3.0,
         "status_timeout_s": 2.0,
         "disable_streaming": False,
+        # P0.3 (tau3-geval-failure-fixes-plan.md): each model request and response of a worker, written to
+        # <workers.log_dir>/<session_id>.trace.jsonl (logging only; the input of the G2 decision replay).
+        "backend_trace": False,
         "request_overrides": {
             "extra_body": {"chat_template_kwargs": {"enable_thinking": True}, "reasoning_budget": 1024}
         },
@@ -167,6 +170,7 @@ class HermesSection:
     disable_streaming: bool
     request_overrides: Mapping[str, Any]
     prompts_path: str
+    backend_trace: bool = False
 
     def worker_settings(self) -> dict[str, Any]:
         """The ``hermes`` block of the worker ``configure`` message."""
@@ -216,6 +220,7 @@ class GatewayConfig:
                 "agent_construct": self.hermes.agent_construct,
                 "run_budget_seconds": self.hermes.run_budget_seconds,
                 "run_hard_deadline_s": self.hermes.run_hard_deadline_s,
+                "backend_trace": self.hermes.backend_trace,
             },
             "recovery": {
                 "respawn": self.recovery.respawn,
@@ -403,6 +408,7 @@ def build_gateway_config(merged: Mapping[str, Any], files: tuple[Path, ...] = ()
         disable_streaming=pick(h, "hermes", "disable_streaming", bool),
         request_overrides=copy.deepcopy(dict(h.get("request_overrides") or {})),
         prompts_path=prompts_path,
+        backend_trace=pick(h, "hermes", "backend_trace", bool),
     )
     try:
         prompt_features = dict(features(merged.get("prompt_features"), BACKEND_FEATURES))

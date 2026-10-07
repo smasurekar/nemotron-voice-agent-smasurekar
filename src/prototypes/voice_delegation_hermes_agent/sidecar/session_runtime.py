@@ -37,7 +37,11 @@ def controller_settings(config: GatewayConfig) -> ControllerSettings:
         configure_timeout_s=config.workers.configure_timeout_s,
         respawn=config.recovery.respawn,
         max_respawns=config.recovery.max_respawns_per_session,
-        worker_hermes={**h.worker_settings(), "fake_default_tool": config.workers.fake_default_tool},
+        worker_hermes={
+            **h.worker_settings(),
+            "fake_default_tool": config.workers.fake_default_tool,
+            "backend_trace_dir": config.workers.log_dir if h.backend_trace else "",
+        },
         domains=config.domains,
     )
 

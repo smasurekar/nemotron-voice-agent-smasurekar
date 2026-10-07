@@ -39,9 +39,12 @@ from prototypes.voice_frontend_backend_agent.audio.formats import AudioFormat, p
 from prototypes.voice_frontend_backend_agent.errors import VoiceConfigError
 from prototypes.voice_frontend_backend_agent.normalization import NormalizationSettings
 from prototypes.voice_frontend_backend_agent.normalization.arguments import (
+    FORMAT_RETRY_FIELDS,
+    FORMAT_RETRY_MODES,
     GUARD_SCOPES,
     ON_INVALID,
     ArgumentRule,
+    FormatRetrySettings,
     ResultHintSettings,
     RetryGuardSettings,
     ToolArgumentSettings,
@@ -186,6 +189,15 @@ DEFAULTS: dict[str, Any] = {
                 "max_hints": 3,
                 "message_key": "lookup_not_found_hint",
                 "escalate_message_key": "",
+                "field_provenance": False,
+            },
+            "format_retry": {
+                "enabled": False,
+                "mode": "call",
+                "fields": "phone",
+                "hint_message_key": "format_retry_hint",
+                "found_message_key": "format_retry_found",
+                "not_found_message_key": "format_retry_not_found",
             },
         },
     },
@@ -223,6 +235,8 @@ _ENUMS: dict[str, tuple[str, ...]] = {
     "normalization.transcript.case": CASES,
     "normalization.transcript.spelled_runs.case": CASES,
     "normalization.tool_arguments.retry_guard.scope": GUARD_SCOPES,
+    "normalization.tool_arguments.format_retry.mode": FORMAT_RETRY_MODES,
+    "normalization.tool_arguments.format_retry.fields": FORMAT_RETRY_FIELDS,
 }
 
 
@@ -768,6 +782,15 @@ def _normalization(reader: _Reader, tools: ToolsConfig, warnings: list[str]) -> 
         max_hints=reader.int(f"{prefix}.result_hints.max_hints", minimum=1),
         message_key=reader.str(f"{prefix}.result_hints.message_key").strip(),
         escalate_message_key=reader.str(f"{prefix}.result_hints.escalate_message_key").strip(),
+        field_provenance=reader.bool(f"{prefix}.result_hints.field_provenance"),
+    )
+    format_retry = FormatRetrySettings(
+        enabled=reader.bool(f"{prefix}.format_retry.enabled"),
+        mode=reader.enum(f"{prefix}.format_retry.mode"),
+        fields=reader.enum(f"{prefix}.format_retry.fields"),
+        hint_message_key=reader.str(f"{prefix}.format_retry.hint_message_key").strip(),
+        found_message_key=reader.str(f"{prefix}.format_retry.found_message_key").strip(),
+        not_found_message_key=reader.str(f"{prefix}.format_retry.not_found_message_key").strip(),
     )
     arguments = ToolArgumentSettings(
         enabled=reader.bool(f"{prefix}.enabled"),
@@ -778,7 +801,16 @@ def _normalization(reader: _Reader, tools: ToolsConfig, warnings: list[str]) -> 
         max_local_rounds=reader.int(f"{prefix}.max_local_rounds", minimum=1),
         retry_guard=guard,
         result_hints=hints,
+        format_retry=format_retry,
     )
+    if format_retry.enabled:
+        if not arguments.enabled:
+            raise VoiceConfigError(f"{prefix}.format_retry.enabled requires {prefix}.enabled")
+        if not (guard.enabled and guard.permanent_failure_pattern):
+            raise VoiceConfigError(
+                f"{prefix}.format_retry.enabled requires the retry guard (its permanent_failure_pattern "
+                "tells a not-found result from a transient error)"
+            )
     if hints.enabled:
         if not arguments.enabled:
             raise VoiceConfigError(f"{prefix}.result_hints.enabled requires {prefix}.enabled")
@@ -829,6 +861,10 @@ def _check_normalization_prompts(config: VoiceConfig) -> None:
                     settings.tool_arguments.retry_guard.message_key,
                 )
             )
+        retry = settings.tool_arguments.format_retry
+        if retry.enabled:
+            for name in ("hint_message_key", "found_message_key", "not_found_message_key"):
+                keys.append((f"normalization.tool_arguments.format_retry.{name}", getattr(retry, name)))
         hints = settings.tool_arguments.result_hints
         if hints.enabled:
             keys.append(("normalization.tool_arguments.result_hints.message_key", hints.message_key))

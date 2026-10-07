@@ -38,7 +38,9 @@
       "search_onestop_flight",
       "get_flight_status"
     ],
-    "phone_arguments": []
+    "phone_arguments": [],
+    "format_retry_arguments": [],
+    "read_only_tools": []
   },
   "retail": {
     "rules": [
@@ -105,7 +107,9 @@
       "get_user_details",
       "list_all_product_types"
     ],
-    "phone_arguments": []
+    "phone_arguments": [],
+    "format_retry_arguments": [],
+    "read_only_tools": []
   },
   "telecom": {
     "rules": [],
@@ -120,7 +124,11 @@
     ],
     "phone_arguments": [
       "get_customer_by_phone.phone_number"
-    ]
+    ],
+    "format_retry_arguments": [
+      "get_customer_by_phone.phone_number"
+    ],
+    "read_only_tools": []
   },
   "banking_knowledge": {
     "rules": [],
@@ -136,7 +144,9 @@
       "get_credit_card_accounts_by_user",
       "list_discoverable_agent_tools"
     ],
-    "phone_arguments": []
+    "phone_arguments": [],
+    "format_retry_arguments": [],
+    "read_only_tools": []
   },
   "mock": {
     "rules": [],
@@ -144,6 +154,8 @@
     "read_tools": [
       "get_users"
     ],
-    "phone_arguments": []
+    "phone_arguments": [],
+    "format_retry_arguments": [],
+    "read_only_tools": []
   }
 }

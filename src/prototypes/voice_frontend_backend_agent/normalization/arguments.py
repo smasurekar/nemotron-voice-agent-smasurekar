@@ -37,6 +37,10 @@ from prototypes.voice_frontend_backend_agent.normalization.transcript import (
 
 ON_INVALID = ("answer_locally", "send")
 GUARD_SCOPES = ("rules", "all")
+#: ``format_retry.mode``: ``call`` retries declared read-only tools itself (others get the hint); ``hint`` never calls.
+FORMAT_RETRY_MODES = ("call", "hint")
+#: ``format_retry.fields``: the field kinds whose values have a second common format.
+FORMAT_RETRY_FIELDS = ("phone",)
 REASON_INVALID = "invalid"
 REASON_ALREADY_FAILED = "already_failed"
 
@@ -101,6 +105,28 @@ class ResultHintSettings:
     max_hints: int = 3
     message_key: str = "lookup_not_found_hint"
     escalate_message_key: str = ""
+    #: A3: on the 2nd and later miss, one factual line saying which values the user spelled or only said.
+    field_provenance: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class FormatRetrySettings:
+    """``normalization.tool_arguments.format_retry`` (A1 / A1-lite, tau3-geval-failure-fixes-plan.md 4).
+
+    After a permanent failure of a read tool on a genuine phone field (by argument name or schema
+    description, never by value shape) with a ten-digit value and no argument rule, the same digits in
+    the other common format (``XXX-XXX-XXXX`` or digits only) are tried once per value: with ``mode:
+    call`` the relay looks them up itself on tools whose schema declares read-only, idempotent
+    semantics; every other read tool gets ``hint_message_key`` appended (A1-lite). Needs the retry
+    guard's ``permanent_failure_pattern``.
+    """
+
+    enabled: bool = False
+    mode: str = "call"
+    fields: str = "phone"
+    hint_message_key: str = "format_retry_hint"
+    found_message_key: str = "format_retry_found"
+    not_found_message_key: str = "format_retry_not_found"
 
 
 @dataclass(frozen=True, slots=True)
@@ -117,6 +143,7 @@ class ToolArgumentSettings:
     max_local_rounds: int = 3
     retry_guard: RetryGuardSettings = field(default_factory=RetryGuardSettings)
     result_hints: ResultHintSettings = field(default_factory=ResultHintSettings)
+    format_retry: FormatRetrySettings = field(default_factory=FormatRetrySettings)
 
 
 @dataclass(frozen=True, slots=True)
@@ -222,6 +249,10 @@ class ArgumentNormalizer:
     def valid(rule: ArgumentRule, value: str) -> bool:
         """Whether ``value`` full-matches the rule's pattern (always true without one)."""
         return not rule.pattern or re.fullmatch(rule.pattern, value) is not None
+
+    def has_rule(self, tool: str, argument: str) -> bool:
+        """Whether ``tool.argument`` has a rule (configured or schema-derived) that canonicalizes it."""
+        return any(rule.argument == argument for rule in self._rules.get(tool, ()))
 
     def is_permanent_failure(self, output: str) -> bool:
         """Whether a client output is a permanent failure (never a transient error)."""

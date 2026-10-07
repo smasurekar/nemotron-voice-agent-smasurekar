@@ -82,6 +82,8 @@ class Span:
     written: str
     start: int
     end: int
+    #: ``anchored`` (built around a separator word) or ``spelled`` (a ``spelled_runs`` run).
+    kind: str = "anchored"
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,7 +160,15 @@ class TranscriptNormalizer:
             if len(chars) >= settings.min_tokens and any(char.isalpha() for char in "".join(chars)):
                 start, end = run[0][0].start, run[-1][0].end
                 spoken = text[start:end]
-                out.append(Span(spoken=spoken, written=apply_case("".join(chars), settings.case), start=start, end=end))
+                out.append(
+                    Span(
+                        spoken=spoken,
+                        written=apply_case("".join(chars), settings.case),
+                        start=start,
+                        end=end,
+                        kind="spelled",
+                    )
+                )
             run.clear()
 
         for token in tokens:

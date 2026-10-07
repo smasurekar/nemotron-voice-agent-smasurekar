@@ -346,7 +346,19 @@ class ResultHintConfigTests(unittest.TestCase):
             for p in voice.glob("*.yaml")
             if load_voice_config(p).normalization.tool_arguments.result_hints.enabled
         }
-        self.assertEqual(on, {"realtime_eval.yaml", "tau3_fixes.yaml", "tau3_recovery_hint.yaml"})
+        self.assertEqual(
+            on,
+            {
+                "realtime_eval.yaml",
+                "realtime_eval_a1_format_retry.yaml",
+                "realtime_eval_a1_lite_format_hint.yaml",
+                "realtime_eval_a2_format_correction.yaml",
+                "realtime_eval_a3_field_provenance.yaml",
+                "realtime_eval_control.yaml",
+                "tau3_fixes.yaml",
+                "tau3_recovery_hint.yaml",
+            },
+        )
         self.assertTrue((PROFILES / "tau3_arm_i3_recovery_hint.yaml").exists())
 
 

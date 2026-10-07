@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Gateway of profiles/realtime_eval.yaml: gateway.yaml with every backend prompt variant pinned, so a
-# later edit to the defaults cannot change an evaluation. No domain detection and no domain notes.
+# later edit to the defaults cannot change an evaluation. No domain detection and no domain notes. Every
+# tau3-geval-failure-fixes-plan.md backend fix is on; gateway.eval_control.yaml (the geval runs' backend
+# prompts) turns them off. Records the backend decision trace.
 
 extends: gateway.yaml
 
@@ -12,5 +14,17 @@ prompt_features:
   write_consent: true
   phone_format: true
   domain_notes: false
+  # tau3-geval-failure-fixes-plan.md section 4: on (off in gateway.eval_control.yaml).
+  format_correction: true
+  write_consent_v2: true
+  policy_check: true
+  request_scope: true
+  transfer_check: true
+  capability_check: true
+
+hermes:
+  # P0.3: the clean controls and the arms record each model request and response for the G2 decision
+  # replay (logging only). FDH_BACKEND_TRACE=false turns it off.
+  backend_trace: ${FDH_BACKEND_TRACE:-true}
 
 domains: {}

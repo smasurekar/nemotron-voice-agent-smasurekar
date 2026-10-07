@@ -11,6 +11,8 @@ argument naming a person, such as ``user_id``). The first external miss gets
 ``message_key`` (I3), later ones ``escalate_message_key`` (I4; "" = the first message
 again). At most ``max_hints`` notes until a watched lookup succeeds, which resets the
 count. Local answers, transient errors, successes and other tools' outputs are never changed.
+With ``field_provenance`` (A3) the relay adds one factual line to the 2nd and later note
+(:mod:`.field_provenance`).
 """
 
 from __future__ import annotations
@@ -30,6 +32,7 @@ class Hint:
     output: str
     message_key: str
     miss: int
+    note: str = ""  # the appended text alone
 
 
 class ResultHints:
@@ -54,6 +57,11 @@ class ResultHints:
         self._escalate = render_message(escalate_message) if escalate_message else ""
         self._misses = 0
         self._hints = 0
+
+    @property
+    def field_provenance(self) -> bool:
+        """A3: the 2nd and later note also states which values were spelled or only heard."""
+        return self._settings.field_provenance
 
     def watches(self, tool: str) -> bool:
         """Whether ``tool`` is one of the watched lookups."""
@@ -82,7 +90,7 @@ class ResultHints:
                 if first
                 else (self._escalate, self._settings.escalate_message_key)
             )
-            return Hint(output=f"{output.rstrip()}\n\n{text}", message_key=key, miss=self._misses)
+            return Hint(output=f"{output.rstrip()}\n\n{text}", message_key=key, miss=self._misses, note=text)
         if not output.lstrip().startswith("Error"):
             self._misses = 0
             self._hints = 0

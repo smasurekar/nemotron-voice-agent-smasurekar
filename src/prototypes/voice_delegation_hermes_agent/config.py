@@ -275,8 +275,21 @@ class DelegationConfig:
             "spelled_runs": self.voice.normalization.transcript.spelled_runs.enabled,
             "result_hints": self.voice.normalization.tool_arguments.enabled
             and self.voice.normalization.tool_arguments.result_hints.enabled,
+            "field_provenance": self._field_provenance,
+            "format_retry": self._format_retry_mode,
             **{f"schema_{name}": on for name, on in self.schema_auto.items()},
         }
+
+    @property
+    def _field_provenance(self) -> bool:
+        arguments = self.voice.normalization.tool_arguments
+        return arguments.enabled and arguments.result_hints.enabled and arguments.result_hints.field_provenance
+
+    @property
+    def _format_retry_mode(self) -> str | bool:
+        """``False`` when off, else the ``format_retry.mode`` in use (``call`` / ``hint``)."""
+        arguments = self.voice.normalization.tool_arguments
+        return arguments.format_retry.mode if arguments.enabled and arguments.format_retry.enabled else False
 
     @property
     def schema_auto(self) -> dict[str, bool]:
@@ -289,6 +302,7 @@ class DelegationConfig:
             and arguments.result_hints.auto_tools,
             "spelling_hold_patterns": self.delegation.spelling_hold.enabled
             and self.delegation.spelling_hold.auto_patterns,
+            "format_retry_fields": arguments.enabled and arguments.format_retry.enabled,
         }
 
     @property

@@ -52,7 +52,7 @@ from prototypes.voice_frontend_backend_agent.normalization.transcript import Tra
 
 SNAPSHOT = HERE / "fixtures" / "schema_rules_snapshot.json"
 TAU2_DOMAINS = ("airline", "retail", "telecom", "banking_knowledge", "mock")
-EVAL = load_delegation_config(PROFILES / "realtime_eval.yaml")
+EVAL = load_delegation_config(PROFILES / "realtime_eval_control.yaml")  # without the geval fixes
 EVAL_ARGS = EVAL.voice.normalization.tool_arguments
 
 
@@ -399,7 +399,7 @@ class SchemaHoldTests(unittest.TestCase):
 
 class SessionWiringTests(unittest.IsolatedAsyncioTestCase):
     async def _session(self, domain: str) -> DelegationHarness:
-        harness = DelegationHarness(profile_config("realtime_eval.yaml"), transcripts=["I need help"])
+        harness = DelegationHarness(profile_config("realtime_eval_control.yaml"), transcripts=["I need help"])
         await harness.start(tau2_session_update(domain))
         await harness.speak()
         await harness.wait_sent("delegate")
@@ -422,7 +422,7 @@ class SessionWiringTests(unittest.IsolatedAsyncioTestCase):
         return json.loads(done["arguments"]), result["output"]
 
     def test_before_the_tools_arrive_there_are_no_schema_rules(self) -> None:
-        harness = DelegationHarness(profile_config("realtime_eval.yaml"))
+        harness = DelegationHarness(profile_config("realtime_eval_control.yaml"))
         parts = harness.runtime.parts(None)  # type: ignore[arg-type]
         assert parts.argument_normalizer is not None and parts.rebuild is not None
         self.assertEqual(parts.argument_normalizer.settings.rules, ())

@@ -179,7 +179,11 @@ class VoiceCatalogTests(unittest.TestCase):
             "tool_argument_invalid_spell_all",
             "tool_call_already_failed",
             "lookup_not_found_hint",
+            "lookup_not_found_hint_format",
             "lookup_not_found_hint_words",
+            "format_retry_hint",
+            "format_retry_found",
+            "format_retry_not_found",
         }
         barge_in_keys = {"frontend_task_in_progress"}
         self.assertEqual(

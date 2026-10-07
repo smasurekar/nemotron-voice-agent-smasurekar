@@ -407,12 +407,51 @@ tool_call_already_failed:
     retry it unchanged. Read it back character by character ({spelled}) and ask the user only about
     the part that may be wrong.
 
+# --- Format retry (A1 / A1-lite, tau3-geval-failure-fixes-plan.md section 4) ------------------------
+# Appended to a not-found result of a lookup by a phone field; {value} is the same digits in the other
+# common format (XXX-XXX-XXXX or digits only). Example values are invented.
+
+format_retry_hint:
+  description: "A1-lite: appended to a not-found phone lookup; the backend may look up the other format once."
+  content: |
+    [Same digits in the other common format: {value}. Look that up once before asking the user.]
+
+format_retry_found:
+  description: "A1: put in front of the result of the relay's own lookup in the other format, when it was found."
+  content: |
+    [Looked up as {value}: same digits, other format.] [Found only after a format change; verify the
+    caller as your policy requires before acting on this account.]
+
+format_retry_not_found:
+  description: "A1: appended to a not-found phone lookup when the relay's own lookup in the other format failed too."
+  content: |
+    [Also not found as {value}.]
+
 lookup_not_found_hint:
   description: "Appended to the first failed lookup of a user or customer (result_hints)."
   content: |
     [Not found. At least one value you sent is wrong, possibly one the user spelled: speech
     recognition can drop or change letters even in a spelling. Keep the other fields for the
     next lookup, but none is confirmed until a lookup succeeds. Ask about one field at a time,
+    starting with the most doubtful: a number or code with an unusual length for its kind (for
+    example a postal code or phone number), a name you only heard as a word, or a field whose
+    versions differ. Read back only that field, letter by letter or digit by digit, and ask the
+    user to confirm or spell it, saying "double S" for repeated letters. Build the next lookup
+    from the latest value of each field, taken from what the user spelled rather than a word you
+    heard; if that spelling differs from an earlier version, ask which is right first. Never fill
+    in a missing letter or digit. If several attempts fail and your instructions allow another
+    way to identify or look up the user, offer it.]
+
+lookup_not_found_hint_format:
+  description: >-
+    Variant of lookup_not_found_hint (A2, tau3-geval-failure-fixes-plan.md section 4): a value that may
+    only be in the wrong format is looked up once in the other format before the user is asked.
+  content: |
+    [Not found. At least one value you sent is wrong, possibly one the user spelled: speech
+    recognition can drop or change letters even in a spelling. Keep the other fields for the
+    next lookup, but none is confirmed until a lookup succeeds. If a value may only be in the
+    wrong format (the same characters with different separators or case), look it up once in
+    the other format before asking the user. Ask about one field at a time,
     starting with the most doubtful: a number or code with an unusual length for its kind (for
     example a postal code or phone number), a name you only heard as a word, or a field whose
     versions differ. Read back only that field, letter by letter or digit by digit, and ask the

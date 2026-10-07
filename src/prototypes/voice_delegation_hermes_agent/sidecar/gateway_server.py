@@ -127,6 +127,7 @@ def build_gateway_app(config: GatewayConfig) -> FastAPI:
             "hermes": {
                 "model": config.hermes.model,
                 "base_url": config.hermes.base_url,
+                "backend_trace": config.hermes.backend_trace,
                 "reasoning": bool(
                     ((config.hermes.request_overrides.get("extra_body") or {}).get("chat_template_kwargs") or {}).get(
                         "enable_thinking", False

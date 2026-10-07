@@ -24,6 +24,13 @@ BACKEND_FEATURES: dict[str, bool] = {
     "write_consent": False,
     "domain_notes": False,
     "phone_format": False,
+    # tau3-geval-failure-fixes-plan.md section 4 (each off by default; gateway.eval_<fix>.yaml turns one on).
+    "format_correction": False,  # A2: a separator or case change is a format correction, not a variant
+    "write_consent_v2": False,  # B1: the policy's confirmation, to the exact change, before a write
+    "policy_check": False,  # B2: <before_change> policy check before every write
+    "request_scope": False,  # B3: <before_change> cover every record and option the request names
+    "transfer_check": False,  # C1: <before_transfer> required transfers at once, else remaining steps first
+    "capability_check": False,  # C2: <before_transfer> check the tools before saying "I can't"
 }
 
 

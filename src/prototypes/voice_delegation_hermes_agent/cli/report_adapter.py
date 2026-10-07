@@ -30,6 +30,8 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+#: The suffix of the relay's own format-retry call ids (``tools/relay.py`` ``RETRY_SUFFIX``).
+RETRY_SUFFIX = ".fmt"
 PASS_THROUGH = ("session_start", "session_end", "speech_stopped", "tool_output_in", "response_done", "turn_latency")
 STARTING_ACTIONS = ("start", "continue", "pending_steer", "retry")
 
@@ -93,7 +95,9 @@ def _adapt_session(session_id: str, rows: list[dict[str, Any]]) -> tuple[list[di
         for call_id in run.get("tool_call_ids") or ():
             call_to_run[str(call_id)] = run["run_id"]
     for r in rows:
-        if r["kind"] == "tool_output_in" and not r.get("local_executor") and str(r.get("call_id")) not in call_to_run:
+        # A format retry (``<id>.fmt``, A1) is the relay's own call for the backend call ``<id>``.
+        call_id = str(r.get("call_id")).removesuffix(RETRY_SUFFIX)
+        if r["kind"] == "tool_output_in" and not r.get("local_executor") and call_id not in call_to_run:
             problems.append(f"{session_id}: tool call {r.get('call_id')} has no backend run")
 
     legacy = [dict(r) for r in rows if r["kind"] in PASS_THROUGH]

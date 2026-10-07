@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Control of tau3-geval-failure-fixes-plan.md (G2, G4): profiles/realtime_eval.yaml with every fix of that plan
+# off (the geval runs' deployment). Gateway: gateway.eval_control.yaml. The realtime_eval_arm_*.yaml profiles
+# extend this file and turn one fix on.
+
+extends: realtime_eval.yaml
+
+voice_profile: ../voice/realtime_eval_control.yaml

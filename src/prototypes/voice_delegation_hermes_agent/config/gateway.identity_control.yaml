@@ -11,3 +11,9 @@ extends: gateway.yaml
 prompt_features:
   domain_notes: false
   phone_format: false
+  format_correction: false
+  write_consent_v2: false
+  policy_check: false
+  request_scope: false
+  transfer_check: false
+  capability_check: false

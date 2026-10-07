@@ -139,6 +139,42 @@ class HermesAdapterTest(unittest.TestCase):
 
         self.assertNotIn("get_order", registry.get_all_tool_names())
 
+    def test_trace_records_each_request_and_response(self) -> None:
+        """P0.3 (tau3-geval-failure-fixes-plan.md): Hermes' own hooks feed the trace; logging only."""
+        import json  # noqa: PLC0415
+
+        from prototypes.voice_delegation_hermes_agent.worker.hermes_adapter import HermesAgentHost  # noqa: PLC0415
+        from prototypes.voice_delegation_hermes_agent.worker.tool_futures import ToolFutures  # noqa: PLC0415
+
+        holder: dict[str, ToolFutures] = {}
+
+        def emit(message: dict[str, Any]) -> None:
+            if message["type"] == "tool.call":
+                threading.Timer(0.05, lambda: holder["f"].resolve(message["call_id"], '{"status": "shipped"}')).start()
+
+        with tempfile.TemporaryDirectory() as trace_dir:
+            futures = ToolFutures(session_id="trace-s", emit=emit, poll_s=0.02)
+            holder["f"] = futures
+            host = HermesAgentHost(futures, lambda *_: None, session_id="trace-s")
+            host.configure(
+                tools=[TOOL], instructions="TRACE-POLICY", hermes={**hermes_settings(), "backend_trace_dir": trace_dir}
+            )
+            futures.current_epoch = 1
+            result = host.agent().run_conversation("What is the status of order 1?", [], "trace-s:1")
+            self.assertIn("shipped", result["final_response"])
+            host.close()
+            records = [json.loads(line) for line in Path(trace_dir, "trace-s.trace.jsonl").read_text().splitlines()]
+        kinds = [r["kind"] for r in records]
+        self.assertEqual(kinds[0], "session")
+        self.assertEqual(kinds.count("request"), kinds.count("response"))
+        self.assertGreaterEqual(kinds.count("request"), 2)  # the tool call, then the answer
+        self.assertEqual({t["function"]["name"] for t in records[0]["tools"]}, {"get_order"})
+        request = next(r for r in records if r["kind"] == "request")
+        self.assertIn("TRACE-POLICY", json.dumps(request["messages"]))
+        first = next(r for r in records if r["kind"] == "response")
+        self.assertEqual(first["api_request_id"], request["api_request_id"])
+        self.assertIn("get_order", json.dumps(first["assistant_message"]))
+
     def test_builtin_collision_is_refused(self) -> None:
         from model_tools import get_tool_definitions  # noqa: PLC0415
 

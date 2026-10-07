@@ -42,6 +42,7 @@ hermes:
   unwind_timeout_s: 10
   load_soul_identity: true                   # required with skip_context_files
   tool_result_timeout_s: 120
+  backend_trace: ${FDH_BACKEND_TRACE:-false}  # P0.3: <log_dir>/<session>.trace.jsonl per worker (logging only)
   steer_timeout_s: 3
   status_timeout_s: 2
   request_overrides:
@@ -52,7 +53,7 @@ hermes:
     path: prompts.backend.yaml
 
 # Backend prompt variants ({% if features.<name> %} in prompts.backend.yaml; tau3-failure-fixes-plan.md).
-# All on by default. gateway.baseline.yaml turns all off (the control, the baseline prompts);
+# All on by default, except domain_notes. gateway.baseline.yaml turns all off (the control, the baseline prompts);
 # gateway.<name>.yaml turns one on over the baseline (one arm).
 prompt_features:
   spelling_v2: true                          # M3.4: after a failed lookup, read back and ask to spell
@@ -60,6 +61,13 @@ prompt_features:
   write_consent: true                        # G4: consent only to a heard question; read back written names
   phone_format: true                         # <phone_numbers>: lookups XXX-XXX-XXXX plus one format retry
   domain_notes: false                        # no domain notes ship (prompts.backend.yaml backend_domain_notes)
+  # tau3-geval-failure-fixes-plan.md section 4: on by default; gateway.eval_control.yaml turns them off.
+  format_correction: true                   # A2: a separator or case change is a format correction, not a variant
+  write_consent_v2: true                    # B1: the policy's confirmation, to the exact change, before a write
+  policy_check: true                        # B2: <before_change> policy check; allow within limits
+  request_scope: true                       # B3: <before_change> every record and option the request covers
+  transfer_check: true                      # C1: <before_transfer> required transfers at once, else steps first
+  capability_check: true                    # C2: <before_transfer> check the tools before saying "I can't"
 
 # Domain detection by tool names: the first domain with one of its tools in the session's tool list wins;
 # it picks the <domain_notes> block of prompts.backend.yaml and is reported as backend_domain. Empty: no

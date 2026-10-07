@@ -11,7 +11,8 @@ This runbook starts two deployments that share one backend gateway:
 Every command runs from the repository root unless it says otherwise. The τ³ campaign runbook for this
 prototype (reportable runs, archiving) is a separate, later document. §6 shows how to point τ³ at the
 server; §6.1 lists the evaluation arms of [`tau3-failure-fixes-plan.md`](tau3-failure-fixes-plan.md) and how
-to start one.
+to start one; §6.3 lists the arms of [`tau3-geval-failure-fixes-plan.md`](tau3-geval-failure-fixes-plan.md) and
+its validation gates.
 
 **Last verified 2026-09-29** on one RTX 5000 Ada host, following this runbook top to bottom:
 
@@ -71,6 +72,27 @@ lookup succeeded). The stack has not been restarted with this change and no arm 
 Verified offline only (unit tests). The stack has not been restarted with this change, and its effect on
 reward has not been measured; it requires validation before a reportable run.
 
+**Changed 2026-10-07:** the fixes of [`tau3-geval-failure-fixes-plan.md`](tau3-geval-failure-fixes-plan.md)
+are implemented behind switches that are **on by default** in the YAML defaults (`gateway.yaml`,
+`gateway.eval.yaml` and `voice/realtime_eval.yaml`), so `realtime_eval.yaml` with `gateway.eval.yaml` runs every
+fix. The control, the geval runs' behaviour, is now `realtime_eval_control.yaml` with `gateway.eval_control.yaml`
+(§6.3). The Python code defaults stay off:
+- **A1 / A1-lite** (`format_retry`): a not-found lookup by a phone field is tried once more with the same
+  digits in the other format. The relay looks it up itself only on tools whose schema declares read-only,
+  idempotent semantics; every other read tool gets a hint. No τ² tool declares it, so on τ³ A1 runs as the hint.
+- **A2** (`format_correction` plus the hint variant `lookup_not_found_hint_format`), **A3**
+  (`result_hints.field_provenance`), **B1** (`write_consent_v2`), **B2** (`policy_check`), **B3**
+  (`request_scope`), **C1** (`transfer_check`) and **C2** (`capability_check`): one arm each (§6.3).
+- **P0.1**: the τ³ `report.sh` marks a run with any backend 429 invalid. **P0.3**: `gateway.eval.yaml` writes a
+  backend decision trace per session (`logs/fdh_workers/<session>.trace.jsonl`); `FDH_BACKEND_TRACE=false`
+  turns it off.
+- The voice event log's `tool_calls_out` now carries `call_ids` and `arguments` (the input of the G1 replay).
+
+Verified offline: unit tests; the real-Hermes trace test; a G1 replay of the geval telecom traffic through the
+A1 arm (a hint in exactly the plan's 20 sessions, all on the phone field, no other output changed). No arm has run
+and no gate beyond G0/G1 has been applied, so no fix is reportable yet. Track I (retry back-off, fallback model,
+progress cadence) is not implemented.
+
 ## 0. What runs where
 
 ```
@@ -87,8 +109,8 @@ reward has not been measured; it requires validation before a reportable run.
 | Component | Where | Port | Config |
 |---|---|---|---|
 | `nemo-speech` | container (Compose profile `frontend-backend-agent/single-gpu`) | 50051 | `docker/docker-compose.nemo-speech-cpp.yaml` |
-| Backend gateway + Hermes workers | host process | 8790, bound to the `docker0` address | `config/gateway.yaml` (an arm may use `config/gateway.<variant>.yaml`, §6.1) |
-| τ³ Realtime voice server `fdh-voice` | container (`nemotron-voice-agent:latest`, `src/` mounted read-only) | 8775 | `config/profiles/tau3_eval.yaml`, `config/profiles/realtime_eval.yaml` (§6.2), or an arm profile (§6.1) |
+| Backend gateway + Hermes workers | host process | 8790, bound to the `docker0` address | `config/gateway.yaml` (an arm may use `config/gateway.<variant>.yaml`, §6.1, or `config/gateway.eval_<fix>.yaml`, §6.3) |
+| τ³ Realtime voice server `fdh-voice` | container (`nemotron-voice-agent:latest`, `src/` mounted read-only) | 8775 | `config/profiles/tau3_eval.yaml`, `config/profiles/realtime_eval.yaml` (§6.2), or an arm profile (§6.1, §6.3) |
 | Browser voice server `fdh-voice-web` | container | 8776 (https) | `config/profiles/browser_demo.yaml` |
 
 Why the gateway runs on the host: Hermes needs its own venv and Python (3.13 or 3.14, whichever the
@@ -124,7 +146,7 @@ between machines. `FDH_HERMES_PY` selects it:
 
 | Hermes checkout | `FDH_HERMES_PY` | Hosts |
 |---|---|---|
-| `requires-python` `<3.14` (v0.21.0: Rust-backed dependencies had no cp314 wheels) | `3.13` | hosts on that checkout |
+| `requires-python` `<3.14` (v0.21.0: Rust-backed dependencies had no cp314 wheels) | `3.13` | hosts on that checkout, such as `ipp2-0543` (2026-10-07: `hermes-venv-313`, with `FDH_HERMES_REPO` set) |
 | `requires-python` `<3.15`, with a lockfile that supports only `python_full_version >= '3.14'` | `3.14` | RTX 5000 Ada host `smasurekar` (2026-09-30) |
 
 `uv sync` with the wrong version fails with `The current Python platform is not compatible with the
@@ -180,9 +202,12 @@ docker logs -f nemotron-voice-agent-nemo-speech-1 2>&1 | grep -m1 'listening on 
 
 The gateway binds only to the `docker0` address: it has no authentication, so it must not be reachable
 from the LAN. The backend model is pinned on the command line. `FDH_GATEWAY_CONFIG` selects the gateway
-file: `gateway.yaml` (every backend prompt variant on) for normal runs, `gateway.eval.yaml` (the same
-variants, pinned) with `realtime_eval.yaml` (§6.2), `gateway.baseline.yaml` (every variant off) for the
-control, or the gateway config an arm needs (§6.1).
+file: `gateway.yaml` (every backend prompt variant on, except `domain_notes` and the
+[`tau3-geval-failure-fixes-plan.md`](tau3-geval-failure-fixes-plan.md) variants) for normal runs, `gateway.eval.yaml`
+(the same variants, pinned, plus the backend decision trace) with `realtime_eval.yaml` (§6.2),
+`gateway.baseline.yaml` (every variant off) for the control, or the gateway config an arm needs (§6.1, §6.3).
+`FDH_GATEWAY_LOG` names the gateway event log: the τ³ campaign tooling expects
+`logs/fdh_gateway_events.realtime_eval.jsonl` for `gateway.eval.yaml` and its arms.
 
 ```bash
 export FDH_GATEWAY_CONFIG=${FDH_GATEWAY_CONFIG:-gateway.yaml}
@@ -190,7 +215,7 @@ nohup env PYTHONPATH=src \
   FDH_GATEWAY_HOST=$DOCKER_HOST_IP FDH_GATEWAY_PORT=8790 FDH_MAX_SESSIONS=8 \
   FDH_HERMES_PYTHON=${FDH_HERMES_VENV:?set it in §1.2}/bin/python \
   BACKEND_LLM_MODEL=nvidia/nvidia/nemotron-3-ultra BACKEND_LLM_BASE_URL=https://inference-api.nvidia.com/v1 \
-  FDH_GATEWAY_LOG=logs/fdh_gateway_events.jsonl FDH_WORKER_LOG_DIR=logs/fdh_workers \
+  FDH_GATEWAY_LOG=${FDH_GATEWAY_LOG:-logs/fdh_gateway_events.jsonl} FDH_WORKER_LOG_DIR=logs/fdh_workers \
   uv run python -m prototypes.voice_delegation_hermes_agent.sidecar.gateway_server \
     --config src/prototypes/voice_delegation_hermes_agent/config/$FDH_GATEWAY_CONFIG \
   > logs/fdh_gateway.out 2>&1 &
@@ -207,7 +232,13 @@ Expected health:
 - `"backend_features"` with `spelling_v2`, `spoken_output`, `write_consent` and `phone_format` `true` and
   `domain_notes` `false` with `gateway.yaml` and `gateway.eval.yaml` (all `false` with `gateway.baseline.yaml`,
   one `true` with a `gateway.<variant>.yaml`, `phone_format` and `domain_notes` `false` with
-  `gateway.identity_control.yaml`), and `"backend_catalog_sha256"`, the hash of `prompts.backend.yaml`;
+  `gateway.identity_control.yaml`), and `"backend_catalog_sha256"`, the hash of `prompts.backend.yaml`.
+  `format_correction`, `write_consent_v2`, `policy_check`, `request_scope`, `transfer_check` and
+  `capability_check` are `true` with `gateway.yaml` and `gateway.eval.yaml`, `false` with
+  `gateway.eval_control.yaml`, `gateway.baseline.yaml` and `gateway.identity_control.yaml`, and one `true` with a
+  `gateway.eval_<fix>.yaml` arm (§6.3);
+- `"hermes"` also reports `"backend_trace"`: `true` with `gateway.eval.yaml`, `gateway.eval_control.yaml` and the arms (unless
+  `FDH_BACKEND_TRACE=false`), `false` otherwise;
 - `"domains": []`: no domain detection (every gateway config extends `gateway.yaml`, which sets `domains: {}`).
 
 The gateway loads its code and prompts at startup: restart it (§10, then this section) after a code or
@@ -226,7 +257,9 @@ PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.bac
 
 `FDH_PROFILE` selects the profile: `tau3_eval.yaml` for normal runs (every τ³ failure fix except M2),
 `realtime_eval.yaml` for the domain-agnostic submission profile (§6.2), or the control or an arm profile
-(§6.1). `FDH_PROACTIVE_AFTER_S` sets the M1 delay; calibrate it per host (§6.1).
+(§6.1, §6.3). `FDH_PROACTIVE_AFTER_S` sets the M1 delay; calibrate it per host (§6.1). `FDH_EVENT_LOG` names
+the event log: the τ³ campaign tooling expects `logs/fdh_voice_events.realtime_eval.jsonl` for
+`realtime_eval.yaml` and its arms.
 
 ```bash
 export FDH_PROFILE=${FDH_PROFILE:-tau3_eval.yaml}
@@ -234,7 +267,7 @@ docker compose --profile frontend-backend-agent/single-gpu run --rm -d --no-deps
   -v "$PWD/logs:/app/logs" -e PYTHONPATH=/app/src -e PIPELINE_TLS=false \
   -e FDH_BACKEND_URL=ws://host.docker.internal:8790/v1/backend -e FDH_MAX_SESSIONS=4 \
   -e FRONTEND_LLM_MODEL=nvidia/nvidia/nemotron-3.5-lightning -e FRONTEND_LLM_BASE_URL=https://inference-api.nvidia.com/v1 \
-  -e FDH_EVENT_LOG=logs/fdh_voice_events.jsonl -e FDH_PROACTIVE_AFTER_S=${FDH_PROACTIVE_AFTER_S:-15} \
+  -e FDH_EVENT_LOG=${FDH_EVENT_LOG:-logs/fdh_voice_events.jsonl} -e FDH_PROACTIVE_AFTER_S=${FDH_PROACTIVE_AFTER_S:-15} \
   frontend-backend-agent-single-gpu \
   uv run python -m prototypes.voice_delegation_hermes_agent.server \
     --config src/prototypes/voice_delegation_hermes_agent/config/profiles/$FDH_PROFILE --port 7860
@@ -248,8 +281,10 @@ Expected:
   `"backend": {"link": "websocket", ...}` and `"features"`: with `tau3_eval.yaml`, `proactive_status`,
   `clean_answers`, `spelling_hold`, `filler_dedupe`, `spelled_runs` and `result_hints` `true`, `replay_unheard_answer` and
   `prompt_features.replay_intent` `false`; with `realtime_eval.yaml`, also `schema_rules`,
-  `schema_result_hint_tools` and `schema_spelling_hold_patterns` `true`; with `tau3_eval_baseline.yaml`, every
-  switch `false`; with an arm profile, only the arm's own switches `true`.
+  `schema_result_hint_tools`, `schema_spelling_hold_patterns`, `field_provenance` and
+  `schema_format_retry_fields` `true` and `format_retry` `"call"` (all three `false` with
+  `realtime_eval_control.yaml`); with `tau3_eval_baseline.yaml`, every switch `false`; with an arm
+  profile, only the arm's own switches `true` (`format_retry` is `"call"` or `"hint"` in the A1 arms).
 - The logs show `frontend warm-up done in …s`, `backend gateway http://host.docker.internal:8790/health:
   {... 'ok': True ... 'hermes': {'model': 'nvidia/nvidia/nemotron-3-ultra', ... 'reasoning': True}}` and
   `VAD silence=800ms`.
@@ -493,13 +528,83 @@ PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.rep
   logs/fdh_voice_events.jsonl --out logs/fdh_voice_events.legacy.jsonl
 ```
 
+### 6.3 Geval failure-fix arms and their gates
+
+[`tau3-geval-failure-fixes-plan.md`](tau3-geval-failure-fixes-plan.md) adds fixes for the three top failure
+classes of the geval runs. Every fix is on by default (`realtime_eval.yaml` with `gateway.eval.yaml`) and off in the
+control, `realtime_eval_control.yaml` with `gateway.eval_control.yaml`. Each arm turns on one fix over that
+control. No arm has been evaluated, and the plan ships a fix only after its gates pass (plan §5).
+
+| Arm | `FDH_PROFILE` | `FDH_GATEWAY_CONFIG` | Turns on |
+|---|---|---|---|
+| Control | `realtime_eval_control.yaml` | `gateway.eval_control.yaml` | nothing new (the geval runs' deployment); the backend decision trace (P0.3) is on |
+| A1 format retry | `realtime_eval_arm_a1_format_retry.yaml` | `gateway.eval_control.yaml` | `format_retry` `mode: call`: after a not-found lookup by a phone field (by argument name or description, never by value shape) with ten digits, the relay looks up the same digits in the other format once on a tool that declares `annotations: {readOnlyHint: true, idempotentHint: true}`; any other read tool gets the A1-lite hint. On τ³ every tool gets the hint |
+| A1-lite format hint | `realtime_eval_arm_a1_lite_format_hint.yaml` | `gateway.eval_control.yaml` | `format_retry` `mode: hint`: `[Same digits in the other common format: …]` appended to the not-found result; the relay never calls a tool itself |
+| A2 format correction | `realtime_eval_arm_a2_format_correction.yaml` | `gateway.eval_a2_format_correction.yaml` | backend variant `format_correction` (a separator or case change is not a "variant") and the first recovery note `lookup_not_found_hint_format` |
+| A3 field provenance | `realtime_eval_arm_a3_field_provenance.yaml` | `gateway.eval_control.yaml` | `result_hints.field_provenance`: from the second miss of a person lookup on, one line saying which values the user spelled, which were only heard, and which are unknown |
+| B1 consent to the exact change | `realtime_eval_control.yaml` | `gateway.eval_b1_write_consent_v2.yaml` | backend variant `write_consent_v2` (inside `<consent>`) |
+| B2 policy check | `realtime_eval_control.yaml` | `gateway.eval_b2_policy_check.yaml` | backend variant `policy_check` (`<before_change>`) |
+| B3 request scope | `realtime_eval_control.yaml` | `gateway.eval_b3_request_scope.yaml` | backend variant `request_scope` (`<before_change>`) |
+| C1 transfer check | `realtime_eval_control.yaml` | `gateway.eval_c1_transfer_check.yaml` | backend variant `transfer_check` (`<before_transfer>`) |
+| C2 capability check | `realtime_eval_control.yaml` | `gateway.eval_c2_capability_check.yaml` | backend variant `capability_check` (`<before_transfer>`) |
+| All fixes (the default) | `realtime_eval.yaml` | `gateway.eval.yaml` | A1 (`mode: call`), A2, A3, B1, B2, B3, C1 and C2 together |
+
+Start an arm like any other (§3 and §4), with the event-log names the τ³ campaign tooling expects:
+
+```bash
+export FDH_PROFILE=realtime_eval_arm_a1_format_retry.yaml FDH_GATEWAY_CONFIG=gateway.eval_control.yaml
+export FDH_EVENT_LOG=logs/fdh_voice_events.realtime_eval.jsonl FDH_GATEWAY_LOG=logs/fdh_gateway_events.realtime_eval.jsonl
+# then §3 (gateway) and §4 (fdh-voice)
+```
+
+**Gates (plan §5).** Run them in this order; a fix that fails one is not shipped:
+
+- **P0.1, a clean run:** the τ³ `report.sh` runs `fdh_logs.py ratelimit` and marks a run `INVALID` when any of its
+  sessions hit a backend 429 (`Error code: 429` or `Retrying API call` in `logs/fdh_workers/<session>-<n>.log`).
+  Re-run an invalid run; prefer quiet hours.
+- **G0:** `uv run pytest tests/unit/prototypes/delegation/test_fdh_geval_fixes.py -q`.
+- **G1, the code paths (A1, A1-lite):** replay a clean control's recorded tool calls through the arm's relay.
+  It needs a log written since 2026-10-07 (`tool_calls_out` with `call_ids` and `arguments`; older sessions are
+  skipped) and the session's tool schemas. Every found-after-retry result is printed for the identity check:
+
+  ```bash
+  PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.relay_replay \
+    logs/fdh_voice_events.realtime_eval.jsonl \
+    --profile src/prototypes/voice_delegation_hermes_agent/config/profiles/realtime_eval_arm_a1_format_retry.yaml \
+    --session-update tests/unit/prototypes/voice/fixtures/tau2_session_update/{airline,retail,telecom}.json \
+    --out logs/g1_a1.json            # last line: G1: OK
+  ```
+
+  A3 needs the user turns, so G1 does not replay it: review the `field_provenance` events of an A3 run against a
+  hand-labelled sample instead.
+- **G2, the backend decisions (A1-lite, A2, A3, B1–C2):** list the write and transfer decisions of a clean
+  control's traces, label them **before** any arm is replayed (`U` unchanged, `P` expected policy correction,
+  `T` targeted, `skip`; plan §5), then replay them with the arm's backend prompt (3 samples at temperature 0).
+  `--dry-run` only checks that the arm's prompt replaces the control's in every request:
+
+  ```bash
+  PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.backend_decision_replay \
+    extract logs/fdh_workers --out logs/g2_decisions.jsonl          # then edit the labels
+  PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.backend_decision_replay \
+    replay logs/g2_decisions.jsonl --traces logs/fdh_workers \
+    --gateway-config src/prototypes/voice_delegation_hermes_agent/config/gateway.eval_b1_write_consent_v2.yaml \
+    --out logs/g2_b1.json            # last line: G2: OK
+  ```
+
+  Keep each control run's traces apart (move `logs/fdh_workers/*.trace.jsonl` aside per run): a trace is
+  named by session, and the replay reads every trace in the directory.
+- **G3, G4:** the mock domain and invented conversations (G3), then the paired A/B (G4: an A/A control run
+  first, five trials per domain, the arm interleaved with the control). Check every arm's fingerprint as in §6.1
+  with the arm's `--profile` and `--gateway-config`.
+
 ## 7. Logs and what to look at
 
 | File | Content |
 |---|---|
-| `logs/fdh_voice_events.jsonl`, `logs/fdh_voice_web_events.jsonl` | Voice server events per session: `fdh_session_start` (config hash, `features`, `invalid_message_keys`), `frontend_prompt` (prompt hash), `backend_configured` (backend fingerprint), `delegation_decision`, `backend_action`, `tool_calls_out`, `tool_output_in`, `call_answered_locally` (`reason`, `message_key`), `backend_answer`, `status_spoken`, `playback_outcome`, `delivery_note`, `history_sync`, `turn_latency`, `filler_timing`, `barge_in`. Only with the fix's switch on (the defaults or an arm): `status_proactive` (M1), `spelling_hold` (M3), `answer_replayed` / `answer_replay_skipped` (M2), `filler_deduped` (G1), `answer_cleaned` (G2), `result_hint` (I3/I4: `tool`, `message_key`, `n`). `backend_configured` carries `backend_domain` (always `""`) and `session_tools_sha256`. With an `auto` switch on (`realtime_eval.yaml`): `session_rules` (`session_tools_sha256`, `schema_auto`, the derived rules) |
+| `logs/fdh_voice_events.jsonl`, `logs/fdh_voice_web_events.jsonl` | Voice server events per session: `fdh_session_start` (config hash, `features`, `invalid_message_keys`), `frontend_prompt` (prompt hash), `backend_configured` (backend fingerprint), `delegation_decision`, `backend_action`, `tool_calls_out`, `tool_output_in`, `call_answered_locally` (`reason`, `message_key`), `backend_answer`, `status_spoken`, `playback_outcome`, `delivery_note`, `history_sync`, `turn_latency`, `filler_timing`, `barge_in`. Only with the fix's switch on (the defaults or an arm): `status_proactive` (M1), `spelling_hold` (M3), `answer_replayed` / `answer_replay_skipped` (M2), `filler_deduped` (G1), `answer_cleaned` (G2), `result_hint` (I3/I4: `tool`, `message_key`, `n`). `backend_configured` carries `backend_domain` (always `""`) and `session_tools_sha256`. With an `auto` switch on (`realtime_eval.yaml`): `session_rules` (`session_tools_sha256`, `schema_auto`, the derived rules, `format_retry_arguments`, `read_only_tools`). Since 2026-10-07, `tool_calls_out` carries `call_ids` and `arguments`; the geval-fix arms add `format_retry` (`tool`, `argument`, `before`, `after`, `mode`, `outcome`: `hint`, `found`, `not_found`, `transient`, `timeout` or `cancelled`; the relay's own retry is a `tool_calls_out` with `format_retry: true` and call id `<id>.fmt`) and `field_provenance` (the line added to a note) |
 | `logs/fdh_gateway_events.jsonl` | Gateway: `gateway_start` (`backend_features`, `backend_catalog_sha256`), sessions, `backend_fingerprint`, worker spawn/ready/exit (`start_ms`, `rss_mb`), run epochs and outcomes, context delivery states, watchdog, respawns |
-| `logs/fdh_workers/*.log` | Each Hermes worker's stdout/stderr. "Auxiliary Nous client unavailable" lines are harmless |
+| `logs/fdh_workers/*.log` | Each Hermes worker's stdout/stderr. "Auxiliary Nous client unavailable" lines are harmless. `Error code: 429` or `Retrying API call` makes the run invalid (§6.3, P0.1) |
+| `logs/fdh_workers/<session>.trace.jsonl` | With `hermes.backend_trace` (on in `gateway.eval.yaml`): one `session` record (the tool schemas as the model sees them, the rendered `backend_system`), then a `request` (the messages as sent) and a `response` (content, tool calls, finish reason, usage) per model call, joined by `api_request_id`. The input of the G2 replay (§6.3). Every `request` repeats the whole conversation, so the file grows with each model call |
 | `logs/fdh_gateway.out` | Gateway process output |
 | `docker logs fdh-voice`, `docker logs fdh-voice-web` | Voice server output (latency breakdowns, errors) |
 
@@ -565,12 +670,17 @@ Profiles are in `src/prototypes/voice_delegation_hermes_agent/config/`. Unknown 
 | G2 answer cleanup | `output.clean_answers` | on |
 | Frontend prompt variants | `delegation_agent.yaml` `prompt_features.replay_intent` | off |
 | Backend prompt variants | `gateway.yaml` `prompt_features.{spelling_v2,spoken_output,write_consent,phone_format,domain_notes}` (`gateway.baseline.yaml` turns all off; `gateway.<variant>.yaml` turns one on over it; `gateway.eval.yaml` pins them) | all on except `domain_notes` |
+| Geval-fix backend variants (A2, B1–C2) | `gateway.yaml` `prompt_features.{format_correction,write_consent_v2,policy_check,request_scope,transfer_check,capability_check}`; text in `prompts.backend.yaml` (`spelling_v2`, `<consent>`, `<before_change>`, `<before_transfer>`) | on (`gateway.eval.yaml` pins them on; `gateway.eval_control.yaml` turns them off; `gateway.eval_<fix>.yaml` turns one on over the control) |
+| A1 / A1-lite format retry | `voice/*.yaml` `normalization.tool_arguments.format_retry.{enabled,mode,fields,hint_message_key,found_message_key,not_found_message_key}` (needs the retry guard); texts `format_retry_*` in `voice_frontend_backend_agent/config/prompts.voice.yaml` | on in `voice/realtime_eval.yaml` (`mode: call`, `fields: phone`); off in `voice/realtime_eval_control.yaml` and the code defaults |
+| A3 field provenance | `voice/*.yaml` `normalization.tool_arguments.result_hints.field_provenance` | on in `voice/realtime_eval.yaml` (with the A2 note `lookup_not_found_hint_format`); off in `voice/realtime_eval_control.yaml` and the code defaults |
+| Backend decision trace (P0.3) | `gateway.yaml` `hermes.backend_trace`, env `FDH_BACKEND_TRACE` | off; on in `gateway.eval.yaml` and `gateway.eval_control.yaml` |
 
 ## 10. Stop and clean up
 
 ```bash
 docker stop fdh-voice fdh-voice-web          # --rm removes them
 kill "$(cat logs/fdh_gateway.pid)"           # the gateway stops its workers (SIGTERM, then SIGKILL)
+pgrep -f sidecar.gateway_server && pkill -f sidecar.gateway_server   # if the pid was only the uv wrapper
 docker compose --profile frontend-backend-agent/single-gpu stop nemo-speech   # optional
 ```
 
@@ -597,4 +707,8 @@ when each worker exits), `/tmp/fdh-workers/` (sockets), and `logs/`.
 | Voice server fails with `replay_unheard_answer.enabled needs prompt_features.replay_intent` | M2 needs its frontend prompt variant: use `tau3_arm_m2_replay.yaml` |
 | Status update says "still working" after the answer | This should not happen: a status line is dropped when its run has already finished (`status_dropped` in the event log). If you see it, report the session id |
 | A status sentence sounds templated | The status LLM call exceeded `backend.status_verbalizer.timeout_ms` (3000); `status_spoken.source` is `template_fallback` |
+| `report.sh` prints `P0.1 … INVALID (re-run it)` | A backend call of that run was rate-limited (429) and waited for `Retry-After`, so the run is not a clean measurement. Re-run it in a quieter window |
+| No `logs/fdh_workers/*.trace.jsonl` with `gateway.eval.yaml` | Check `"backend_trace": true` in the gateway `/health`, then the worker log for `backend trace:` warnings (a Hermes version without the plugin hook registry writes no trace) |
+| `relay_replay` reports every session `skipped` | The event log was written before 2026-10-07 (`tool_calls_out` without `call_ids` and `arguments`), or no `--session-update` matches the sessions' `session_tools_sha256` (`sessions_without_tools`) |
+| `backend_decision_replay replay` fails with `occurs 0 times in the system messages` | The decisions or traces come from another control, or Hermes changed how it embeds the ephemeral system prompt. Re-extract from the control's own traces |
 | Manual-mode client gets `conversation_already_has_active_response` | It sent `response.create` while the previous turn was still deciding or speaking. Wait for `response.done`, as Realtime requires |

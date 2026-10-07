@@ -65,7 +65,9 @@ from prototypes.voice_delegation_hermes_agent.frontend.delegate_tool import Deci
 from prototypes.voice_delegation_hermes_agent.frontend.prompts import PromptCatalog
 from prototypes.voice_delegation_hermes_agent.frontend.status_verbalizer import StatusVerbalizer
 from prototypes.voice_delegation_hermes_agent.prompt_features import sha256_text
-from prototypes.voice_delegation_hermes_agent.tools.relay import ToolRelay
+from prototypes.voice_delegation_hermes_agent.tools.field_provenance import FieldProvenance, SpelledSpan
+from prototypes.voice_delegation_hermes_agent.tools.format_retry import FormatRetry
+from prototypes.voice_delegation_hermes_agent.tools.relay import FormatRetryMessages, ToolRelay
 from prototypes.voice_delegation_hermes_agent.tools.result_hints import ResultHints
 from prototypes.voice_frontend_backend_agent.agent.filler import Stamp
 from prototypes.voice_frontend_backend_agent.agent.tools import capability_lines, realtime_tools_to_specs
@@ -89,6 +91,7 @@ class SessionRules:
     result_hints: ResultHints | None = None
     spelling_hold: SpellingHoldPredicate | None = None
     schema: SchemaRules | None = None
+    format_retry: FormatRetry | None = None
 
 
 @dataclass(slots=True)
@@ -110,6 +113,8 @@ class SessionParts:
     local_tools: tuple[ToolSpec, ...] = ()
     spelling_hold: SpellingHoldPredicate | None = None
     rebuild: Callable[[Sequence[Mapping[str, Any]]], SessionRules] | None = None
+    format_retry: FormatRetry | None = None
+    format_messages: FormatRetryMessages | None = None
 
 
 @dataclass(slots=True)
@@ -174,6 +179,9 @@ class DelegationTurnManager:
             hold_max_ms=config.output.hold_max_ms, on_stale=config.output.on_stale, monotonic=context.clock.monotonic
         )
         per_call_delay = config.backend.delay_seconds if config.backend.delay_where == "per_tool_call" else 0.0
+        hints = context.config.normalization.tool_arguments.result_hints
+        # A3: the decided user turns, for the field-provenance line of repeated lookup misses.
+        self._provenance = FieldProvenance() if hints.enabled and hints.field_provenance else None
         self._relay = ToolRelay(
             executor=config.tools.executor,
             send_result=self._send_tool_result,
@@ -184,6 +192,10 @@ class DelegationTurnManager:
             local_tools=parts.local_tools,
             batch_window_ms=config.tools.batch_window_ms,
             per_call_delay_s=per_call_delay,
+            format_retry=parts.format_retry,
+            format_messages=parts.format_messages,
+            provenance=self._provenance,
+            result_timeout_s=config.tools.result_timeout_s,
         )
         self._backend = _Backend(activity=deque(maxlen=max(1, config.frontend.activity_max_items)))
         self._system_prompt = ""
@@ -346,7 +358,8 @@ class DelegationTurnManager:
         self._parts.argument_normalizer = rules.argument_normalizer
         self._parts.result_hints = rules.result_hints
         self._parts.spelling_hold = rules.spelling_hold
-        self._relay.reconfigure(rules.argument_normalizer, rules.result_hints)
+        self._parts.format_retry = rules.format_retry
+        self._relay.reconfigure(rules.argument_normalizer, rules.result_hints, rules.format_retry)
         self._log(
             "session_rules",
             session_tools_sha256=self._tools_sha256,
@@ -567,7 +580,9 @@ class DelegationTurnManager:
 
     async def _decide(self, turn: _Turn) -> None:
         await self._spelling_hold(turn)
-        text = self._normalize(turn.text)
+        text, spelled = self._normalize_with_spans(turn.text)
+        heard = self.transcript.last_heard_assistant()
+        question = heard.spoken_text if heard is not None else ""
         backend = self._backend
         messages = self.transcript.frontend_messages(max_groups=self._config.frontend.history_max_groups)
         if messages and messages[-1]["role"] == "user":
@@ -590,6 +605,8 @@ class DelegationTurnManager:
         )
         decision = await self._parts.decider.decide(context)
         # Everything below is synchronous: a barge-in can no longer undo this decision.
+        if self._provenance is not None:
+            self._provenance.add_turn(turn.text, spelled, question)
         guarded = apply_guards(
             decision,
             context,
@@ -622,15 +639,21 @@ class DelegationTurnManager:
             raise
         self._log("spelling_hold", **details, merged=False)
 
-    def _normalize(self, text: str) -> str:
+    def _normalize_with_spans(self, text: str) -> tuple[str, tuple[SpelledSpan, ...]]:
+        """The normalized text, and its ``spelled_runs`` spans (positions in ``text``) for A3."""
         normalizer = self._parts.transcript_normalizer
         if normalizer is None:
-            return text
+            return text, ()
         normalized = normalizer.normalize(text)
         if normalized.changed:
             spans = [{"spoken": span.spoken, "written": span.written} for span in normalized.spans]
             self._log("transcript_normalized", raw=text, text=normalized.text, spans=spans)
-        return normalized.text
+        spelled = tuple(
+            SpelledSpan(written=span.written, start=span.start, end=span.end)
+            for span in normalized.spans
+            if span.kind == "spelled"
+        )
+        return normalized.text, spelled
 
     # -- M2: replay an unheard answer (RC2, tau3-failure-fixes-plan.md section 4) --------------
 

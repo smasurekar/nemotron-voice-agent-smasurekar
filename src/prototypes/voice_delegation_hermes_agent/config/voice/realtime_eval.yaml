@@ -36,5 +36,9 @@ normalization:
       failure_pattern: "(?i)\\b(users?|customers?|members?|clients?|profiles?)\\b[^.]*\\b(not found|no such|does not exist)\\b|\\bno (records|results|matches) found\\b[^.]*\\b(users?|customers?|members?|clients?|profiles?)\\b"
       count_local_invalid: true       # only a local "invalid" answer for a person argument (user_id, ...)
       max_hints: 3
-      message_key: lookup_not_found_hint
+      message_key: lookup_not_found_hint_format  # A2 variant (tau3-geval-failure-fixes-plan.md)
       escalate_message_key: lookup_not_found_hint_words
+      field_provenance: true          # A3: spelled / heard / unknown per field from the 2nd miss on
+    # A1 / A1-lite: a not-found phone lookup tried once in the other format (by the relay on declared
+    # read-only tools, else a hint). voice/realtime_eval_control.yaml turns the geval fixes off.
+    format_retry: {enabled: true, mode: call, fields: phone}

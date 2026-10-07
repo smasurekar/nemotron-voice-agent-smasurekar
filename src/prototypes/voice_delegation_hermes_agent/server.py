@@ -52,6 +52,8 @@ from prototypes.voice_delegation_hermes_agent.frontend.status_verbalizer import 
     StatusVerbalizer,
     TemplateVerbalizer,
 )
+from prototypes.voice_delegation_hermes_agent.tools.format_retry import FormatRetry
+from prototypes.voice_delegation_hermes_agent.tools.relay import FormatRetryMessages
 from prototypes.voice_delegation_hermes_agent.tools.result_hints import ResultHints
 from prototypes.voice_frontend_backend_agent.engine.turn_api import TurnContext
 from prototypes.voice_frontend_backend_agent.normalization.arguments import ArgumentNormalizer
@@ -78,6 +80,7 @@ class DelegationRuntime:
         self._script = _load_script(config.frontend.script)
         self._argument_templates = ("", "", "")
         self._hint_templates = ("", "")  # result_hints: (message_key, escalate_message_key) texts
+        self.format_messages = FormatRetryMessages()  # format_retry: hint, found, not-found texts
         arguments = voice.normalization.tool_arguments
         if arguments.enabled:
             catalog = load_catalog(voice.agent.prompts_path, voice.agent.prompts.inline)
@@ -93,6 +96,13 @@ class DelegationRuntime:
                 self._hint_templates = (
                     catalog.get(hints.message_key),
                     catalog.get(hints.escalate_message_key) if hints.escalate_message_key else "",
+                )
+            retry = arguments.format_retry
+            if retry.enabled:
+                self.format_messages = FormatRetryMessages(
+                    hint=catalog.get(retry.hint_message_key),
+                    found=catalog.get(retry.found_message_key),
+                    not_found=catalog.get(retry.not_found_message_key),
                 )
         self.gateway_health: dict[str, Any] = {}
 
@@ -128,6 +138,15 @@ class DelegationRuntime:
             if arguments is not None and hints.enabled
             else None
         )
+        format_retry = (
+            FormatRetry(
+                settings.format_retry,
+                fields=schema.format_retry_fields() if schema is not None else {},
+                read_only_tools=schema.read_only_tools if schema is not None else (),
+            )
+            if arguments is not None and settings.format_retry.enabled
+            else None
+        )
         hold = config.delegation.spelling_hold
         spelling_hold = (
             SpellingHoldPredicate(
@@ -140,7 +159,11 @@ class DelegationRuntime:
             else None
         )
         return SessionRules(
-            argument_normalizer=arguments, result_hints=result_hints, spelling_hold=spelling_hold, schema=schema
+            argument_normalizer=arguments,
+            result_hints=result_hints,
+            spelling_hold=spelling_hold,
+            schema=schema,
+            format_retry=format_retry,
         )
 
     def parts(self, context: TurnContext) -> SessionParts:
@@ -160,6 +183,8 @@ class DelegationRuntime:
             local_tools=tuple(voice.tools.config_tool_specs) if config.tools.executor == "local" else (),
             spelling_hold=rules.spelling_hold,
             rebuild=self.session_rules if any(config.schema_auto.values()) else None,
+            format_retry=rules.format_retry,
+            format_messages=self.format_messages,
         )
 
     def turn_manager(self, context: TurnContext) -> DelegationTurnManager:

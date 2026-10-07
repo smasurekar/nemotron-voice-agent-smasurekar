@@ -25,6 +25,13 @@ Nothing here knows a tool or a domain by name. From those schemas:
 * **read tools**: the tools result hints watch (``result_hints.tools: auto``).
 * **phone arguments**: string arguments of read tools whose name contains ``phone``
   (reported only; no code acts on them).
+* **format-retry arguments** (``format_retry``, A1 / A1-lite): arguments of read tools that are a
+  genuine phone field: the name contains a phone word (:data:`PHONE_WORDS`) or the description
+  says "phone number". A value's shape never qualifies an argument (ten-digit product IDs exist).
+* **declared read-only tools**: tools whose schema declares read-only, idempotent semantics
+  (``annotations: {readOnlyHint: true, idempotentHint: true}``, the MCP tool-annotation
+  convention). Only these may be called by the relay itself; a name or a description never
+  proves the absence of side effects.
 
 Pure: no I/O. See ``tau3-voice-domain-specific-changes-genericization.md`` sections 4.5,
 4.7, 4.9 and 5.6.
@@ -48,6 +55,8 @@ READ_DESCRIPTION_OPENINGS = ("get", "find", "search", "list", "look up")
 STRIPPABLE = " .-"
 #: Words naming a person-type entity (result hints count local invalid answers for such arguments only).
 PERSON_WORDS = ("user", "customer", "member", "client", "profile")
+#: Words in an argument name that make it a phone field (format_retry).
+PHONE_WORDS = ("phone", "mobile", "msisdn", "telephone")
 
 _EXAMPLE = re.compile(r"""(?:such as|e\.g\.,?|for example)\s*(?:'([^'\s]+)'|"([^"\s]+)")""", re.IGNORECASE)
 _PERSON_ARGUMENT = re.compile(r"(?:^|_)(?:" + "|".join(PERSON_WORDS) + r")(?:_|$)")
@@ -63,6 +72,8 @@ class SchemaRules:
     complete_patterns: tuple[str, ...] = ()
     read_tools: tuple[str, ...] = ()
     phone_arguments: tuple[str, ...] = ()  # "tool.argument"
+    format_retry_arguments: tuple[str, ...] = ()  # "tool.argument": genuine phone fields of read tools
+    read_only_tools: tuple[str, ...] = ()  # tools whose schema declares read-only, idempotent semantics
 
     def snapshot(self) -> dict[str, Any]:
         """A JSON-able summary (logged per session, and the reviewed test snapshot)."""
@@ -85,7 +96,17 @@ class SchemaRules:
             "complete_patterns": list(self.complete_patterns),
             "read_tools": list(self.read_tools),
             "phone_arguments": list(self.phone_arguments),
+            "format_retry_arguments": list(self.format_retry_arguments),
+            "read_only_tools": list(self.read_only_tools),
         }
+
+    def format_retry_fields(self) -> dict[str, tuple[str, ...]]:
+        """``tool -> phone arguments`` of :attr:`format_retry_arguments`."""
+        out: dict[str, tuple[str, ...]] = {}
+        for entry in self.format_retry_arguments:
+            tool, _, argument = entry.partition(".")
+            out[tool] = (*out.get(tool, ()), argument)
+        return out
 
 
 @dataclass(frozen=True, slots=True)
@@ -107,6 +128,21 @@ def tool_function(tool: Mapping[str, Any]) -> Mapping[str, Any]:
 def is_read_tool(name: str, description: str) -> bool:
     """A lookup by its name or the opening of its description; unknown tools count as write tools."""
     return name.startswith(READ_PREFIXES) or description.lstrip().lower().startswith(READ_DESCRIPTION_OPENINGS)
+
+
+def is_phone_argument(name: str, description: str = "") -> bool:
+    """A genuine phone field: a phone word in the argument name, or "phone number" in its description."""
+    lowered = name.lower()
+    return any(word in lowered for word in PHONE_WORDS) or "phone number" in description.lower()
+
+
+def declares_read_only(tool: Mapping[str, Any]) -> bool:
+    """``annotations: {readOnlyHint: true, idempotentHint: true}`` on the tool (or its ``function`` part)."""
+    for part in (tool, tool_function(tool)):
+        annotations = part.get("annotations")
+        if isinstance(annotations, Mapping) and annotations.get("readOnlyHint") is True:
+            return annotations.get("idempotentHint") is True
+    return False
 
 
 def is_identifier_argument(name: str, *, plural: bool = False) -> bool:
@@ -133,11 +169,13 @@ def tools_sha256(tools: Sequence[Mapping[str, Any]]) -> str:
 
 
 def build_schema_rules(tools: Sequence[Mapping[str, Any]]) -> SchemaRules:
-    """Derive identifier rules, hold patterns, read tools and phone arguments from ``tools``."""
+    """Derive identifier rules, hold patterns, read tools, phone fields and read-only declarations from ``tools``."""
     rules: list[ArgumentRule] = []
     patterns: list[str] = []
     read_tools: list[str] = []
     phones: list[str] = []
+    retry_fields: list[str] = []
+    read_only: list[str] = []
     for tool in tools:
         function = tool_function(tool)
         name = str(function.get("name") or "")
@@ -146,6 +184,8 @@ def build_schema_rules(tools: Sequence[Mapping[str, Any]]) -> SchemaRules:
         read = is_read_tool(name, str(function.get("description") or ""))
         if read:
             read_tools.append(name)
+        if declares_read_only(tool):
+            read_only.append(name)
         parameters = function.get("parameters")
         properties = parameters.get("properties") if isinstance(parameters, Mapping) else None
         for argument, spec in (properties or {}).items():
@@ -154,6 +194,12 @@ def build_schema_rules(tools: Sequence[Mapping[str, Any]]) -> SchemaRules:
             string = spec.get("type") == "string"
             if read and string and "phone" in argument.lower():
                 phones.append(f"{name}.{argument}")
+            if (
+                read
+                and spec.get("type") in ("string", None)
+                and is_phone_argument(argument, str(spec.get("description") or ""))
+            ):
+                retry_fields.append(f"{name}.{argument}")
             if not is_identifier_argument(argument, plural=True):
                 continue
             shape = _shape(first_example(str(spec.get("description") or "")))
@@ -169,6 +215,8 @@ def build_schema_rules(tools: Sequence[Mapping[str, Any]]) -> SchemaRules:
         complete_patterns=tuple(patterns),
         read_tools=tuple(read_tools),
         phone_arguments=tuple(phones),
+        format_retry_arguments=tuple(retry_fields),
+        read_only_tools=tuple(read_only),
     )
 
 
