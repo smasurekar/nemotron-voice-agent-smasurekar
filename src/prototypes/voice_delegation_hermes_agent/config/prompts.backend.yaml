@@ -6,7 +6,8 @@
 # Prompt variants: {% if features.<name> %} blocks switched by prompt_features in gateway.yaml
 # (spelling_v2, spoken_output, write_consent: tau3-failure-fixes-plan.md; phone_format; domain_notes;
 # format_correction, write_consent_v2, policy_check, request_scope, transfer_check, capability_check:
-# tau3-geval-failure-fixes-plan.md section 4). All off = the baseline prompts. Examples are invented.
+# tau3-geval-failure-fixes-plan.md section 4; situational_facts (F4) and identity_from_identifier (F8):
+# fix-plan-f1-f2-f4-f8.md sections 3 and 4.4). All off = the baseline prompts. Examples are invented.
 
 # SOUL.md of every Hermes worker (loaded because load_soul_identity: true).
 backend_soul: |
@@ -30,6 +31,11 @@ backend_system: |
   with a guess or a variant{% if features.format_correction %} (changing only separators or letter case, with exactly the same characters, is a format correction and not a variant){% endif %}: read back what you heard, letter by letter, and ask the user to
   spell it. If you already found the user's account in this conversation, do not ask for
   their identifier again.
+  {% if features.identity_from_identifier -%}
+  If the user gives an identifier that visibly contains a name (for example jane_doe_1234) and your
+  instructions require a lookup by name, read that name back to the user and, once they confirm it,
+  use it for the lookup.
+  {% endif -%}
   {% else -%}
   Spoken identifiers may arrive spelled out or normalized; ask the user to spell an
   identifier letter by letter if a lookup fails.
@@ -134,6 +140,20 @@ backend_system: |
   transfer for that case.
   {%- endif %}
   </before_transfer>
+  {%- endif %}
+  {%- if features.situational_facts %}
+
+  <situational_facts>
+  This applies only when your instructions make a cause or a step depend on the user's own situation,
+  for example where they are, what their device or screen shows, or what they have already tried, and
+  none of your tools can show that situation. If such a situation matters for the problem the user
+  reported and you do not already know it from the user or from your tools, do not treat it as absent:
+  ask the user, one short question at a time, when you reach that cause or step, and before you
+  conclude that nothing else can be done. Do not ask about anything your tools already show or that
+  does not change what you would do. This never delays a transfer that your policy requires right away.
+  When you ask the user to check something on their own device or screen, ask them to read out
+  everything it shows, exactly as shown, and check each item against your instructions.
+  </situational_facts>
   {%- endif %}
 
 # Instructions for one domain only, rendered into backend_system as <domain_notes> right after the

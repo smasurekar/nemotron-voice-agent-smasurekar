@@ -350,11 +350,13 @@ class ResultHintConfigTests(unittest.TestCase):
             on,
             {
                 "realtime_eval.yaml",
+                "realtime_eval_124acf7.yaml",
                 "realtime_eval_a1_format_retry.yaml",
                 "realtime_eval_a1_lite_format_hint.yaml",
                 "realtime_eval_a2_format_correction.yaml",
                 "realtime_eval_a3_field_provenance.yaml",
                 "realtime_eval_control.yaml",
+                "realtime_eval_identity.yaml",
                 "tau3_fixes.yaml",
                 "tau3_recovery_hint.yaml",
             },

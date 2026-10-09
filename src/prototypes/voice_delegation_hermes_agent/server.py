@@ -53,10 +53,15 @@ from prototypes.voice_delegation_hermes_agent.frontend.status_verbalizer import 
     TemplateVerbalizer,
 )
 from prototypes.voice_delegation_hermes_agent.tools.format_retry import FormatRetry
+from prototypes.voice_delegation_hermes_agent.tools.identity_ledger import (
+    IdentityLedger,
+    LedgerSettings,
+    identification_tools,
+)
 from prototypes.voice_delegation_hermes_agent.tools.relay import FormatRetryMessages
 from prototypes.voice_delegation_hermes_agent.tools.result_hints import ResultHints
 from prototypes.voice_frontend_backend_agent.engine.turn_api import TurnContext
-from prototypes.voice_frontend_backend_agent.normalization.arguments import ArgumentNormalizer
+from prototypes.voice_frontend_backend_agent.normalization.arguments import ArgumentNormalizer, ResultHintSettings
 from prototypes.voice_frontend_backend_agent.normalization.schema_rules import SchemaRules, build_schema_rules
 from prototypes.voice_frontend_backend_agent.normalization.transcript import TranscriptNormalizer
 from prototypes.voice_frontend_backend_agent.server import ServerOptions, SessionHooks, build_app
@@ -80,6 +85,7 @@ class DelegationRuntime:
         self._script = _load_script(config.frontend.script)
         self._argument_templates = ("", "", "")
         self._hint_templates = ("", "")  # result_hints: (message_key, escalate_message_key) texts
+        self._ledger_template = ""  # F8: result_hints.ledger_message_key text
         self.format_messages = FormatRetryMessages()  # format_retry: hint, found, not-found texts
         arguments = voice.normalization.tool_arguments
         if arguments.enabled:
@@ -97,6 +103,8 @@ class DelegationRuntime:
                     catalog.get(hints.message_key),
                     catalog.get(hints.escalate_message_key) if hints.escalate_message_key else "",
                 )
+                if hints.ledger:
+                    self._ledger_template = catalog.get(hints.ledger_message_key)
             retry = arguments.format_retry
             if retry.enabled:
                 self.format_messages = FormatRetryMessages(
@@ -134,6 +142,7 @@ class DelegationRuntime:
                 message=self._hint_templates[0],
                 escalate_message=self._hint_templates[1],
                 read_tools=schema.read_tools if schema is not None else (),
+                ledger=self._ledger(hints, tools),
             )
             if arguments is not None and hints.enabled
             else None
@@ -164,6 +173,24 @@ class DelegationRuntime:
             spelling_hold=spelling_hold,
             schema=schema,
             format_retry=format_retry,
+        )
+
+    def _ledger(self, hints: ResultHintSettings, tools: Sequence[Mapping[str, Any]] | None) -> IdentityLedger | None:
+        """F8: the session's identification ledger (fix-plan-f1-f2-f4-f8.md section 4), or None when off."""
+        if not hints.ledger:
+            return None
+        schemas = tuple(tools or ())
+        names = identification_tools(schemas) if hints.auto_identification_tools else hints.identification_tools
+        return IdentityLedger(
+            names,
+            tools=schemas,
+            failure_pattern=hints.failure_pattern,
+            template=self._ledger_template,
+            settings=LedgerSettings(
+                max_age_turns=hints.ledger_max_age_turns,
+                correction_cues=hints.ledger_correction_cues,
+                max_notes=hints.max_hints,
+            ),
         )
 
     def parts(self, context: TurnContext) -> SessionParts:

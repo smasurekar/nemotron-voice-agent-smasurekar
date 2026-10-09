@@ -1,0 +1,72 @@
+== airline: 50 paired tasks (airline_control -> airline_fixes)
+  median per task (s), control -> fixes:
+    total_wall_s              761.1 ->    775.4   (sum   741.3 ->   746.2 min)
+    wall_s                    699.1 ->    671.2   (sum   600.8 ->   535.8 min)
+    conv_s                    355.6 ->    339.6   (sum   309.0 ->   272.6 min)
+    user_tts_s                 76.8 ->     54.5   (sum    69.2 ->    46.3 min)
+    user_llm_s                 50.7 ->     62.2   (sum    49.8 ->    58.5 min)
+    decision_llm_s            123.6 ->    127.2   (sum   124.2 ->   114.3 min)
+    other_block_s               8.5 ->      8.2   (sum     9.0 ->     9.8 min)
+    setup_s                     6.6 ->      9.8   (sum     5.9 ->     9.9 min)
+    post_s                      5.3 ->      4.8   (sum     4.7 ->     4.1 min)
+    user_turns                 13.0 ->     12.0   (sum    11.6 ->    10.7 min)
+    first_audio_mean_s         10.0 ->      7.5   (sum     9.4 ->     7.3 min)
+    backend_s                  81.9 ->     55.3   (sum    81.7 ->    59.0 min)
+    sum extra attempts       140.5 ->   210.4 min; 429 waits 0 -> 0
+    user-side block per user turn (median s): 22.14 -> 20.75
+  tasks slower: 23/50; main driver of the increase: {'longer conversation': 10, 'extra attempts': 10, 'user-sim LLM': 2, 'decision LLM': 1}
+  biggest increases: 37 +43.6 min (extra attempts); 16 +26.5 min (extra attempts); 18 +18.7 min (extra attempts); 20 +13.4 min (extra attempts); 5 +10.7 min (extra attempts); 42 +10.6 min (longer conversation); 40 +9.8 min (extra attempts); 41 +9.5 min (longer conversation)
+== retail: 114 paired tasks (retail_control_r3 -> retail_fixes_run1)
+  median per task (s), control -> fixes:
+    total_wall_s              709.6 ->    672.8   (sum  1795.2 ->  1644.0 min)
+    wall_s                    689.7 ->    608.6   (sum  1449.8 ->  1366.9 min)
+    conv_s                    363.0 ->    349.9   (sum   770.6 ->   766.6 min)
+    user_tts_s                 48.0 ->     45.7   (sum   110.7 ->   108.5 min)
+    user_llm_s                 45.0 ->     44.1   (sum   117.1 ->   111.3 min)
+    decision_llm_s            153.8 ->    113.8   (sum   321.2 ->   254.8 min)
+    other_block_s              15.8 ->     14.2   (sum    40.0 ->    36.9 min)
+    setup_s                     6.0 ->      5.0   (sum    14.2 ->    13.6 min)
+    post_s                      6.5 ->      6.1   (sum    15.0 ->    12.5 min)
+    user_turns                 16.0 ->     14.0   (sum    35.0 ->    31.4 min)
+    first_audio_mean_s          6.5 ->      7.7   (sum    13.1 ->    19.8 min)
+    backend_s                  59.0 ->     74.5   (sum   128.6 ->   190.5 min)
+    sum extra attempts       345.4 ->   277.1 min; 429 waits 0 -> 80
+    user-side block per user turn (median s): 15.28 -> 15.29
+  tasks slower: 59/114; main driver of the increase: {'longer conversation': 43, 'extra attempts': 14, 'user-sim LLM': 2}
+  biggest increases: 16 +28.2 min (extra attempts); 48 +27.4 min (extra attempts); 8 +26.0 min (extra attempts); 51 +24.2 min (extra attempts); 32 +23.9 min (longer conversation); 101 +18.9 min (longer conversation); 63 +18.0 min (extra attempts); 33 +16.5 min (extra attempts)
+== retail_rerun43: 43 paired tasks (retail_control_r3 -> retail_fixes_rerun43)
+  median per task (s), control -> fixes:
+    total_wall_s              734.7 ->    825.5   (sum   657.0 ->   679.9 min)
+    wall_s                    714.0 ->    776.5   (sum   582.8 ->   582.5 min)
+    conv_s                    394.4 ->    458.8   (sum   318.3 ->   338.7 min)
+    user_tts_s                 52.1 ->     56.3   (sum    46.9 ->    43.6 min)
+    user_llm_s                 48.9 ->     56.8   (sum    46.4 ->    48.9 min)
+    decision_llm_s            153.7 ->    135.4   (sum   119.2 ->   105.8 min)
+    other_block_s              17.7 ->     12.9   (sum    16.0 ->    10.8 min)
+    setup_s                     5.0 ->      5.4   (sum     4.6 ->     4.4 min)
+    post_s                      6.4 ->      6.1   (sum     4.8 ->     4.5 min)
+    user_turns                 17.0 ->     16.0   (sum    14.7 ->    13.1 min)
+    first_audio_mean_s          6.3 ->      6.7   (sum     4.8 ->     5.0 min)
+    backend_s                  58.1 ->     55.7   (sum    50.6 ->    46.0 min)
+    sum extra attempts        74.2 ->    97.3 min; 429 waits 0 -> 0
+    user-side block per user turn (median s): 14.50 -> 15.80
+  tasks slower: 22/43; main driver of the increase: {'longer conversation': 16, 'extra attempts': 4, 'user-sim LLM': 1, 'decision LLM': 1}
+  biggest increases: 61 +34.8 min (extra attempts); 75 +25.6 min (extra attempts); 55 +10.7 min (longer conversation); 84 +10.2 min (longer conversation); 94 +9.3 min (longer conversation); 100 +9.3 min (longer conversation); 93 +8.8 min (extra attempts); 78 +7.9 min (longer conversation)
+== telecom: 114 paired tasks (telecom_control -> telecom_fixes)
+  median per task (s), control -> fixes:
+    total_wall_s              536.0 ->    584.7   (sum  1383.0 ->  1397.2 min)
+    wall_s                    497.9 ->    549.8   (sum  1103.9 ->  1204.9 min)
+    conv_s                    249.1 ->    259.3   (sum   555.6 ->   585.7 min)
+    user_tts_s                 36.6 ->     62.4   (sum    92.0 ->   144.4 min)
+    user_llm_s                 88.9 ->     95.0   (sum   197.3 ->   201.6 min)
+    decision_llm_s             71.5 ->     81.0   (sum   160.8 ->   181.9 min)
+    other_block_s              10.4 ->      2.1   (sum    28.4 ->     6.7 min)
+    setup_s                     8.6 ->      8.2   (sum    18.6 ->    20.3 min)
+    post_s                      4.5 ->      4.5   (sum     9.9 ->     9.8 min)
+    user_turns                 14.0 ->     13.0   (sum    32.0 ->    28.6 min)
+    first_audio_mean_s          6.6 ->      8.8   (sum    15.7 ->    21.7 min)
+    backend_s                  53.0 ->     84.6   (sum   170.0 ->   207.4 min)
+    sum extra attempts       279.1 ->   192.3 min; 429 waits 64 -> 42
+    user-side block per user turn (median s): 14.45 -> 20.06
+  tasks slower: 57/114; main driver of the increase: {'longer conversation': 31, 'extra attempts': 13, 'user TTS': 6, 'decision LLM': 4, 'user-sim LLM': 3}
+  biggest increases: [mms_issue]bad_network_preference|bad_wi +23.1 min (longer conversation); [service_issue]airplane_mode_on|lock_sim +22.1 min (longer conversation); [mms_issue]break_apn_mms_setting|data_mo +20.6 min (extra attempts); [service_issue]break_apn_settings|contra +19.9 min (extra attempts); [mms_issue]airplane_mode_on|bad_network_ +18.4 min (extra attempts); [mms_issue]bad_wifi_calling|break_apn_mm +17.6 min (extra attempts); [mms_issue]bad_wifi_calling|break_apn_mm +15.2 min (extra attempts); [mms_issue]bad_network_preference|break_ +14.6 min (extra attempts)

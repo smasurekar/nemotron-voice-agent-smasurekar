@@ -12,3 +12,5 @@ normalization:
     result_hints:
       message_key: lookup_not_found_hint
       field_provenance: false
+      ledger: false                   # fix-plan-f1-f2-f4-f8.md F8 off in the geval runs' control
+      max_hints: 3

@@ -139,3 +139,10 @@ filler_alternatives: |
   Okay, checking now.
   Give me a second.
   Let me take a look.
+
+# F2 R1 (delegation.guards.liveness_reply, fix-plan-f1-f2-f4-f8.md section 2.3): spoken in rotation when a
+# silent reply to "are you still there?" or "could you repeat that?" is delegated. No facts, no promise.
+liveness_lines: |
+  Yes, I'm here.
+  I'm still here, one moment.
+  Yes, I'm with you.

@@ -1,0 +1,2547 @@
+{
+ "arms": {
+  "magpie_john": "Magpie (local NeMo Speech), voice John",
+  "gpt4omini_ash": "gpt-4o-mini-tts (Hub), voice ash + persona instructions",
+  "gpt4omini_coral": "gpt-4o-mini-tts (Hub), voice coral + persona instructions"
+ },
+ "asrs": {
+  "nemotron": "Nemotron ASR (local, our agent's ASR)",
+  "gpt4o_transcribe": "gpt-4o-mini-transcribe (Hub)"
+ },
+ "categories": {
+  "plain": "Plain conversational",
+  "numbers": "Numbers, prices, dates, times",
+  "names": "Spelled-out names and letters",
+  "emails": "Emails",
+  "ids": "IDs and digits"
+ },
+ "synth_meta": {
+  "started_utc": "2026-10-08T10:21:36Z",
+  "ended_utc": "2026-10-08T10:29:32Z",
+  "hub_model": "openai/openai/gpt-4o-mini-tts",
+  "style": "You are a middle-aged caller, calm and slightly impatient, with a neutral American accent.\nRead the text exactly as written, as a caller on a phone line.",
+  "local_server": "localhost:50051",
+  "repeats": 2,
+  "arms": {
+   "magpie_john": [
+    "Magpie (local NeMo Speech), voice John",
+    22050
+   ],
+   "gpt4omini_ash": [
+    "gpt-4o-mini-tts (Hub), voice ash + persona instructions",
+    24000
+   ],
+   "gpt4omini_coral": [
+    "gpt-4o-mini-tts (Hub), voice coral + persona instructions",
+    24000
+   ]
+  },
+  "skipped_arm": "nvidia/nvidia/magpie-tts-multilingual-357m on the Hub: audio.speech.create returns 400 'litellm.BadRequestError: LLM Provider NOT provided' (2 tries, 2026-10-08)"
+ },
+ "synth_errors": 0,
+ "synth_retries": 0,
+ "intelligibility": {
+  "magpie_john": {
+   "nemotron": {
+    "overall": {
+     "n_clips": 82,
+     "wer": {
+      "n": 82,
+      "mean": 0.124,
+      "p50": 0.059,
+      "std": 0.188,
+      "min": 0.0,
+      "max": 1.0
+     },
+     "cer": {
+      "n": 82,
+      "mean": 0.041,
+      "p50": 0.011,
+      "std": 0.057,
+      "min": 0.0,
+      "max": 0.279
+     },
+     "entity_sentence_acc": 0.636,
+     "entity_item_acc": 0.696,
+     "n_entity_items": 92,
+     "digit_entity_item_acc": 0.859,
+     "n_digit_entity_items": 64
+    },
+    "plain": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.013,
+      "p50": 0.0,
+      "std": 0.035,
+      "min": 0.0,
+      "max": 0.105
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.001,
+      "p50": 0.0,
+      "std": 0.003,
+      "min": 0.0,
+      "max": 0.011
+     },
+     "entity_sentence_acc": null,
+     "entity_item_acc": null,
+     "n_entity_items": 0,
+     "digit_entity_item_acc": null,
+     "n_digit_entity_items": 0
+    },
+    "numbers": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.016,
+      "p50": 0.0,
+      "std": 0.028,
+      "min": 0.0,
+      "max": 0.071
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.009,
+      "p50": 0.0,
+      "std": 0.015,
+      "min": 0.0,
+      "max": 0.042
+     },
+     "entity_sentence_acc": 1.0,
+     "entity_item_acc": 1.0,
+     "n_entity_items": 28,
+     "digit_entity_item_acc": 1.0,
+     "n_digit_entity_items": 28
+    },
+    "names": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.323,
+      "p50": 0.167,
+      "std": 0.282,
+      "min": 0.077,
+      "max": 1.0
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.09,
+      "p50": 0.072,
+      "std": 0.066,
+      "min": 0.031,
+      "max": 0.279
+     },
+     "entity_sentence_acc": 0.562,
+     "entity_item_acc": 0.654,
+     "n_entity_items": 26,
+     "digit_entity_item_acc": null,
+     "n_digit_entity_items": 0
+    },
+    "emails": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.128,
+      "p50": 0.115,
+      "std": 0.121,
+      "min": 0.0,
+      "max": 0.333
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.047,
+      "p50": 0.045,
+      "std": 0.045,
+      "min": 0.0,
+      "max": 0.114
+     },
+     "entity_sentence_acc": 0.375,
+     "entity_item_acc": 0.375,
+     "n_entity_items": 16,
+     "digit_entity_item_acc": 0.714,
+     "n_digit_entity_items": 14
+    },
+    "ids": {
+     "n_clips": 18,
+     "wer": {
+      "n": 18,
+      "mean": 0.138,
+      "p50": 0.15,
+      "std": 0.137,
+      "min": 0.0,
+      "max": 0.4
+     },
+     "cer": {
+      "n": 18,
+      "mean": 0.057,
+      "p50": 0.04,
+      "std": 0.066,
+      "min": 0.0,
+      "max": 0.245
+     },
+     "entity_sentence_acc": 0.611,
+     "entity_item_acc": 0.591,
+     "n_entity_items": 22,
+     "digit_entity_item_acc": 0.773,
+     "n_digit_entity_items": 22
+    }
+   },
+   "gpt4o_transcribe": {
+    "overall": {
+     "n_clips": 82,
+     "wer": {
+      "n": 82,
+      "mean": 0.045,
+      "p50": 0.0,
+      "std": 0.079,
+      "min": 0.0,
+      "max": 0.333
+     },
+     "cer": {
+      "n": 82,
+      "mean": 0.017,
+      "p50": 0.0,
+      "std": 0.033,
+      "min": 0.0,
+      "max": 0.143
+     },
+     "entity_sentence_acc": 0.758,
+     "entity_item_acc": 0.815,
+     "n_entity_items": 92,
+     "digit_entity_item_acc": 0.938,
+     "n_digit_entity_items": 64
+    },
+    "plain": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.0,
+      "p50": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.0,
+      "p50": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+     },
+     "entity_sentence_acc": null,
+     "entity_item_acc": null,
+     "n_entity_items": 0,
+     "digit_entity_item_acc": null,
+     "n_digit_entity_items": 0
+    },
+    "numbers": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.009,
+      "p50": 0.0,
+      "std": 0.024,
+      "min": 0.0,
+      "max": 0.071
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.003,
+      "p50": 0.0,
+      "std": 0.009,
+      "min": 0.0,
+      "max": 0.027
+     },
+     "entity_sentence_acc": 1.0,
+     "entity_item_acc": 1.0,
+     "n_entity_items": 28,
+     "digit_entity_item_acc": 1.0,
+     "n_digit_entity_items": 28
+    },
+    "names": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.102,
+      "p50": 0.083,
+      "std": 0.094,
+      "min": 0.0,
+      "max": 0.333
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.036,
+      "p50": 0.031,
+      "std": 0.035,
+      "min": 0.0,
+      "max": 0.107
+     },
+     "entity_sentence_acc": 0.812,
+     "entity_item_acc": 0.885,
+     "n_entity_items": 26,
+     "digit_entity_item_acc": null,
+     "n_digit_entity_items": 0
+    },
+    "emails": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.057,
+      "p50": 0.0,
+      "std": 0.076,
+      "min": 0.0,
+      "max": 0.222
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.022,
+      "p50": 0.0,
+      "std": 0.034,
+      "min": 0.0,
+      "max": 0.1
+     },
+     "entity_sentence_acc": 0.562,
+     "entity_item_acc": 0.562,
+     "n_entity_items": 16,
+     "digit_entity_item_acc": 0.857,
+     "n_digit_entity_items": 14
+    },
+    "ids": {
+     "n_clips": 18,
+     "wer": {
+      "n": 18,
+      "mean": 0.056,
+      "p50": 0.0,
+      "std": 0.095,
+      "min": 0.0,
+      "max": 0.273
+     },
+     "cer": {
+      "n": 18,
+      "mean": 0.024,
+      "p50": 0.0,
+      "std": 0.043,
+      "min": 0.0,
+      "max": 0.143
+     },
+     "entity_sentence_acc": 0.667,
+     "entity_item_acc": 0.682,
+     "n_entity_items": 22,
+     "digit_entity_item_acc": 0.909,
+     "n_digit_entity_items": 22
+    }
+   }
+  },
+  "gpt4omini_ash": {
+   "nemotron": {
+    "overall": {
+     "n_clips": 82,
+     "wer": {
+      "n": 82,
+      "mean": 0.067,
+      "p50": 0.0,
+      "std": 0.103,
+      "min": 0.0,
+      "max": 0.375
+     },
+     "cer": {
+      "n": 82,
+      "mean": 0.032,
+      "p50": 0.0,
+      "std": 0.059,
+      "min": 0.0,
+      "max": 0.3
+     },
+     "entity_sentence_acc": 0.682,
+     "entity_item_acc": 0.772,
+     "n_entity_items": 92,
+     "digit_entity_item_acc": 0.953,
+     "n_digit_entity_items": 64
+    },
+    "plain": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.007,
+      "p50": 0.0,
+      "std": 0.025,
+      "min": 0.0,
+      "max": 0.105
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.001,
+      "p50": 0.0,
+      "std": 0.003,
+      "min": 0.0,
+      "max": 0.011
+     },
+     "entity_sentence_acc": null,
+     "entity_item_acc": null,
+     "n_entity_items": 0,
+     "digit_entity_item_acc": null,
+     "n_digit_entity_items": 0
+    },
+    "numbers": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.003,
+      "p50": 0.0,
+      "std": 0.013,
+      "min": 0.0,
+      "max": 0.056
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.002,
+      "p50": 0.0,
+      "std": 0.008,
+      "min": 0.0,
+      "max": 0.035
+     },
+     "entity_sentence_acc": 1.0,
+     "entity_item_acc": 1.0,
+     "n_entity_items": 28,
+     "digit_entity_item_acc": 1.0,
+     "n_digit_entity_items": 28
+    },
+    "names": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.162,
+      "p50": 0.167,
+      "std": 0.133,
+      "min": 0.0,
+      "max": 0.375
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.051,
+      "p50": 0.047,
+      "std": 0.049,
+      "min": 0.0,
+      "max": 0.154
+     },
+     "entity_sentence_acc": 0.688,
+     "entity_item_acc": 0.808,
+     "n_entity_items": 26,
+     "digit_entity_item_acc": null,
+     "n_digit_entity_items": 0
+    },
+    "emails": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.058,
+      "p50": 0.061,
+      "std": 0.062,
+      "min": 0.0,
+      "max": 0.222
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.035,
+      "p50": 0.031,
+      "std": 0.036,
+      "min": 0.0,
+      "max": 0.1
+     },
+     "entity_sentence_acc": 0.438,
+     "entity_item_acc": 0.438,
+     "n_entity_items": 16,
+     "digit_entity_item_acc": 1.0,
+     "n_digit_entity_items": 14
+    },
+    "ids": {
+     "n_clips": 18,
+     "wer": {
+      "n": 18,
+      "mean": 0.102,
+      "p50": 0.05,
+      "std": 0.113,
+      "min": 0.0,
+      "max": 0.333
+     },
+     "cer": {
+      "n": 18,
+      "mean": 0.068,
+      "p50": 0.015,
+      "std": 0.097,
+      "min": 0.0,
+      "max": 0.3
+     },
+     "entity_sentence_acc": 0.611,
+     "entity_item_acc": 0.682,
+     "n_entity_items": 22,
+     "digit_entity_item_acc": 0.864,
+     "n_digit_entity_items": 22
+    }
+   },
+   "gpt4o_transcribe": {
+    "overall": {
+     "n_clips": 82,
+     "wer": {
+      "n": 82,
+      "mean": 0.027,
+      "p50": 0.0,
+      "std": 0.061,
+      "min": 0.0,
+      "max": 0.267
+     },
+     "cer": {
+      "n": 82,
+      "mean": 0.02,
+      "p50": 0.0,
+      "std": 0.053,
+      "min": 0.0,
+      "max": 0.287
+     },
+     "entity_sentence_acc": 0.818,
+     "entity_item_acc": 0.87,
+     "n_entity_items": 92,
+     "digit_entity_item_acc": 0.984,
+     "n_digit_entity_items": 64
+    },
+    "plain": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.0,
+      "p50": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.0,
+      "p50": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+     },
+     "entity_sentence_acc": null,
+     "entity_item_acc": null,
+     "n_entity_items": 0,
+     "digit_entity_item_acc": null,
+     "n_digit_entity_items": 0
+    },
+    "numbers": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.0,
+      "p50": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.0,
+      "p50": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+     },
+     "entity_sentence_acc": 1.0,
+     "entity_item_acc": 1.0,
+     "n_entity_items": 28,
+     "digit_entity_item_acc": 1.0,
+     "n_digit_entity_items": 28
+    },
+    "names": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.031,
+      "p50": 0.0,
+      "std": 0.049,
+      "min": 0.0,
+      "max": 0.133
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.018,
+      "p50": 0.0,
+      "std": 0.031,
+      "min": 0.0,
+      "max": 0.107
+     },
+     "entity_sentence_acc": 0.875,
+     "entity_item_acc": 0.923,
+     "n_entity_items": 26,
+     "digit_entity_item_acc": null,
+     "n_digit_entity_items": 0
+    },
+    "emails": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.044,
+      "p50": 0.0,
+      "std": 0.065,
+      "min": 0.0,
+      "max": 0.222
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.022,
+      "p50": 0.0,
+      "std": 0.034,
+      "min": 0.0,
+      "max": 0.1
+     },
+     "entity_sentence_acc": 0.688,
+     "entity_item_acc": 0.688,
+     "n_entity_items": 16,
+     "digit_entity_item_acc": 1.0,
+     "n_digit_entity_items": 14
+    },
+    "ids": {
+     "n_clips": 18,
+     "wer": {
+      "n": 18,
+      "mean": 0.058,
+      "p50": 0.0,
+      "std": 0.092,
+      "min": 0.0,
+      "max": 0.267
+     },
+     "cer": {
+      "n": 18,
+      "mean": 0.054,
+      "p50": 0.0,
+      "std": 0.096,
+      "min": 0.0,
+      "max": 0.287
+     },
+     "entity_sentence_acc": 0.722,
+     "entity_item_acc": 0.773,
+     "n_entity_items": 22,
+     "digit_entity_item_acc": 0.955,
+     "n_digit_entity_items": 22
+    }
+   }
+  },
+  "gpt4omini_coral": {
+   "nemotron": {
+    "overall": {
+     "n_clips": 82,
+     "wer": {
+      "n": 82,
+      "mean": 0.062,
+      "p50": 0.0,
+      "std": 0.095,
+      "min": 0.0,
+      "max": 0.333
+     },
+     "cer": {
+      "n": 82,
+      "mean": 0.031,
+      "p50": 0.0,
+      "std": 0.062,
+      "min": 0.0,
+      "max": 0.312
+     },
+     "entity_sentence_acc": 0.682,
+     "entity_item_acc": 0.761,
+     "n_entity_items": 92,
+     "digit_entity_item_acc": 0.922,
+     "n_digit_entity_items": 64
+    },
+    "plain": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.003,
+      "p50": 0.0,
+      "std": 0.012,
+      "min": 0.0,
+      "max": 0.048
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.002,
+      "p50": 0.0,
+      "std": 0.008,
+      "min": 0.0,
+      "max": 0.031
+     },
+     "entity_sentence_acc": null,
+     "entity_item_acc": null,
+     "n_entity_items": 0,
+     "digit_entity_item_acc": null,
+     "n_digit_entity_items": 0
+    },
+    "numbers": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.0,
+      "p50": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.0,
+      "p50": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+     },
+     "entity_sentence_acc": 1.0,
+     "entity_item_acc": 1.0,
+     "n_entity_items": 28,
+     "digit_entity_item_acc": 1.0,
+     "n_digit_entity_items": 28
+    },
+    "names": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.137,
+      "p50": 0.16,
+      "std": 0.109,
+      "min": 0.0,
+      "max": 0.333
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.055,
+      "p50": 0.061,
+      "std": 0.05,
+      "min": 0.0,
+      "max": 0.169
+     },
+     "entity_sentence_acc": 0.688,
+     "entity_item_acc": 0.808,
+     "n_entity_items": 26,
+     "digit_entity_item_acc": null,
+     "n_digit_entity_items": 0
+    },
+    "emails": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.074,
+      "p50": 0.031,
+      "std": 0.087,
+      "min": 0.0,
+      "max": 0.25
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.044,
+      "p50": 0.008,
+      "std": 0.06,
+      "min": 0.0,
+      "max": 0.224
+     },
+     "entity_sentence_acc": 0.5,
+     "entity_item_acc": 0.5,
+     "n_entity_items": 16,
+     "digit_entity_item_acc": 1.0,
+     "n_digit_entity_items": 14
+    },
+    "ids": {
+     "n_clips": 18,
+     "wer": {
+      "n": 18,
+      "mean": 0.092,
+      "p50": 0.0,
+      "std": 0.107,
+      "min": 0.0,
+      "max": 0.267
+     },
+     "cer": {
+      "n": 18,
+      "mean": 0.053,
+      "p50": 0.0,
+      "std": 0.096,
+      "min": 0.0,
+      "max": 0.312
+     },
+     "entity_sentence_acc": 0.556,
+     "entity_item_acc": 0.591,
+     "n_entity_items": 22,
+     "digit_entity_item_acc": 0.773,
+     "n_digit_entity_items": 22
+    }
+   },
+   "gpt4o_transcribe": {
+    "overall": {
+     "n_clips": 82,
+     "wer": {
+      "n": 82,
+      "mean": 0.029,
+      "p50": 0.0,
+      "std": 0.067,
+      "min": 0.0,
+      "max": 0.267
+     },
+     "cer": {
+      "n": 82,
+      "mean": 0.018,
+      "p50": 0.0,
+      "std": 0.057,
+      "min": 0.0,
+      "max": 0.287
+     },
+     "entity_sentence_acc": 0.788,
+     "entity_item_acc": 0.848,
+     "n_entity_items": 92,
+     "digit_entity_item_acc": 0.969,
+     "n_digit_entity_items": 64
+    },
+    "plain": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.0,
+      "p50": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.0,
+      "p50": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+     },
+     "entity_sentence_acc": null,
+     "entity_item_acc": null,
+     "n_entity_items": 0,
+     "digit_entity_item_acc": null,
+     "n_digit_entity_items": 0
+    },
+    "numbers": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.0,
+      "p50": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.0,
+      "p50": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+     },
+     "entity_sentence_acc": 1.0,
+     "entity_item_acc": 1.0,
+     "n_entity_items": 28,
+     "digit_entity_item_acc": 1.0,
+     "n_digit_entity_items": 28
+    },
+    "names": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.026,
+      "p50": 0.0,
+      "std": 0.048,
+      "min": 0.0,
+      "max": 0.133
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.011,
+      "p50": 0.0,
+      "std": 0.021,
+      "min": 0.0,
+      "max": 0.059
+     },
+     "entity_sentence_acc": 0.875,
+     "entity_item_acc": 0.923,
+     "n_entity_items": 26,
+     "digit_entity_item_acc": null,
+     "n_digit_entity_items": 0
+    },
+    "emails": {
+     "n_clips": 16,
+     "wer": {
+      "n": 16,
+      "mean": 0.056,
+      "p50": 0.0,
+      "std": 0.079,
+      "min": 0.0,
+      "max": 0.25
+     },
+     "cer": {
+      "n": 16,
+      "mean": 0.027,
+      "p50": 0.0,
+      "std": 0.051,
+      "min": 0.0,
+      "max": 0.197
+     },
+     "entity_sentence_acc": 0.562,
+     "entity_item_acc": 0.562,
+     "n_entity_items": 16,
+     "digit_entity_item_acc": 1.0,
+     "n_digit_entity_items": 14
+    },
+    "ids": {
+     "n_clips": 18,
+     "wer": {
+      "n": 18,
+      "mean": 0.058,
+      "p50": 0.0,
+      "std": 0.099,
+      "min": 0.0,
+      "max": 0.267
+     },
+     "cer": {
+      "n": 18,
+      "mean": 0.049,
+      "p50": 0.0,
+      "std": 0.102,
+      "min": 0.0,
+      "max": 0.287
+     },
+     "entity_sentence_acc": 0.722,
+     "entity_item_acc": 0.773,
+     "n_entity_items": 22,
+     "digit_entity_item_acc": 0.909,
+     "n_digit_entity_items": 22
+    }
+   }
+  }
+ },
+ "mos": {
+  "magpie_john": {
+   "overall": {
+    "utmos": {
+     "n": 82,
+     "mean": 4.381,
+     "p50": 4.418,
+     "std": 0.114,
+     "min": 3.838,
+     "max": 4.492
+    },
+    "dnsmos_sig": {
+     "n": 82,
+     "mean": 3.657,
+     "p50": 3.67,
+     "std": 0.074,
+     "min": 3.392,
+     "max": 3.753
+    },
+    "dnsmos_bak": {
+     "n": 82,
+     "mean": 4.205,
+     "p50": 4.214,
+     "std": 0.047,
+     "min": 3.9,
+     "max": 4.262
+    },
+    "dnsmos_ovrl": {
+     "n": 82,
+     "mean": 3.435,
+     "p50": 3.45,
+     "std": 0.089,
+     "min": 3.153,
+     "max": 3.554
+    },
+    "dnsmos_p808": {
+     "n": 82,
+     "mean": 4.029,
+     "p50": 4.053,
+     "std": 0.131,
+     "min": 3.744,
+     "max": 4.28
+    }
+   },
+   "plain": {
+    "utmos": {
+     "n": 16,
+     "mean": 4.324,
+     "p50": 4.382,
+     "std": 0.16,
+     "min": 3.838,
+     "max": 4.454
+    },
+    "dnsmos_sig": {
+     "n": 16,
+     "mean": 3.678,
+     "p50": 3.682,
+     "std": 0.054,
+     "min": 3.547,
+     "max": 3.753
+    },
+    "dnsmos_bak": {
+     "n": 16,
+     "mean": 4.215,
+     "p50": 4.219,
+     "std": 0.027,
+     "min": 4.148,
+     "max": 4.247
+    },
+    "dnsmos_ovrl": {
+     "n": 16,
+     "mean": 3.463,
+     "p50": 3.476,
+     "std": 0.065,
+     "min": 3.308,
+     "max": 3.543
+    },
+    "dnsmos_p808": {
+     "n": 16,
+     "mean": 4.059,
+     "p50": 4.067,
+     "std": 0.109,
+     "min": 3.857,
+     "max": 4.207
+    }
+   },
+   "numbers": {
+    "utmos": {
+     "n": 16,
+     "mean": 4.403,
+     "p50": 4.428,
+     "std": 0.069,
+     "min": 4.201,
+     "max": 4.492
+    },
+    "dnsmos_sig": {
+     "n": 16,
+     "mean": 3.664,
+     "p50": 3.665,
+     "std": 0.064,
+     "min": 3.509,
+     "max": 3.753
+    },
+    "dnsmos_bak": {
+     "n": 16,
+     "mean": 4.211,
+     "p50": 4.215,
+     "std": 0.028,
+     "min": 4.134,
+     "max": 4.262
+    },
+    "dnsmos_ovrl": {
+     "n": 16,
+     "mean": 3.444,
+     "p50": 3.441,
+     "std": 0.074,
+     "min": 3.264,
+     "max": 3.548
+    },
+    "dnsmos_p808": {
+     "n": 16,
+     "mean": 4.05,
+     "p50": 4.069,
+     "std": 0.093,
+     "min": 3.88,
+     "max": 4.225
+    }
+   },
+   "names": {
+    "utmos": {
+     "n": 16,
+     "mean": 4.312,
+     "p50": 4.348,
+     "std": 0.141,
+     "min": 3.839,
+     "max": 4.437
+    },
+    "dnsmos_sig": {
+     "n": 16,
+     "mean": 3.628,
+     "p50": 3.67,
+     "std": 0.108,
+     "min": 3.392,
+     "max": 3.751
+    },
+    "dnsmos_bak": {
+     "n": 16,
+     "mean": 4.183,
+     "p50": 4.212,
+     "std": 0.085,
+     "min": 3.9,
+     "max": 4.257
+    },
+    "dnsmos_ovrl": {
+     "n": 16,
+     "mean": 3.395,
+     "p50": 3.449,
+     "std": 0.133,
+     "min": 3.153,
+     "max": 3.554
+    },
+    "dnsmos_p808": {
+     "n": 16,
+     "mean": 3.972,
+     "p50": 3.904,
+     "std": 0.174,
+     "min": 3.756,
+     "max": 4.269
+    }
+   },
+   "emails": {
+    "utmos": {
+     "n": 16,
+     "mean": 4.434,
+     "p50": 4.438,
+     "std": 0.034,
+     "min": 4.36,
+     "max": 4.483
+    },
+    "dnsmos_sig": {
+     "n": 16,
+     "mean": 3.681,
+     "p50": 3.693,
+     "std": 0.05,
+     "min": 3.528,
+     "max": 3.732
+    },
+    "dnsmos_bak": {
+     "n": 16,
+     "mean": 4.209,
+     "p50": 4.216,
+     "std": 0.028,
+     "min": 4.133,
+     "max": 4.239
+    },
+    "dnsmos_ovrl": {
+     "n": 16,
+     "mean": 3.461,
+     "p50": 3.474,
+     "std": 0.058,
+     "min": 3.291,
+     "max": 3.525
+    },
+    "dnsmos_p808": {
+     "n": 16,
+     "mean": 4.043,
+     "p50": 4.064,
+     "std": 0.094,
+     "min": 3.879,
+     "max": 4.205
+    }
+   },
+   "ids": {
+    "utmos": {
+     "n": 18,
+     "mean": 4.427,
+     "p50": 4.428,
+     "std": 0.032,
+     "min": 4.348,
+     "max": 4.479
+    },
+    "dnsmos_sig": {
+     "n": 18,
+     "mean": 3.636,
+     "p50": 3.646,
+     "std": 0.065,
+     "min": 3.507,
+     "max": 3.726
+    },
+    "dnsmos_bak": {
+     "n": 18,
+     "mean": 4.208,
+     "p50": 4.21,
+     "std": 0.03,
+     "min": 4.144,
+     "max": 4.249
+    },
+    "dnsmos_ovrl": {
+     "n": 18,
+     "mean": 3.417,
+     "p50": 3.428,
+     "std": 0.074,
+     "min": 3.252,
+     "max": 3.523
+    },
+    "dnsmos_p808": {
+     "n": 18,
+     "mean": 4.021,
+     "p50": 4.024,
+     "std": 0.146,
+     "min": 3.744,
+     "max": 4.28
+    }
+   }
+  },
+  "gpt4omini_ash": {
+   "overall": {
+    "utmos": {
+     "n": 82,
+     "mean": 4.488,
+     "p50": 4.504,
+     "std": 0.094,
+     "min": 3.892,
+     "max": 4.555
+    },
+    "dnsmos_sig": {
+     "n": 82,
+     "mean": 3.713,
+     "p50": 3.723,
+     "std": 0.055,
+     "min": 3.568,
+     "max": 3.874
+    },
+    "dnsmos_bak": {
+     "n": 82,
+     "mean": 4.211,
+     "p50": 4.214,
+     "std": 0.03,
+     "min": 4.122,
+     "max": 4.288
+    },
+    "dnsmos_ovrl": {
+     "n": 82,
+     "mean": 3.518,
+     "p50": 3.525,
+     "std": 0.066,
+     "min": 3.343,
+     "max": 3.72
+    },
+    "dnsmos_p808": {
+     "n": 82,
+     "mean": 4.111,
+     "p50": 4.136,
+     "std": 0.132,
+     "min": 3.628,
+     "max": 4.331
+    }
+   },
+   "plain": {
+    "utmos": {
+     "n": 16,
+     "mean": 4.485,
+     "p50": 4.483,
+     "std": 0.023,
+     "min": 4.437,
+     "max": 4.518
+    },
+    "dnsmos_sig": {
+     "n": 16,
+     "mean": 3.734,
+     "p50": 3.74,
+     "std": 0.032,
+     "min": 3.667,
+     "max": 3.791
+    },
+    "dnsmos_bak": {
+     "n": 16,
+     "mean": 4.21,
+     "p50": 4.21,
+     "std": 0.024,
+     "min": 4.148,
+     "max": 4.258
+    },
+    "dnsmos_ovrl": {
+     "n": 16,
+     "mean": 3.541,
+     "p50": 3.543,
+     "std": 0.039,
+     "min": 3.46,
+     "max": 3.614
+    },
+    "dnsmos_p808": {
+     "n": 16,
+     "mean": 4.147,
+     "p50": 4.126,
+     "std": 0.093,
+     "min": 3.969,
+     "max": 4.331
+    }
+   },
+   "numbers": {
+    "utmos": {
+     "n": 16,
+     "mean": 4.498,
+     "p50": 4.501,
+     "std": 0.025,
+     "min": 4.438,
+     "max": 4.529
+    },
+    "dnsmos_sig": {
+     "n": 16,
+     "mean": 3.726,
+     "p50": 3.743,
+     "std": 0.062,
+     "min": 3.604,
+     "max": 3.874
+    },
+    "dnsmos_bak": {
+     "n": 16,
+     "mean": 4.211,
+     "p50": 4.208,
+     "std": 0.038,
+     "min": 4.126,
+     "max": 4.288
+    },
+    "dnsmos_ovrl": {
+     "n": 16,
+     "mean": 3.534,
+     "p50": 3.544,
+     "std": 0.078,
+     "min": 3.374,
+     "max": 3.72
+    },
+    "dnsmos_p808": {
+     "n": 16,
+     "mean": 4.141,
+     "p50": 4.176,
+     "std": 0.114,
+     "min": 3.852,
+     "max": 4.267
+    }
+   },
+   "names": {
+    "utmos": {
+     "n": 16,
+     "mean": 4.471,
+     "p50": 4.504,
+     "std": 0.133,
+     "min": 3.957,
+     "max": 4.528
+    },
+    "dnsmos_sig": {
+     "n": 16,
+     "mean": 3.717,
+     "p50": 3.725,
+     "std": 0.055,
+     "min": 3.597,
+     "max": 3.794
+    },
+    "dnsmos_bak": {
+     "n": 16,
+     "mean": 4.221,
+     "p50": 4.219,
+     "std": 0.021,
+     "min": 4.187,
+     "max": 4.27
+    },
+    "dnsmos_ovrl": {
+     "n": 16,
+     "mean": 3.524,
+     "p50": 3.537,
+     "std": 0.059,
+     "min": 3.414,
+     "max": 3.615
+    },
+    "dnsmos_p808": {
+     "n": 16,
+     "mean": 3.949,
+     "p50": 3.936,
+     "std": 0.15,
+     "min": 3.628,
+     "max": 4.19
+    }
+   },
+   "emails": {
+    "utmos": {
+     "n": 16,
+     "mean": 4.5,
+     "p50": 4.517,
+     "std": 0.047,
+     "min": 4.383,
+     "max": 4.555
+    },
+    "dnsmos_sig": {
+     "n": 16,
+     "mean": 3.707,
+     "p50": 3.707,
+     "std": 0.039,
+     "min": 3.622,
+     "max": 3.768
+    },
+    "dnsmos_bak": {
+     "n": 16,
+     "mean": 4.217,
+     "p50": 4.219,
+     "std": 0.018,
+     "min": 4.174,
+     "max": 4.24
+    },
+    "dnsmos_ovrl": {
+     "n": 16,
+     "mean": 3.514,
+     "p50": 3.515,
+     "std": 0.051,
+     "min": 3.427,
+     "max": 3.597
+    },
+    "dnsmos_p808": {
+     "n": 16,
+     "mean": 4.15,
+     "p50": 4.149,
+     "std": 0.066,
+     "min": 4.011,
+     "max": 4.306
+    }
+   },
+   "ids": {
+    "utmos": {
+     "n": 18,
+     "mean": 4.487,
+     "p50": 4.533,
+     "std": 0.146,
+     "min": 3.892,
+     "max": 4.544
+    },
+    "dnsmos_sig": {
+     "n": 18,
+     "mean": 3.686,
+     "p50": 3.693,
+     "std": 0.062,
+     "min": 3.568,
+     "max": 3.782
+    },
+    "dnsmos_bak": {
+     "n": 18,
+     "mean": 4.198,
+     "p50": 4.2,
+     "std": 0.037,
+     "min": 4.122,
+     "max": 4.258
+    },
+    "dnsmos_ovrl": {
+     "n": 18,
+     "mean": 3.484,
+     "p50": 3.489,
+     "std": 0.077,
+     "min": 3.343,
+     "max": 3.607
+    },
+    "dnsmos_p808": {
+     "n": 18,
+     "mean": 4.163,
+     "p50": 4.189,
+     "std": 0.087,
+     "min": 3.942,
+     "max": 4.292
+    }
+   }
+  },
+  "gpt4omini_coral": {
+   "overall": {
+    "utmos": {
+     "n": 82,
+     "mean": 4.41,
+     "p50": 4.453,
+     "std": 0.138,
+     "min": 3.819,
+     "max": 4.548
+    },
+    "dnsmos_sig": {
+     "n": 82,
+     "mean": 3.649,
+     "p50": 3.647,
+     "std": 0.057,
+     "min": 3.504,
+     "max": 3.817
+    },
+    "dnsmos_bak": {
+     "n": 82,
+     "mean": 4.19,
+     "p50": 4.189,
+     "std": 0.034,
+     "min": 4.091,
+     "max": 4.272
+    },
+    "dnsmos_ovrl": {
+     "n": 82,
+     "mean": 3.42,
+     "p50": 3.412,
+     "std": 0.068,
+     "min": 3.283,
+     "max": 3.604
+    },
+    "dnsmos_p808": {
+     "n": 82,
+     "mean": 3.941,
+     "p50": 3.949,
+     "std": 0.132,
+     "min": 3.588,
+     "max": 4.245
+    }
+   },
+   "plain": {
+    "utmos": {
+     "n": 16,
+     "mean": 4.372,
+     "p50": 4.432,
+     "std": 0.168,
+     "min": 3.905,
+     "max": 4.492
+    },
+    "dnsmos_sig": {
+     "n": 16,
+     "mean": 3.688,
+     "p50": 3.687,
+     "std": 0.054,
+     "min": 3.604,
+     "max": 3.774
+    },
+    "dnsmos_bak": {
+     "n": 16,
+     "mean": 4.213,
+     "p50": 4.213,
+     "std": 0.021,
+     "min": 4.18,
+     "max": 4.255
+    },
+    "dnsmos_ovrl": {
+     "n": 16,
+     "mean": 3.474,
+     "p50": 3.474,
+     "std": 0.061,
+     "min": 3.377,
+     "max": 3.577
+    },
+    "dnsmos_p808": {
+     "n": 16,
+     "mean": 3.979,
+     "p50": 3.981,
+     "std": 0.149,
+     "min": 3.606,
+     "max": 4.245
+    }
+   },
+   "numbers": {
+    "utmos": {
+     "n": 16,
+     "mean": 4.401,
+     "p50": 4.451,
+     "std": 0.15,
+     "min": 3.887,
+     "max": 4.504
+    },
+    "dnsmos_sig": {
+     "n": 16,
+     "mean": 3.638,
+     "p50": 3.637,
+     "std": 0.046,
+     "min": 3.535,
+     "max": 3.705
+    },
+    "dnsmos_bak": {
+     "n": 16,
+     "mean": 4.19,
+     "p50": 4.191,
+     "std": 0.027,
+     "min": 4.112,
+     "max": 4.225
+    },
+    "dnsmos_ovrl": {
+     "n": 16,
+     "mean": 3.409,
+     "p50": 3.408,
+     "std": 0.059,
+     "min": 3.291,
+     "max": 3.501
+    },
+    "dnsmos_p808": {
+     "n": 16,
+     "mean": 3.907,
+     "p50": 3.949,
+     "std": 0.112,
+     "min": 3.675,
+     "max": 4.064
+    }
+   },
+   "names": {
+    "utmos": {
+     "n": 16,
+     "mean": 4.366,
+     "p50": 4.439,
+     "std": 0.174,
+     "min": 3.819,
+     "max": 4.528
+    },
+    "dnsmos_sig": {
+     "n": 16,
+     "mean": 3.63,
+     "p50": 3.642,
+     "std": 0.064,
+     "min": 3.504,
+     "max": 3.742
+    },
+    "dnsmos_bak": {
+     "n": 16,
+     "mean": 4.187,
+     "p50": 4.193,
+     "std": 0.038,
+     "min": 4.123,
+     "max": 4.248
+    },
+    "dnsmos_ovrl": {
+     "n": 16,
+     "mean": 3.401,
+     "p50": 3.411,
+     "std": 0.073,
+     "min": 3.283,
+     "max": 3.525
+    },
+    "dnsmos_p808": {
+     "n": 16,
+     "mean": 3.905,
+     "p50": 3.899,
+     "std": 0.145,
+     "min": 3.588,
+     "max": 4.165
+    }
+   },
+   "emails": {
+    "utmos": {
+     "n": 16,
+     "mean": 4.449,
+     "p50": 4.474,
+     "std": 0.077,
+     "min": 4.199,
+     "max": 4.548
+    },
+    "dnsmos_sig": {
+     "n": 16,
+     "mean": 3.658,
+     "p50": 3.647,
+     "std": 0.056,
+     "min": 3.553,
+     "max": 3.817
+    },
+    "dnsmos_bak": {
+     "n": 16,
+     "mean": 4.188,
+     "p50": 4.183,
+     "std": 0.028,
+     "min": 4.147,
+     "max": 4.272
+    },
+    "dnsmos_ovrl": {
+     "n": 16,
+     "mean": 3.422,
+     "p50": 3.415,
+     "std": 0.068,
+     "min": 3.302,
+     "max": 3.604
+    },
+    "dnsmos_p808": {
+     "n": 16,
+     "mean": 3.978,
+     "p50": 3.986,
+     "std": 0.095,
+     "min": 3.807,
+     "max": 4.166
+    }
+   },
+   "ids": {
+    "utmos": {
+     "n": 18,
+     "mean": 4.458,
+     "p50": 4.473,
+     "std": 0.057,
+     "min": 4.296,
+     "max": 4.524
+    },
+    "dnsmos_sig": {
+     "n": 18,
+     "mean": 3.632,
+     "p50": 3.631,
+     "std": 0.044,
+     "min": 3.535,
+     "max": 3.702
+    },
+    "dnsmos_bak": {
+     "n": 18,
+     "mean": 4.176,
+     "p50": 4.175,
+     "std": 0.038,
+     "min": 4.091,
+     "max": 4.227
+    },
+    "dnsmos_ovrl": {
+     "n": 18,
+     "mean": 3.396,
+     "p50": 3.382,
+     "std": 0.049,
+     "min": 3.313,
+     "max": 3.495
+    },
+    "dnsmos_p808": {
+     "n": 18,
+     "mean": 3.939,
+     "p50": 3.925,
+     "std": 0.131,
+     "min": 3.651,
+     "max": 4.155
+    }
+   }
+  }
+ },
+ "audio": {
+  "magpie_john": {
+   "sample_rate": [
+    22050
+   ],
+   "dur_s": {
+    "n": 82,
+    "mean": 6.308,
+    "p50": 6.409,
+    "std": 1.4,
+    "min": 2.833,
+    "max": 9.427
+   },
+   "wps": {
+    "n": 82,
+    "mean": 2.548,
+    "p50": 2.643,
+    "std": 0.782,
+    "min": 1.017,
+    "max": 4.023
+   },
+   "lead_sil_s": {
+    "n": 82,
+    "mean": 0.223,
+    "p50": 0.22,
+    "std": 0.129,
+    "min": 0.02,
+    "max": 0.52
+   },
+   "trail_sil_s": {
+    "n": 82,
+    "mean": 0.555,
+    "p50": 0.567,
+    "std": 0.137,
+    "min": 0.015,
+    "max": 0.875
+   },
+   "peak_dbfs": {
+    "n": 82,
+    "mean": -9.664,
+    "p50": -9.775,
+    "std": 1.762,
+    "min": -15.14,
+    "max": -5.33
+   },
+   "rms_dbfs": {
+    "n": 82,
+    "mean": -28.216,
+    "p50": -28.22,
+    "std": 1.269,
+    "min": -31.53,
+    "max": -24.8
+   },
+   "clipped_pct": {
+    "n": 82,
+    "mean": 0.0,
+    "p50": 0.0,
+    "std": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "wps_by_category": {
+    "plain": {
+     "n": 16,
+     "mean": 3.291,
+     "p50": 3.264,
+     "std": 0.328,
+     "min": 2.742,
+     "max": 4.023
+    },
+    "numbers": {
+     "n": 16,
+     "mean": 2.746,
+     "p50": 2.924,
+     "std": 0.522,
+     "min": 1.847,
+     "max": 3.373
+    },
+    "names": {
+     "n": 16,
+     "mean": 2.908,
+     "p50": 2.859,
+     "std": 0.366,
+     "min": 2.335,
+     "max": 3.597
+    },
+    "emails": {
+     "n": 16,
+     "mean": 1.844,
+     "p50": 1.774,
+     "std": 0.625,
+     "min": 1.017,
+     "max": 2.655
+    },
+    "ids": {
+     "n": 18,
+     "mean": 2.016,
+     "p50": 1.813,
+     "std": 0.783,
+     "min": 1.055,
+     "max": 3.659
+    }
+   },
+   "repeat_dur_rel_diff": {
+    "n": 41,
+    "mean": 0.053,
+    "p50": 0.04,
+    "std": 0.045,
+    "min": 0.0,
+    "max": 0.181
+   },
+   "repeat_dur_diff_gt20pct": 0,
+   "repeat_pairs": 41,
+   "clips_with_clipping": 0,
+   "entity_result_flips_between_repeats_nemotron": {
+    "flips": 2,
+    "pairs": 33
+   }
+  },
+  "gpt4omini_ash": {
+   "sample_rate": [
+    24000
+   ],
+   "dur_s": {
+    "n": 82,
+    "mean": 6.935,
+    "p50": 6.875,
+    "std": 1.202,
+    "min": 3.95,
+    "max": 10.0
+   },
+   "wps": {
+    "n": 82,
+    "mean": 2.164,
+    "p50": 2.208,
+    "std": 0.649,
+    "min": 0.865,
+    "max": 3.621
+   },
+   "lead_sil_s": {
+    "n": 82,
+    "mean": 0.09,
+    "p50": 0.02,
+    "std": 0.147,
+    "min": 0.0,
+    "max": 0.66
+   },
+   "trail_sil_s": {
+    "n": 82,
+    "mean": 0.459,
+    "p50": 0.39,
+    "std": 0.298,
+    "min": 0.13,
+    "max": 1.81
+   },
+   "peak_dbfs": {
+    "n": 82,
+    "mean": -6.886,
+    "p50": -7.02,
+    "std": 1.685,
+    "min": -10.15,
+    "max": -2.74
+   },
+   "rms_dbfs": {
+    "n": 82,
+    "mean": -23.557,
+    "p50": -23.535,
+    "std": 1.049,
+    "min": -25.72,
+    "max": -21.0
+   },
+   "clipped_pct": {
+    "n": 82,
+    "mean": 0.0,
+    "p50": 0.0,
+    "std": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "wps_by_category": {
+    "plain": {
+     "n": 16,
+     "mean": 2.877,
+     "p50": 2.854,
+     "std": 0.372,
+     "min": 2.322,
+     "max": 3.621
+    },
+    "numbers": {
+     "n": 16,
+     "mean": 2.482,
+     "p50": 2.571,
+     "std": 0.429,
+     "min": 1.639,
+     "max": 3.307
+    },
+    "names": {
+     "n": 16,
+     "mean": 2.168,
+     "p50": 2.183,
+     "std": 0.287,
+     "min": 1.648,
+     "max": 2.857
+    },
+    "emails": {
+     "n": 16,
+     "mean": 1.591,
+     "p50": 1.431,
+     "std": 0.486,
+     "min": 0.865,
+     "max": 2.381
+    },
+    "ids": {
+     "n": 18,
+     "mean": 1.753,
+     "p50": 1.611,
+     "std": 0.59,
+     "min": 0.932,
+     "max": 2.863
+    }
+   },
+   "repeat_dur_rel_diff": {
+    "n": 41,
+    "mean": 0.086,
+    "p50": 0.073,
+    "std": 0.064,
+    "min": 0.007,
+    "max": 0.263
+   },
+   "repeat_dur_diff_gt20pct": 3,
+   "repeat_pairs": 41,
+   "clips_with_clipping": 0,
+   "entity_result_flips_between_repeats_nemotron": {
+    "flips": 5,
+    "pairs": 33
+   }
+  },
+  "gpt4omini_coral": {
+   "sample_rate": [
+    24000
+   ],
+   "dur_s": {
+    "n": 82,
+    "mean": 6.629,
+    "p50": 6.7,
+    "std": 1.087,
+    "min": 3.3,
+    "max": 9.65
+   },
+   "wps": {
+    "n": 82,
+    "mean": 2.287,
+    "p50": 2.253,
+    "std": 0.724,
+    "min": 0.949,
+    "max": 4.086
+   },
+   "lead_sil_s": {
+    "n": 82,
+    "mean": 0.104,
+    "p50": 0.04,
+    "std": 0.164,
+    "min": 0.0,
+    "max": 0.66
+   },
+   "trail_sil_s": {
+    "n": 82,
+    "mean": 0.449,
+    "p50": 0.42,
+    "std": 0.249,
+    "min": 0.09,
+    "max": 1.39
+   },
+   "peak_dbfs": {
+    "n": 82,
+    "mean": -12.159,
+    "p50": -12.205,
+    "std": 2.022,
+    "min": -15.67,
+    "max": -5.98
+   },
+   "rms_dbfs": {
+    "n": 82,
+    "mean": -28.798,
+    "p50": -28.805,
+    "std": 1.304,
+    "min": -31.86,
+    "max": -25.29
+   },
+   "clipped_pct": {
+    "n": 82,
+    "mean": 0.0,
+    "p50": 0.0,
+    "std": 0.0,
+    "min": 0.0,
+    "max": 0.0
+   },
+   "wps_by_category": {
+    "plain": {
+     "n": 16,
+     "mean": 3.144,
+     "p50": 2.985,
+     "std": 0.412,
+     "min": 2.632,
+     "max": 4.086
+    },
+    "numbers": {
+     "n": 16,
+     "mean": 2.581,
+     "p50": 2.354,
+     "std": 0.54,
+     "min": 1.994,
+     "max": 3.991
+    },
+    "names": {
+     "n": 16,
+     "mean": 2.206,
+     "p50": 2.171,
+     "std": 0.348,
+     "min": 1.579,
+     "max": 2.995
+    },
+    "emails": {
+     "n": 16,
+     "mean": 1.749,
+     "p50": 1.641,
+     "std": 0.584,
+     "min": 0.949,
+     "max": 2.863
+    },
+    "ids": {
+     "n": 18,
+     "mean": 1.813,
+     "p50": 1.722,
+     "std": 0.589,
+     "min": 0.995,
+     "max": 2.903
+    }
+   },
+   "repeat_dur_rel_diff": {
+    "n": 41,
+    "mean": 0.107,
+    "p50": 0.092,
+    "std": 0.08,
+    "min": 0.0,
+    "max": 0.318
+   },
+   "repeat_dur_diff_gt20pct": 6,
+   "repeat_pairs": 41,
+   "clips_with_clipping": 0,
+   "entity_result_flips_between_repeats_nemotron": {
+    "flips": 7,
+    "pairs": 33
+   }
+  }
+ },
+ "worst": {
+  "magpie_john": {
+   "nemotron": [
+    {
+     "id": "s04",
+     "rep": 0,
+     "category": "names",
+     "wer": 0.4,
+     "cer": 0.2794,
+     "all_entities_ok": false,
+     "ref_text": "The reservation is under Sofia Li. That's Sofia with an F, and Li is L I.",
+     "hyp_raw": "The reservation is under Sophia Lee . That Sophia with an F and Lee is L . L. L. L. L. L. L. L. L. L. L."
+    },
+    {
+     "id": "d08",
+     "rep": 0,
+     "category": "ids",
+     "wer": 0.2727,
+     "cer": 0.2449,
+     "all_entities_ok": false,
+     "ref_text": "Your reservation ID is 4WQ150, on flight HAT214.",
+     "hyp_raw": "Your reservation id is for Buy Yushi one hundred fifty on flight hat two hundred fourteen"
+    },
+    {
+     "id": "s04",
+     "rep": 1,
+     "category": "names",
+     "wer": 0.4,
+     "cer": 0.1618,
+     "all_entities_ok": false,
+     "ref_text": "The reservation is under Sofia Li. That's Sofia with an F, and Li is L I.",
+     "hyp_raw": "The reservation is under Sophia Lee . That's Sophia with an F , and Lee is L Ly."
+    },
+    {
+     "id": "s02",
+     "rep": 0,
+     "category": "names",
+     "wer": 1.0,
+     "cer": 0.1538,
+     "all_entities_ok": false,
+     "ref_text": "It's Chen, C as in Charlie, H, E, N.",
+     "hyp_raw": "Its chin C as in Charlie Hen"
+    },
+    {
+     "id": "s02",
+     "rep": 1,
+     "category": "names",
+     "wer": 1.0,
+     "cer": 0.1538,
+     "all_entities_ok": false,
+     "ref_text": "It's Chen, C as in Charlie, H, E, N.",
+     "hyp_raw": "Its chin C as in Charlie Hen"
+    },
+    {
+     "id": "d03",
+     "rep": 0,
+     "category": "ids",
+     "wer": 0.3333,
+     "cer": 0.1373,
+     "all_entities_ok": false,
+     "ref_text": "My user id is mei underscore kovacs underscore eight zero two zero.",
+     "hyp_raw": "My user A is may underscore Covax underscore eight zero to zero"
+    },
+    {
+     "id": "d08",
+     "rep": 1,
+     "category": "ids",
+     "wer": 0.2727,
+     "cer": 0.1224,
+     "all_entities_ok": false,
+     "ref_text": "Your reservation ID is 4WQ150, on flight HAT214.",
+     "hyp_raw": "Your reservation A is for W one hundred fifty on flight hat two hundred fourteen"
+    },
+    {
+     "id": "e07",
+     "rep": 0,
+     "category": "emails",
+     "wer": 0.3,
+     "cer": 0.1136,
+     "all_entities_ok": false,
+     "ref_text": "Uh, it's raj, R A J, dot kovacs, at example dot com.",
+     "hyp_raw": "Ah , its Raj A J dot Covax at example dot com ."
+    }
+   ],
+   "gpt4o_transcribe": [
+    {
+     "id": "d08",
+     "rep": 0,
+     "category": "ids",
+     "wer": 0.2727,
+     "cer": 0.1429,
+     "all_entities_ok": false,
+     "ref_text": "Your reservation ID is 4WQ150, on flight HAT214.",
+     "hyp_raw": "Your reservation ID is for BUC150 on flight HA214."
+    },
+    {
+     "id": "d08",
+     "rep": 1,
+     "category": "ids",
+     "wer": 0.2727,
+     "cer": 0.1224,
+     "all_entities_ok": false,
+     "ref_text": "Your reservation ID is 4WQ150, on flight HAT214.",
+     "hyp_raw": "Your reservation A is for WU150 on flight HAT214."
+    },
+    {
+     "id": "s03",
+     "rep": 0,
+     "category": "names",
+     "wer": 0.0833,
+     "cer": 0.1071,
+     "all_entities_ok": true,
+     "ref_text": "My first name is Daiki, D A I K I, and my last name is Sanchez.",
+     "hyp_raw": "My first name is Daiki (\u30c0\u30a4\u30ad) and my last name is Sanchez."
+    },
+    {
+     "id": "s08",
+     "rep": 1,
+     "category": "names",
+     "wer": 0.25,
+     "cer": 0.102,
+     "all_entities_ok": false,
+     "ref_text": "Just to confirm, that's Daiki Sanchez, spelled D A I K I?",
+     "hyp_raw": "Just to confirm, that's Dikey Sanchez, spelled D-I-K?"
+    },
+    {
+     "id": "e03",
+     "rep": 0,
+     "category": "emails",
+     "wer": 0.2222,
+     "cer": 0.1,
+     "all_entities_ok": false,
+     "ref_text": "It's sofia dot li nine two one nine at example dot com.",
+     "hyp_raw": "it's sophia.lee9219@example.com."
+    },
+    {
+     "id": "e03",
+     "rep": 1,
+     "category": "emails",
+     "wer": 0.2222,
+     "cer": 0.1,
+     "all_entities_ok": false,
+     "ref_text": "It's sofia dot li nine two one nine at example dot com.",
+     "hyp_raw": "It's sophia.lee9219@example.com."
+    },
+    {
+     "id": "d03",
+     "rep": 0,
+     "category": "ids",
+     "wer": 0.2222,
+     "cer": 0.0784,
+     "all_entities_ok": false,
+     "ref_text": "My user id is mei underscore kovacs underscore eight zero two zero.",
+     "hyp_raw": "My user A is may_kovacs_8020."
+    },
+    {
+     "id": "s02",
+     "rep": 0,
+     "category": "names",
+     "wer": 0.3333,
+     "cer": 0.0769,
+     "all_entities_ok": true,
+     "ref_text": "It's Chen, C as in Charlie, H, E, N.",
+     "hyp_raw": "It's chin, C as in Charlie, H-E-N."
+    }
+   ]
+  },
+  "gpt4omini_ash": {
+   "nemotron": [
+    {
+     "id": "d04",
+     "rep": 0,
+     "category": "ids",
+     "wer": 0.2,
+     "cer": 0.3,
+     "all_entities_ok": false,
+     "ref_text": "Your user ID is mei_kovacs_8020, and your zip code is 19122.",
+     "hyp_raw": "Your user ID is MEI COVAX eight zero two zero and your zip code is one nine one two two ."
+    },
+    {
+     "id": "d04",
+     "rep": 1,
+     "category": "ids",
+     "wer": 0.2,
+     "cer": 0.3,
+     "all_entities_ok": false,
+     "ref_text": "Your user ID is mei_kovacs_8020, and your zip code is 19122.",
+     "hyp_raw": "Your user ID is MEI COVAX eight zero two zero and your zip code is one nine one two two ."
+    },
+    {
+     "id": "d01",
+     "rep": 1,
+     "category": "ids",
+     "wer": 0.2,
+     "cer": 0.16,
+     "all_entities_ok": false,
+     "ref_text": "I found order #W4073673. It was delivered on Monday.",
+     "hyp_raw": "I found order number W four seven three six seven three . It was delivered on Monday ."
+    },
+    {
+     "id": "s06",
+     "rep": 0,
+     "category": "names",
+     "wer": 0.2308,
+     "cer": 0.1538,
+     "all_entities_ok": false,
+     "ref_text": "Thank you, Mr. Kowalski. I've found the booking for you and Ms. Nguyen.",
+     "hyp_raw": "Thank you , Mister Kowalski . I found the booking for you and Miss W."
+    },
+    {
+     "id": "d01",
+     "rep": 0,
+     "category": "ids",
+     "wer": 0.1,
+     "cer": 0.14,
+     "all_entities_ok": true,
+     "ref_text": "I found order #W4073673. It was delivered on Monday.",
+     "hyp_raw": "I found order number W four zero seven three six seven three . It was delivered on Monday ."
+    },
+    {
+     "id": "d03",
+     "rep": 1,
+     "category": "ids",
+     "wer": 0.3333,
+     "cer": 0.1373,
+     "all_entities_ok": false,
+     "ref_text": "My user id is mei underscore kovacs underscore eight zero two zero.",
+     "hyp_raw": "My user ID is May K underscore COVAX underscore eight zero two zero."
+    },
+    {
+     "id": "s04",
+     "rep": 0,
+     "category": "names",
+     "wer": 0.3333,
+     "cer": 0.1324,
+     "all_entities_ok": false,
+     "ref_text": "The reservation is under Sofia Li. That's Sofia with an F, and Li is L I.",
+     "hyp_raw": "The reservation is under Sophia Lee that Sophia with an F and Lee is L.I."
+    },
+    {
+     "id": "s04",
+     "rep": 1,
+     "category": "names",
+     "wer": 0.3333,
+     "cer": 0.1324,
+     "all_entities_ok": false,
+     "ref_text": "The reservation is under Sofia Li. That's Sofia with an F, and Li is L I.",
+     "hyp_raw": "The reservation is under Sophia Lee . That Sophia with an F and Lee is L.I."
+    }
+   ],
+   "gpt4o_transcribe": [
+    {
+     "id": "d04",
+     "rep": 0,
+     "category": "ids",
+     "wer": 0.2667,
+     "cer": 0.2875,
+     "all_entities_ok": false,
+     "ref_text": "Your user ID is mei_kovacs_8020, and your zip code is 19122.",
+     "hyp_raw": "Your user ID is meikovacs8020 and your zip code is 19122."
+    },
+    {
+     "id": "d04",
+     "rep": 1,
+     "category": "ids",
+     "wer": 0.2667,
+     "cer": 0.2875,
+     "all_entities_ok": false,
+     "ref_text": "Your user ID is mei_kovacs_8020, and your zip code is 19122.",
+     "hyp_raw": "Your user ID is MEIKovacs8020 and your zip code is 19122."
+    },
+    {
+     "id": "d01",
+     "rep": 1,
+     "category": "ids",
+     "wer": 0.2,
+     "cer": 0.16,
+     "all_entities_ok": false,
+     "ref_text": "I found order #W4073673. It was delivered on Monday.",
+     "hyp_raw": "I found order number W473673. It was delivered on Monday."
+    },
+    {
+     "id": "d01",
+     "rep": 0,
+     "category": "ids",
+     "wer": 0.1,
+     "cer": 0.14,
+     "all_entities_ok": true,
+     "ref_text": "I found order #W4073673. It was delivered on Monday.",
+     "hyp_raw": "I found order number W4073673. It was delivered on Monday."
+    },
+    {
+     "id": "s03",
+     "rep": 1,
+     "category": "names",
+     "wer": 0.0833,
+     "cer": 0.1071,
+     "all_entities_ok": true,
+     "ref_text": "My first name is Daiki, D A I K I, and my last name is Sanchez.",
+     "hyp_raw": "My first name is Daiki and my last name is Sanchez."
+    },
+    {
+     "id": "e03",
+     "rep": 0,
+     "category": "emails",
+     "wer": 0.2222,
+     "cer": 0.1,
+     "all_entities_ok": false,
+     "ref_text": "It's sofia dot li nine two one nine at example dot com.",
+     "hyp_raw": "It's sophia.lee9219@example.com."
+    },
+    {
+     "id": "e07",
+     "rep": 1,
+     "category": "emails",
+     "wer": 0.1,
+     "cer": 0.0909,
+     "all_entities_ok": true,
+     "ref_text": "Uh, it's raj, R A J, dot kovacs, at example dot com.",
+     "hyp_raw": "Uh, it's raj.kovacs@example.com."
+    },
+    {
+     "id": "d03",
+     "rep": 1,
+     "category": "ids",
+     "wer": 0.1111,
+     "cer": 0.0784,
+     "all_entities_ok": false,
+     "ref_text": "My user id is mei underscore kovacs underscore eight zero two zero.",
+     "hyp_raw": "My user ID is Makay_Kovacs_8020."
+    }
+   ]
+  },
+  "gpt4omini_coral": {
+   "nemotron": [
+    {
+     "id": "d04",
+     "rep": 0,
+     "category": "ids",
+     "wer": 0.2667,
+     "cer": 0.3125,
+     "all_entities_ok": false,
+     "ref_text": "Your user ID is mei_kovacs_8020, and your zip code is 19122.",
+     "hyp_raw": "Your user ID is MEI COVAX eight zero two zero and your zip code is one nine one two two two"
+    },
+    {
+     "id": "d04",
+     "rep": 1,
+     "category": "ids",
+     "wer": 0.2667,
+     "cer": 0.3125,
+     "all_entities_ok": false,
+     "ref_text": "Your user ID is mei_kovacs_8020, and your zip code is 19122.",
+     "hyp_raw": "Your user ID is Mie Covax eight oh two oh and your zip code is one nine one two two"
+    },
+    {
+     "id": "e02",
+     "rep": 1,
+     "category": "emails",
+     "wer": 0.25,
+     "cer": 0.2237,
+     "all_entities_ok": false,
+     "ref_text": "I have your email as daiki.sanchez1479@example.com. Is that right?",
+     "hyp_raw": "I have your email as deikey dot Sanchez one four seven nine at example dot com."
+    },
+    {
+     "id": "s06",
+     "rep": 1,
+     "category": "names",
+     "wer": 0.2308,
+     "cer": 0.1692,
+     "all_entities_ok": false,
+     "ref_text": "Thank you, Mr. Kowalski. I've found the booking for you and Ms. Nguyen.",
+     "hyp_raw": "Saint you, Mister Kowalski, I've found the booking for you and Miss Wynne."
+    },
+    {
+     "id": "s04",
+     "rep": 0,
+     "category": "names",
+     "wer": 0.3333,
+     "cer": 0.1324,
+     "all_entities_ok": false,
+     "ref_text": "The reservation is under Sofia Li. That's Sofia with an F, and Li is L I.",
+     "hyp_raw": "The reservation is under Sophia Lee that Sophia with an F and Lee is L.I."
+    },
+    {
+     "id": "s04",
+     "rep": 1,
+     "category": "names",
+     "wer": 0.2667,
+     "cer": 0.1176,
+     "all_entities_ok": false,
+     "ref_text": "The reservation is under Sofia Li. That's Sofia with an F, and Li is L I.",
+     "hyp_raw": "The reservation is under Sophia Lee . That's Sophia with an F and Lee is L.I."
+    },
+    {
+     "id": "e04",
+     "rep": 1,
+     "category": "emails",
+     "wer": 0.1538,
+     "cer": 0.1077,
+     "all_entities_ok": false,
+     "ref_text": "I'll send the receipt to omar.anderson3203@example.com.",
+     "hyp_raw": "I'll send a receipt to Omar Anderson three two zero three at example dot com ."
+    },
+    {
+     "id": "e03",
+     "rep": 0,
+     "category": "emails",
+     "wer": 0.2222,
+     "cer": 0.1,
+     "all_entities_ok": false,
+     "ref_text": "It's sofia dot li nine two one nine at example dot com.",
+     "hyp_raw": "It's Sophia dot Lee nine two one nine at example dot com ."
+    }
+   ],
+   "gpt4o_transcribe": [
+    {
+     "id": "d04",
+     "rep": 0,
+     "category": "ids",
+     "wer": 0.2667,
+     "cer": 0.2875,
+     "all_entities_ok": false,
+     "ref_text": "Your user ID is mei_kovacs_8020, and your zip code is 19122.",
+     "hyp_raw": "Your user ID is MEIKOVACS8020 and your zip code is 19122."
+    },
+    {
+     "id": "d04",
+     "rep": 1,
+     "category": "ids",
+     "wer": 0.2667,
+     "cer": 0.2875,
+     "all_entities_ok": false,
+     "ref_text": "Your user ID is mei_kovacs_8020, and your zip code is 19122.",
+     "hyp_raw": "Your user ID is MIEKovacs8020 and your zip code is 19122."
+    },
+    {
+     "id": "d03",
+     "rep": 1,
+     "category": "ids",
+     "wer": 0.2222,
+     "cer": 0.2549,
+     "all_entities_ok": false,
+     "ref_text": "My user id is mei underscore kovacs underscore eight zero two zero.",
+     "hyp_raw": "My user ID is May_kovacs__8020."
+    },
+    {
+     "id": "e02",
+     "rep": 1,
+     "category": "emails",
+     "wer": 0.25,
+     "cer": 0.1974,
+     "all_entities_ok": false,
+     "ref_text": "I have your email as daiki.sanchez1479@example.com. Is that right?",
+     "hyp_raw": "I have your email as daiky.sanchez1479@example.com."
+    },
+    {
+     "id": "e03",
+     "rep": 0,
+     "category": "emails",
+     "wer": 0.2222,
+     "cer": 0.1,
+     "all_entities_ok": false,
+     "ref_text": "It's sofia dot li nine two one nine at example dot com.",
+     "hyp_raw": "It's sophia.lee9219@example.com."
+    },
+    {
+     "id": "s04",
+     "rep": 0,
+     "category": "names",
+     "wer": 0.1333,
+     "cer": 0.0588,
+     "all_entities_ok": false,
+     "ref_text": "The reservation is under Sofia Li. That's Sofia with an F, and Li is L I.",
+     "hyp_raw": "The reservation is under Sophia Li. That's Sophia with an F, and Li is L-I."
+    },
+    {
+     "id": "s04",
+     "rep": 1,
+     "category": "names",
+     "wer": 0.1333,
+     "cer": 0.0588,
+     "all_entities_ok": false,
+     "ref_text": "The reservation is under Sofia Li. That's Sofia with an F, and Li is L I.",
+     "hyp_raw": "The reservation is under Sophia Li. That's Sophia with an F, and Li is L-I."
+    },
+    {
+     "id": "e03",
+     "rep": 1,
+     "category": "emails",
+     "wer": 0.1111,
+     "cer": 0.05,
+     "all_entities_ok": false,
+     "ref_text": "It's sofia dot li nine two one nine at example dot com.",
+     "hyp_raw": "It's sophia.li9219@example.com."
+    }
+   ]
+  }
+ }
+}

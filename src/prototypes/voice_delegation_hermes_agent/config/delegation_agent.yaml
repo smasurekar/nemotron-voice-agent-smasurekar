@@ -41,6 +41,12 @@ delegation:
     # unless the backend just asked a question ("okay" may then be an answer). [] disables the guard.
     backchannel_words: [mm-hmm, mhm, uh-huh, uh huh, hmm, mm, okay, ok, okay sure, sure, alright, all right,
                         right, thanks, thank you, got it, cool]
+    # fix-plan-f1-f2-f4-f8.md F2 (off here; profiles/realtime_eval_liveness.yaml turns them on). They act only
+    # on a silent decision (R1, R2) or a liveness ping while WORKING (R3), and only when the session's ASR
+    # language has a phrase lexicon (delegation.guards.lexicon.<lang>; English ships in the code defaults).
+    liveness_reply: false          # R1: a silent reply to "are you still there?" / "could you repeat that?" is delegated
+    question_never_silent: false   # R2: a silent reply to a question is delegated
+    ping_as_status: false          # R3: a ping while WORKING is a status request (never steers the running call)
   prompts: {path: "${FDH_PROMPTS:-prompts.yaml}"}
   # tau3-failure-fixes-plan.md: every fix is on here except M2 (experimental). tau3_eval_baseline.yaml
   # (the control) turns all of them off; the tau3_arm_*.yaml profiles turn on one each over the control.
@@ -53,8 +59,10 @@ delegation:
   spelling_hold: {enabled: true, hold_ms: 1500, complete_patterns: []}
   # M2 (experimental, RC2): on request=status while IDLE, speak the unheard last answer again instead
   # of delegating, if it belongs to the last finished run, no task came since and it is <= ttl_s old.
-  # Needs prompt_features.replay_intent.
-  replay_unheard_answer: {enabled: false, ttl_s: 30}
+  # The status_intent trigger needs prompt_features.replay_intent. F1 (fix-plan-f1-f2-f4-f8.md) adds the
+  # triggers backchannel, ping and repeat, which replay only in place of a silent decision, and
+  # whole_if_heard_below (replay the whole answer when less than that share was heard; 0 = the unheard part).
+  replay_unheard_answer: {enabled: false, ttl_s: 30, triggers: [status_intent], whole_if_heard_below: 0}
   # G1: a delegated filler repeating one of the last `recent` is dropped (WORKING) or replaced.
   filler_dedupe: {enabled: true, recent: 3}
 

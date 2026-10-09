@@ -154,7 +154,9 @@ class BackendPromptTests(unittest.TestCase):
         self.assertTrue(all(default.prompt_features[name] for name in GEVAL_BACKEND_FIXES))
         self.assertFalse(any(control.prompt_features[name] for name in GEVAL_BACKEND_FIXES))
         self.assertTrue(default.hermes.backend_trace and control.hermes.backend_trace)
-        arms = [p for p in CONFIG.glob("gateway.eval_*") if p.name != "gateway.eval_control.yaml"]
+        # fix-plan-f1-f2-f4-f8.md arms extend gateway.eval.yaml instead (test_fdh_fix_plan.py).
+        later = {"gateway.eval_124acf7.yaml", "gateway.eval_situational.yaml", "gateway.eval_identity_name.yaml"}
+        arms = [p for p in CONFIG.glob("gateway.eval_*") if p.name not in {"gateway.eval_control.yaml", *later}]
         self.assertEqual(len(arms), len(GEVAL_BACKEND_FIXES))
         for path in arms:
             with self.subTest(arm=path.name):
@@ -638,8 +640,19 @@ class FormatRetryConfigTests(unittest.TestCase):
         self.assertEqual(a2.voice.normalization.tool_arguments.result_hints.message_key, "lookup_not_found_hint_format")
         default = profile_config("realtime_eval.yaml")
         changed = {k: v for k, v in default.features.items() if control.get(k) != v}
+        # Since 2026-10-09 the default also runs fix-plan-f1-f2-f4-f8.md (F1 + F2, F8; the ledger replaces A3).
         self.assertEqual(
-            changed, {"format_retry": "call", "schema_format_retry_fields": True, "field_provenance": True}
+            changed,
+            {
+                "format_retry": "call",
+                "schema_format_retry_fields": True,
+                "liveness_reply": True,
+                "question_never_silent": True,
+                "ping_as_status": True,
+                "replay_unheard_answer": True,
+                "replay_triggers": ["backchannel", "ping", "repeat"],
+                "identity_ledger": True,
+            },
         )
         self.assertEqual(
             default.voice.normalization.tool_arguments.result_hints.message_key, "lookup_not_found_hint_format"

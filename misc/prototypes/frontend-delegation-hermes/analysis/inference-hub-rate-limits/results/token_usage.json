@@ -1,0 +1,349 @@
+{
+  "runs": {
+    "Run 1 - Airline": {
+      "path": "2026-10-05_05-33-27Z_fdh-voice-geval/fdh_voice_geval_airline_regular",
+      "log_tz_offset_h": 5.5,
+      "clock_skew_s_p50": 0.11,
+      "sessions": 60,
+      "calls": 1423,
+      "throttled_retries": 0,
+      "session_avg_tpm": {
+        "n": 60,
+        "mean": 23901,
+        "p50": 21928,
+        "p95": 36402,
+        "max": 48115
+      },
+      "session_peak_tpm": {
+        "n": 60,
+        "mean": 70427,
+        "p50": 67096,
+        "p95": 121661,
+        "max": 141184
+      },
+      "busiest_60s_tokens": 239090,
+      "busiest_60s_utc": "2026-10-05 08:16:51",
+      "live_sessions": 4,
+      "mean_tpm_over_span": 79682,
+      "max_live_sessions": 4,
+      "worker_in_minus_cache": 12936004,
+      "gateway_in": 12581769
+    },
+    "Run 2 - Retail": {
+      "path": "2026-10-05_05-59-44Z_fdh-voice-geval/fdh_voice_geval_retail_regular_r2",
+      "log_tz_offset_h": 0.0,
+      "clock_skew_s_p50": 0.01,
+      "sessions": 129,
+      "calls": 2943,
+      "throttled_retries": 260,
+      "session_avg_tpm": {
+        "n": 129,
+        "mean": 21162,
+        "p50": 19639,
+        "p95": 31852,
+        "max": 50455
+      },
+      "session_peak_tpm": {
+        "n": 129,
+        "mean": 60306,
+        "p50": 61050,
+        "p95": 104135,
+        "max": 145250
+      },
+      "busiest_60s_tokens": 242692,
+      "busiest_60s_utc": "2026-10-05 23:09:36",
+      "live_sessions": 4,
+      "mean_tpm_over_span": 72615,
+      "max_live_sessions": 4,
+      "worker_in_minus_cache": 27674673,
+      "gateway_in": 26966122
+    },
+    "Run 3 - Retail": {
+      "path": "2026-10-05_05-59-44Z_fdh-voice-geval/fdh_voice_geval_retail_regular_r3",
+      "log_tz_offset_h": 0.0,
+      "clock_skew_s_p50": 0.01,
+      "sessions": 135,
+      "calls": 3770,
+      "throttled_retries": 0,
+      "session_avg_tpm": {
+        "n": 135,
+        "mean": 25852,
+        "p50": 24882,
+        "p95": 38594,
+        "max": 50923
+      },
+      "session_peak_tpm": {
+        "n": 135,
+        "mean": 72762,
+        "p50": 72429,
+        "p95": 114322,
+        "max": 173798
+      },
+      "busiest_60s_tokens": 225526,
+      "busiest_60s_utc": "2026-10-06 04:38:38",
+      "live_sessions": 4,
+      "mean_tpm_over_span": 70176,
+      "max_live_sessions": 4,
+      "worker_in_minus_cache": 33167142,
+      "gateway_in": 32727972
+    },
+    "Run 4 - Telecom": {
+      "path": "2026-10-05_05-59-44Z_fdh-voice-geval/fdh_voice_geval_telecom_regular",
+      "log_tz_offset_h": 0.0,
+      "clock_skew_s_p50": 0.01,
+      "sessions": 138,
+      "calls": 3348,
+      "throttled_retries": 80,
+      "session_avg_tpm": {
+        "n": 138,
+        "mean": 33273,
+        "p50": 32390,
+        "p95": 49877,
+        "max": 67729
+      },
+      "session_peak_tpm": {
+        "n": 138,
+        "mean": 73734,
+        "p50": 71954,
+        "p95": 101928,
+        "max": 137264
+      },
+      "busiest_60s_tokens": 265409,
+      "busiest_60s_utc": "2026-10-05 09:15:47",
+      "live_sessions": 4,
+      "mean_tpm_over_span": 105470,
+      "max_live_sessions": 4,
+      "worker_in_minus_cache": 32883868,
+      "gateway_in": 32330671
+    },
+    "Run 5 - Airline": {
+      "path": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_airline_regular",
+      "log_tz_offset_h": 0.0,
+      "clock_skew_s_p50": 0.01,
+      "sessions": 71,
+      "calls": 1505,
+      "throttled_retries": 0,
+      "session_avg_tpm": {
+        "n": 71,
+        "mean": 26038,
+        "p50": 26052,
+        "p95": 40183,
+        "max": 86243
+      },
+      "session_peak_tpm": {
+        "n": 71,
+        "mean": 74641,
+        "p50": 71475,
+        "p95": 150480,
+        "max": 220117
+      },
+      "busiest_60s_tokens": 262005,
+      "busiest_60s_utc": "2026-10-07 15:09:36",
+      "live_sessions": 2,
+      "mean_tpm_over_span": 53988,
+      "max_live_sessions": 4,
+      "worker_in_minus_cache": 14506858,
+      "gateway_in": 14133487
+    },
+    "Run 6 - Retail": {
+      "path": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_retail_regular_fixes",
+      "log_tz_offset_h": 0.0,
+      "clock_skew_s_p50": 0.01,
+      "sessions": 134,
+      "calls": 3380,
+      "throttled_retries": 89,
+      "session_avg_tpm": {
+        "n": 134,
+        "mean": 26684,
+        "p50": 25581,
+        "p95": 40045,
+        "max": 51274
+      },
+      "session_peak_tpm": {
+        "n": 134,
+        "mean": 73762,
+        "p50": 69847,
+        "p95": 124489,
+        "max": 228474
+      },
+      "busiest_60s_tokens": 261489,
+      "busiest_60s_utc": "2026-10-07 16:58:26",
+      "live_sessions": 3,
+      "mean_tpm_over_span": 70096,
+      "max_live_sessions": 3,
+      "worker_in_minus_cache": 34236958,
+      "gateway_in": 33876391
+    },
+    "Run 7 - Retail": {
+      "path": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_retail_regular_rerun43",
+      "log_tz_offset_h": 0.0,
+      "clock_skew_s_p50": 0.01,
+      "sessions": 48,
+      "calls": 1344,
+      "throttled_retries": 0,
+      "session_avg_tpm": {
+        "n": 48,
+        "mean": 26756,
+        "p50": 26795,
+        "p95": 38016,
+        "max": 41838
+      },
+      "session_peak_tpm": {
+        "n": 48,
+        "mean": 79210,
+        "p50": 77888,
+        "p95": 123511,
+        "max": 143942
+      },
+      "busiest_60s_tokens": 177213,
+      "busiest_60s_utc": "2026-10-08 06:07:22",
+      "live_sessions": 2,
+      "mean_tpm_over_span": 46419,
+      "max_live_sessions": 2,
+      "worker_in_minus_cache": 13800191,
+      "gateway_in": 13587813
+    },
+    "Run 8 - Telecom": {
+      "path": "2026-10-07_16-18-35Z_fdh-voice-geval-fixes/fdh_voice_geval_telecom_regular",
+      "log_tz_offset_h": 5.5,
+      "clock_skew_s_p50": 0.02,
+      "sessions": 131,
+      "calls": 2911,
+      "throttled_retries": 56,
+      "session_avg_tpm": {
+        "n": 131,
+        "mean": 30701,
+        "p50": 29139,
+        "p95": 47516,
+        "max": 65744
+      },
+      "session_peak_tpm": {
+        "n": 131,
+        "mean": 73299,
+        "p50": 74483,
+        "p95": 97566,
+        "max": 102703
+      },
+      "busiest_60s_tokens": 178780,
+      "busiest_60s_utc": "2026-10-08 04:33:20",
+      "live_sessions": 2,
+      "mean_tpm_over_span": 49412,
+      "max_live_sessions": 2,
+      "worker_in_minus_cache": 31824608,
+      "gateway_in": 31091210
+    },
+    "Run 9 - Retail": {
+      "path": "2026-10-08_11-04-25Z_fdh-voice-geval-gpt55usr/fdh_voice_geval_retail_regular_gpt55",
+      "log_tz_offset_h": 0.0,
+      "clock_skew_s_p50": 0.01,
+      "sessions": 124,
+      "calls": 2866,
+      "throttled_retries": 0,
+      "session_avg_tpm": {
+        "n": 124,
+        "mean": 29476,
+        "p50": 29007,
+        "p95": 43437,
+        "max": 128211
+      },
+      "session_peak_tpm": {
+        "n": 124,
+        "mean": 71372,
+        "p50": 69317,
+        "p95": 120619,
+        "max": 206481
+      },
+      "busiest_60s_tokens": 330074,
+      "busiest_60s_utc": "2026-10-08 11:52:52",
+      "live_sessions": 5,
+      "mean_tpm_over_span": 98560,
+      "max_live_sessions": 4,
+      "worker_in_minus_cache": 25923083,
+      "gateway_in": 25734415
+    },
+    "Run 10 - Telecom": {
+      "path": "2026-10-08_11-04-25Z_fdh-voice-geval-gpt55usr/fdh_voice_geval_telecom_regular_gpt55",
+      "log_tz_offset_h": 0.0,
+      "clock_skew_s_p50": 0.15,
+      "sessions": 137,
+      "calls": 6857,
+      "throttled_retries": 0,
+      "session_avg_tpm": {
+        "n": 137,
+        "mean": 42129,
+        "p50": 41677,
+        "p95": 56792,
+        "max": 96583
+      },
+      "session_peak_tpm": {
+        "n": 137,
+        "mean": 91802,
+        "p50": 93180,
+        "p95": 122546,
+        "max": 152328
+      },
+      "busiest_60s_tokens": 356243,
+      "busiest_60s_utc": "2026-10-09 01:37:36",
+      "live_sessions": 4,
+      "mean_tpm_over_span": 153198,
+      "max_live_sessions": 4,
+      "worker_in_minus_cache": 64694037,
+      "gateway_in": 63767738
+    }
+  },
+  "all": {
+    "sessions": 1107,
+    "calls": 30347,
+    "throttled_retries": 485,
+    "throttled_pct_of_calls": 1.6,
+    "tokens_per_call": {
+      "n": 30347,
+      "mean": 11930,
+      "p50": 11508,
+      "p95": 18317,
+      "max": 31088
+    },
+    "input_per_call": {
+      "n": 30347,
+      "mean": 11725,
+      "p50": 11255,
+      "p95": 18106,
+      "max": 30715
+    },
+    "output_per_call": {
+      "n": 30347,
+      "mean": 205,
+      "p50": 135,
+      "p95": 599,
+      "max": 3140
+    },
+    "session_avg_tpm": {
+      "n": 1107,
+      "mean": 29271,
+      "p50": 27765,
+      "p95": 48987,
+      "max": 128211
+    },
+    "session_avg_tpm_pooled": 29329,
+    "session_peak_tpm": {
+      "n": 1107,
+      "mean": 74091,
+      "p50": 72956,
+      "p95": 118598,
+      "max": 228474
+    },
+    "all_runs_timeline": {
+      "busiest_60s_tokens": 420933,
+      "busiest_60s_utc": "2026-10-05 08:21:11",
+      "live_sessions": 8,
+      "mean_tpm_over_span": 63923,
+      "max_live_sessions": 8
+    }
+  },
+  "projection": {
+    "target_sessions": 128,
+    "mean_tpm": 3746663,
+    "worst_case_all_p95_bursts": 15180480,
+    "scaled_observed_busiest": 6734928
+  }
+}

@@ -107,6 +107,14 @@ class ResultHintSettings:
     escalate_message_key: str = ""
     #: A3: on the 2nd and later miss, one factual line saying which values the user spelled or only said.
     field_provenance: bool = False
+    #: F8 (fix-plan-f1-f2-f4-f8.md section 4): the identification ledger's note after a failed identification lookup.
+    ledger: bool = False
+    ledger_message_key: str = "lookup_ledger"
+    #: ``identification_tools: auto`` derives them from the tool schemas; a list names them.
+    identification_tools: tuple[str, ...] = ()
+    auto_identification_tools: bool = True
+    ledger_max_age_turns: int = 8
+    ledger_correction_cues: tuple[str, ...] = ("not", "no,", "it's", "with two", "double", "instead", "wrong")
 
 
 @dataclass(frozen=True, slots=True)

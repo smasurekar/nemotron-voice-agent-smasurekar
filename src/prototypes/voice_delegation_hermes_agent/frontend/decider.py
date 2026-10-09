@@ -9,7 +9,8 @@
 * :class:`RuleDecider` is the deterministic stand-in (``frontend.decider: scripted``)
   for tests and ``--stub-backend`` smoke runs.
 
-:func:`apply_guards` runs after either (the ``backend_question_needs_delegate`` guard).
+:func:`apply_guards` runs after either: the backchannel and ``backend_question_needs_delegate`` guards,
+then the F2 rules R1-R3 (fix-plan-f1-f2-f4-f8.md section 2.3), each behind its own switch.
 """
 
 from __future__ import annotations
@@ -32,6 +33,12 @@ from prototypes.voice_delegation_hermes_agent.frontend.delegate_tool import (
 )
 from prototypes.voice_delegation_hermes_agent.frontend.llm import ChatModel, ChatReply
 from prototypes.voice_delegation_hermes_agent.frontend.prompts import PromptCatalog
+from prototypes.voice_delegation_hermes_agent.frontend.turn_class import CONTENT, LIVENESS, TurnClass
+
+#: ``Decision.repair`` of the F2 rules; the turn manager picks their fillers (section 2.3).
+LIVENESS_REPLY = "liveness_reply"
+QUESTION_NEVER_SILENT = "question_never_silent"
+PING_AS_STATUS = "ping_as_status"
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,13 +79,55 @@ def apply_guards(
     *,
     backend_question_needs_delegate: bool,
     backchannel_words: Sequence[str] = (),
+    turn_class: TurnClass | None = None,
+    liveness_reply: bool = False,
+    question_never_silent: bool = False,
+    ping_as_status: bool = False,
 ) -> Decision:
-    """Code guards on top of the prompt (plan section 3).
+    """Code guards on top of the prompt (plan section 3; fix-plan-f1-f2-f4-f8.md section 2.3).
 
     1. A pure backchannel (the whole turn is one of ``backchannel_words``) is never delegated and gets no
        filler, unless the backend's last heard message asked a question.
     2. IDLE + the backend's last heard message asked a question: the turn is its answer, so it is delegated.
+
+    Then, only with ``turn_class`` and the rule's switch, on the decision the two guards produced:
+
+    * R1 ``liveness_reply``: a silent decision on a liveness turn is delegated (``status`` while WORKING,
+      else ``task``) with an empty filler, which the turn manager replaces with a liveness line.
+    * R2 ``question_never_silent``: a silent decision on a content turn that is a question is delegated as
+      a ``task`` with an empty filler, which the turn manager replaces with a filler alternative.
+    * R3 ``ping_as_status``: a liveness turn delegated as a ``task`` while WORKING becomes ``status`` (a
+      status never steers the running model call); the model's filler is kept.
+
+    A decision that speaks or delegates content is never changed by R1-R3.
     """
+    guarded = _base_guards(decision, context, backend_question_needs_delegate, backchannel_words)
+    if turn_class is None:
+        return guarded
+    silent = not guarded.delegate and not guarded.filler_text
+    if liveness_reply and silent and turn_class.kind == LIVENESS:
+        request = REQUEST_STATUS if context.state == WORKING else REQUEST_TASK
+        return replace(guarded, delegate=True, filler_text="", request=request, repair=LIVENESS_REPLY)
+    if question_never_silent and silent and turn_class.kind == CONTENT and turn_class.has_question:
+        return replace(guarded, delegate=True, filler_text="", request=REQUEST_TASK, repair=QUESTION_NEVER_SILENT)
+    if (
+        ping_as_status
+        and guarded.delegate
+        and guarded.request == REQUEST_TASK
+        and context.state == WORKING
+        and turn_class.kind == LIVENESS
+    ):
+        return replace(guarded, request=REQUEST_STATUS, repair=PING_AS_STATUS)
+    return guarded
+
+
+def _base_guards(
+    decision: Decision,
+    context: DecisionContext,
+    backend_question_needs_delegate: bool,
+    backchannel_words: Sequence[str],
+) -> Decision:
+    """The two plan-section-3 guards (unchanged)."""
     words = re.sub(r"[^\w\s'-]", "", context.user_text.lower()).strip()
     if backchannel_words and not context.backend_asked_question and words in backchannel_words:
         if decision.delegate or decision.filler_text:

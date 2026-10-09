@@ -28,6 +28,8 @@ GEVAL_BACKEND_FIXES = (
     "transfer_check",
     "capability_check",
 )
+#: fix-plan-f1-f2-f4-f8.md backend variants (F4, F8 name line), on by default since 2026-10-09.
+FIX_PLAN_BACKEND_FIXES = ("situational_facts", "identity_from_identifier")
 
 
 class ShippedProfileTests(unittest.TestCase):
@@ -37,11 +39,14 @@ class ShippedProfileTests(unittest.TestCase):
             [
                 "browser_demo.yaml",
                 "realtime_eval.yaml",
+                "realtime_eval_124acf7.yaml",
                 "realtime_eval_arm_a1_format_retry.yaml",
                 "realtime_eval_arm_a1_lite_format_hint.yaml",
                 "realtime_eval_arm_a2_format_correction.yaml",
                 "realtime_eval_arm_a3_field_provenance.yaml",
                 "realtime_eval_control.yaml",
+                "realtime_eval_identity.yaml",
+                "realtime_eval_liveness.yaml",
                 "stub.yaml",
                 "stub_gate.yaml",
                 "tau3_airline_canary.yaml",
@@ -107,7 +112,9 @@ class ShippedProfileTests(unittest.TestCase):
         defaults = gc.load_gateway_config(config_dir / "gateway.yaml").prompt_features
         self.assertEqual({k for k, v in defaults.items() if not v}, {"domain_notes"})  # no domain notes ship
         control = gc.load_gateway_config(config_dir / "gateway.eval_control.yaml").prompt_features
-        self.assertEqual({k for k, v in defaults.items() if v != control[k]}, set(GEVAL_BACKEND_FIXES))
+        self.assertEqual(
+            {k for k, v in defaults.items() if v != control[k]}, {*GEVAL_BACKEND_FIXES, *FIX_PLAN_BACKEND_FIXES}
+        )
         self.assertFalse(any(gc.load_gateway_config(config_dir / "gateway.baseline.yaml").prompt_features.values()))
         for name in ("spelling_v2", "spoken_output", "write_consent"):
             with self.subTest(variant=name):
@@ -159,7 +166,10 @@ class ShippedProfileTests(unittest.TestCase):
         config_dir = PROFILES.parent
         full = dict(gc.load_gateway_config(config_dir / "gateway.yaml").prompt_features)
         identity_control = dict(gc.load_gateway_config(config_dir / "gateway.identity_control.yaml").prompt_features)
-        self.assertEqual({k for k in full if full[k] != identity_control[k]}, {"phone_format", *GEVAL_BACKEND_FIXES})
+        self.assertEqual(
+            {k for k in full if full[k] != identity_control[k]},
+            {"phone_format", *GEVAL_BACKEND_FIXES, *FIX_PLAN_BACKEND_FIXES},
+        )
 
     def test_delay_is_env_configurable_in_the_browser_profile(self) -> None:
         with mock.patch.dict(os.environ, {"FDH_BACKEND_DELAY_S": "2.5"}):

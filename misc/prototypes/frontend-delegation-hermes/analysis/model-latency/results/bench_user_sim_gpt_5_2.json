@@ -1,0 +1,122 @@
+{
+  "benchmark": "user_sim_gpt_5_2",
+  "model": "azure/openai/gpt-5.2",
+  "call_name": "user_streaming_response",
+  "started_utc": "2026-10-08T09:36:14Z",
+  "ended_utc": "2026-10-08T09:36:35Z",
+  "concurrency": 1,
+  "streaming": false,
+  "summary": {
+    "n": 6,
+    "n_ok": 6,
+    "total_s": {
+      "p50": 3.175,
+      "p90": 3.877,
+      "mean": 3.024,
+      "min": 1.899,
+      "max": 3.922
+    },
+    "prompt_tokens": {
+      "p50": 3165.0,
+      "p90": 4075.5,
+      "mean": 3191.333,
+      "min": 1921,
+      "max": 4207
+    },
+    "completion_tokens": {
+      "p50": 70.5,
+      "p90": 87.5,
+      "mean": 65.0,
+      "min": 13,
+      "max": 95
+    },
+    "reasoning_tokens": {
+      "p50": 0.0,
+      "p90": 0.0,
+      "mean": 0.0,
+      "min": 0,
+      "max": 0
+    },
+    "e2e_tok_s": {
+      "p50": 20.8,
+      "p90": 35.0,
+      "mean": 22.217,
+      "min": 6.1,
+      "max": 37.9
+    }
+  },
+  "rows": [
+    {
+      "ok": true,
+      "total_s": 3.832,
+      "prompt_tokens": 4207,
+      "completion_tokens": 69,
+      "reasoning_tokens": 0,
+      "e2e_tok_s": 18.0,
+      "finish_reason": "stop",
+      "i": 0,
+      "source": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_retail_regular_rerun43/tau2/fdh_voice_geval_retail_regular_rerun43/artifacts/task_100/sim_e407d341-df3c-4878-9a4a-02809cbc2c45/llm_debug/20261008_064457_887_user_streaming_response_91afbe43.json",
+      "recorded_generation_time_s": 2.8398017827421427
+    },
+    {
+      "ok": true,
+      "total_s": 2.143,
+      "prompt_tokens": 3021,
+      "completion_tokens": 13,
+      "reasoning_tokens": 0,
+      "e2e_tok_s": 6.1,
+      "finish_reason": "stop",
+      "i": 1,
+      "source": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_retail_regular_rerun43/tau2/fdh_voice_geval_retail_regular_rerun43/artifacts/task_69/sim_12985e86-fc68-47c6-931b-20dc31154e67/llm_debug/20261008_033346_753_user_streaming_response_6561746d.json",
+      "recorded_generation_time_s": 2.527046227827668
+    },
+    {
+      "ok": true,
+      "total_s": 2.96,
+      "prompt_tokens": 2746,
+      "completion_tokens": 95,
+      "reasoning_tokens": 0,
+      "e2e_tok_s": 32.1,
+      "finish_reason": "stop",
+      "i": 2,
+      "source": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_retail_regular_rerun43/tau2/fdh_voice_geval_retail_regular_rerun43/artifacts/task_93/sim_e8640f0e-0add-4ce4-ad6f-8e845625ab35/llm_debug/20261008_054303_900_user_streaming_response_ab8211a9.json",
+      "recorded_generation_time_s": 4.952294057235122
+    },
+    {
+      "ok": true,
+      "total_s": 1.899,
+      "prompt_tokens": 1921,
+      "completion_tokens": 72,
+      "reasoning_tokens": 0,
+      "e2e_tok_s": 37.9,
+      "finish_reason": "stop",
+      "i": 3,
+      "source": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_airline_regular/tau2/fdh_voice_geval_airline_regular/artifacts/task_17/sim_29f4b9be-de93-4307-ae9e-348173f1e806/llm_debug/20261007_111945_489_user_streaming_response_62f5fa39.json",
+      "recorded_generation_time_s": 4.646165642887354
+    },
+    {
+      "ok": true,
+      "total_s": 3.922,
+      "prompt_tokens": 3944,
+      "completion_tokens": 61,
+      "reasoning_tokens": 0,
+      "e2e_tok_s": 15.6,
+      "finish_reason": "stop",
+      "i": 4,
+      "source": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_airline_regular/tau2/fdh_voice_geval_airline_regular/artifacts/task_24/sim_837dfe61-d718-427c-b4b2-05a9cc79787e/llm_debug/20261007_122117_930_user_streaming_response_f0331010.json",
+      "recorded_generation_time_s": 3.0690774116665125
+    },
+    {
+      "ok": true,
+      "total_s": 3.391,
+      "prompt_tokens": 3309,
+      "completion_tokens": 80,
+      "reasoning_tokens": 0,
+      "e2e_tok_s": 23.6,
+      "finish_reason": "stop",
+      "i": 5,
+      "source": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_airline_regular/tau2/fdh_voice_geval_airline_regular/artifacts/task_39/sim_4ef1450d-4d40-42e0-b7b0-cd45350f11c1/llm_debug/20261007_141341_557_user_streaming_response_8a0fd88b.json",
+      "recorded_generation_time_s": 2.339490655809641
+    }
+  ]
+}

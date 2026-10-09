@@ -1,0 +1,113 @@
+{
+  "benchmark": "network_hub",
+  "host": "inference-api.nvidia.com",
+  "started_utc": "2026-10-08T09:45:37Z",
+  "ended_utc": "2026-10-08T09:45:40Z",
+  "machine": "ipp2-0543",
+  "summary": {
+    "n": 8,
+    "n_ok": 8,
+    "dns_ms": {
+      "p50": 1.6,
+      "p90": 1.93,
+      "mean": 1.65,
+      "min": 1.3,
+      "max": 2.0
+    },
+    "tcp_connect_ms": {
+      "p50": 25.45,
+      "p90": 26.99,
+      "mean": 25.538,
+      "min": 23.8,
+      "max": 27.2
+    },
+    "tls_handshake_ms": {
+      "p50": 24.55,
+      "p90": 25.82,
+      "mean": 24.6,
+      "min": 23.2,
+      "max": 26.1
+    },
+    "new_connection_ms": {
+      "p50": 50.3,
+      "p90": 52.93,
+      "mean": 50.163,
+      "min": 47.2,
+      "max": 53.0
+    }
+  },
+  "rows": [
+    {
+      "ok": true,
+      "i": 0,
+      "ip": "10.48.202.204",
+      "dns_ms": 2.0,
+      "tcp_connect_ms": 25.0,
+      "tls_handshake_ms": 23.5,
+      "new_connection_ms": 48.6
+    },
+    {
+      "ok": true,
+      "i": 1,
+      "ip": "10.48.202.204",
+      "dns_ms": 1.3,
+      "tcp_connect_ms": 25.8,
+      "tls_handshake_ms": 25.1,
+      "new_connection_ms": 51.0
+    },
+    {
+      "ok": true,
+      "i": 2,
+      "ip": "10.48.202.67",
+      "dns_ms": 1.4,
+      "tcp_connect_ms": 24.0,
+      "tls_handshake_ms": 23.2,
+      "new_connection_ms": 47.2
+    },
+    {
+      "ok": true,
+      "i": 3,
+      "ip": "10.48.203.184",
+      "dns_ms": 1.6,
+      "tcp_connect_ms": 26.9,
+      "tls_handshake_ms": 26.1,
+      "new_connection_ms": 53.0
+    },
+    {
+      "ok": true,
+      "i": 4,
+      "ip": "10.48.203.184",
+      "dns_ms": 1.9,
+      "tcp_connect_ms": 25.1,
+      "tls_handshake_ms": 24.5,
+      "new_connection_ms": 49.6
+    },
+    {
+      "ok": true,
+      "i": 5,
+      "ip": "10.48.203.184",
+      "dns_ms": 1.8,
+      "tcp_connect_ms": 26.5,
+      "tls_handshake_ms": 24.6,
+      "new_connection_ms": 51.1
+    },
+    {
+      "ok": true,
+      "i": 6,
+      "ip": "10.48.203.184",
+      "dns_ms": 1.6,
+      "tcp_connect_ms": 27.2,
+      "tls_handshake_ms": 25.7,
+      "new_connection_ms": 52.9
+    },
+    {
+      "ok": true,
+      "i": 7,
+      "ip": "10.48.202.67",
+      "dns_ms": 1.6,
+      "tcp_connect_ms": 23.8,
+      "tls_handshake_ms": 24.1,
+      "new_connection_ms": 47.9
+    }
+  ]
+}

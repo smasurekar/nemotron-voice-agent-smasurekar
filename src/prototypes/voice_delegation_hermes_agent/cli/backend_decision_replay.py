@@ -19,7 +19,9 @@ later yes from the control; default ``"yes"``).
 rendered ``backend_system`` inside the system message is replaced by the arm's render of the same
 policy), ``--samples`` times at temperature 0:
 
-* ``U``: every sample calls the same tool with the same arguments (canonical JSON);
+* ``U``: every sample makes the control response's complete, ordered list of tool calls (names and
+  canonical JSON arguments; fix-plan-f1-f2-f4-f8.md section 7). Decisions extracted before ``calls``
+  existed fall back to "the same tool with the same arguments is among the sample's calls";
 * ``P``: every sample first answers without a tool call (the confirmation); then, with the
   confirmation and ``next_user`` appended, every sample makes the same call;
 * ``T``: how many samples changed the decision (information only).
@@ -64,6 +66,8 @@ class Decision:
     label: str = "U"
     next_user: str = "yes"
     note: str = ""
+    #: The control response's complete ordered tool calls ``[[name, canonical arguments], ...]``.
+    calls: list[list[str]] = field(default_factory=list)
 
 
 @dataclass(slots=True)
@@ -140,7 +144,8 @@ def extract(traces: Mapping[str, Trace]) -> list[Decision]:
             request_id = str(response.get("api_request_id"))
             if request_id not in trace.requests:
                 continue
-            for index, (name, arguments) in enumerate(tool_calls(response.get("assistant_message"))):
+            calls = tool_calls(response.get("assistant_message"))
+            for index, (name, arguments) in enumerate(calls):
                 if name in writes:
                     decisions.append(
                         Decision(
@@ -149,6 +154,7 @@ def extract(traces: Mapping[str, Trace]) -> list[Decision]:
                             api_request_id=request_id,
                             tool=name,
                             arguments=arguments,
+                            calls=[list(call) for call in calls],
                         )
                     )
     return decisions
@@ -189,12 +195,13 @@ def arm_messages(messages: list[dict[str, Any]], control_prompt: str, arm_prompt
 
 def render_arm_prompt(gateway_config: str, control_prompt: str) -> str:
     """The arm's ``backend_system`` for the same policy."""
+    from prototypes.voice_delegation_hermes_agent.prompt_features import render_backend_system  # noqa: PLC0415
     from prototypes.voice_delegation_hermes_agent.sidecar.gateway_config import load_gateway_config  # noqa: PLC0415
     from prototypes.voice_delegation_hermes_agent.sidecar.templates import BackendTemplates  # noqa: PLC0415
 
     config = load_gateway_config(gateway_config)
     templates = BackendTemplates(config.hermes.prompts_path, prompt_features=config.prompt_features)
-    return templates.render("backend_system", instructions=policy_of(control_prompt), domain_note="")
+    return render_backend_system(templates, policy_of(control_prompt))
 
 
 # -- verdicts ---------------------------------------------------------------------------------------
@@ -204,6 +211,9 @@ def verdict(decision: Decision, first: list[list[tuple[str, str]]], second: list
     """``pass`` / ``fail`` (U, P) or ``changed`` / ``unchanged`` (T) from the sampled tool calls."""
     wanted = (decision.tool, decision.arguments)
     if decision.label == "U":
+        if decision.calls:
+            sequence = [tuple(call) for call in decision.calls]
+            return "pass" if all(calls == sequence for calls in first) else "fail"
         return "pass" if all(wanted in calls for calls in first) else "fail"
     if decision.label == "P":
         asked = all(not calls for calls in first)

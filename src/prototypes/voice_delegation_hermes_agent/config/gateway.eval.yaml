@@ -21,6 +21,9 @@ prompt_features:
   request_scope: true
   transfer_check: true
   capability_check: true
+  # fix-plan-f1-f2-f4-f8.md: on (off in gateway.eval_124acf7.yaml and gateway.eval_control.yaml).
+  situational_facts: true
+  identity_from_identifier: true
 
 hermes:
   # P0.3: the clean controls and the arms record each model request and response for the G2 decision

@@ -17,3 +17,5 @@ prompt_features:
   request_scope: false
   transfer_check: false
   capability_check: false
+  situational_facts: false
+  identity_from_identifier: false

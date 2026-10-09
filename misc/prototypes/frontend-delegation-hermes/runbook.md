@@ -93,6 +93,31 @@ A1 arm (a hint in exactly the plan's 20 sessions, all on the phone field, no oth
 and no gate beyond G0/G1 has been applied, so no fix is reportable yet. Track I (retry back-off, fallback model,
 progress cadence) is not implemented.
 
+**Changed 2026-10-09:** the fixes of
+[`fix-plan-f1-f2-f4-f8.md`](analysis/2026-10-09_fdh-eval-diagnosis-and-remedies/fix-plan-f1-f2-f4-f8.md) are
+implemented and **on by default** in the YAML defaults (`realtime_eval.yaml`, `voice/realtime_eval.yaml`,
+`gateway.yaml`, `gateway.eval.yaml`), so `realtime_eval.yaml` with `gateway.eval.yaml` runs every fix. The control is
+the new pair `realtime_eval_124acf7.yaml` with `gateway.eval_124acf7.yaml`, which renders and decides exactly as agent
+`124acf7` (checked against goldens captured from that commit, §8). Every older control (`realtime_eval_control.yaml`,
+`gateway.eval_control.yaml`, `gateway.baseline.yaml`, `gateway.identity_control.yaml`) pins the new switches off, and
+the Python code defaults stay off. One arm per fix over the new control (§6.4):
+- **F1 + F2, no dead air** (`realtime_eval_liveness.yaml`): a silent reply to "are you still there?" or "could you
+  repeat that?" is delegated or replaced by a replay of the unheard answer; a silent reply to a question is
+  delegated; a ping while the backend works is a status request, which never interrupts the running model call.
+- **F4, situational facts** (`gateway.eval_situational.yaml`): a backend prompt block, in every session, that asks
+  about a situation the policy makes conditional and no tool can show.
+- **F8, identity recovery** (`realtime_eval_identity.yaml`, and the sub-arm `gateway.eval_identity_name.yaml`): after
+  a failed identification lookup, the note lists the lookups tried, what the user spelled and where each spelling was
+  sent, the user's corrections, and the other identification lookups the tools offer.
+- **Logging (always on):** `delegation_guard` names the real guard; `backend_answer` carries its text;
+  `playback_outcome` carries `answer_id` and the heard text; `transcript_normalized` spans carry their `kind`;
+  `backend_configured` and the trace `session` record both carry `tools_canonical_sha256`.
+
+Verified: unit tests (`tests/` all green); the stack restarted with `realtime_eval.yaml` + `gateway.eval.yaml`; both
+`/health` endpoints reported the new switches on; the §4.1 text smoke passed; and the voice log and the backend trace
+of the smoke session carried the same `tools_canonical_sha256`. No arm has run, so no fix is reportable yet. The
+`config_hash` of `realtime_eval.yaml` changed with the new settings: pair runs by profile name.
+
 ## 0. What runs where
 
 ```
@@ -597,6 +622,44 @@ export FDH_EVENT_LOG=logs/fdh_voice_events.realtime_eval.jsonl FDH_GATEWAY_LOG=l
   first, five trials per domain, the arm interleaved with the control). Check every arm's fingerprint as in §6.1
   with the arm's `--profile` and `--gateway-config`.
 
+### 6.4 Arms of fix-plan-f1-f2-f4-f8.md (F1 + F2, F4, F8)
+
+The default deployment, `realtime_eval.yaml` with `gateway.eval.yaml`, runs every fix (the combined arm of plan
+stage 3). The control is the deployed `124acf7` pair, `realtime_eval_124acf7.yaml` with `gateway.eval_124acf7.yaml`;
+every arm adds one fix to it. Run them in the plan's stages (plan §5.3: targeted cells first, a fresh control in the same window, the same user
+simulator and judge in arm and control) and accept them only by the plan's §5.4 checks.
+
+| Arm | `FDH_PROFILE` | `FDH_GATEWAY_CONFIG` | Turns on |
+|---|---|---|---|
+| All fixes (the default) | `realtime_eval.yaml` | `gateway.eval.yaml` | F1 + F2, F4, F8 and the F8 name line together (plan stage 3) |
+| Control | `realtime_eval_124acf7.yaml` | `gateway.eval_124acf7.yaml` | nothing new (agent `124acf7`) |
+| liveness (F1 + F2) | `realtime_eval_liveness.yaml` | `gateway.eval_124acf7.yaml` | `delegation.guards.{liveness_reply, question_never_silent, ping_as_status}`; `replay_unheard_answer` with `triggers: [backchannel, ping, repeat]`, `ttl_s: 60`, `whole_if_heard_below: 0.2` |
+| situational (F4) | `realtime_eval_124acf7.yaml` | `gateway.eval_situational.yaml` | backend variant `situational_facts` (`<situational_facts>` in every session) |
+| identity (F8) | `realtime_eval_identity.yaml` | `gateway.eval_124acf7.yaml` | `result_hints.ledger` (`identification_tools: auto`), `max_hints: 6`, A3's `field_provenance` off |
+| identity_name (F8 sub-arm) | `realtime_eval_124acf7.yaml` | `gateway.eval_identity_name.yaml` | backend variant `identity_from_identifier` (every session) |
+
+If an arm does not pass, turn its switch off in the default files (`profiles/realtime_eval.yaml`,
+`voice/realtime_eval.yaml`, `gateway.yaml`, `gateway.eval.yaml`) and re-run the default.
+
+```bash
+export FDH_PROFILE=realtime_eval_liveness.yaml FDH_GATEWAY_CONFIG=gateway.eval_124acf7.yaml
+export FDH_EVENT_LOG=logs/fdh_voice_events.realtime_eval.jsonl FDH_GATEWAY_LOG=logs/fdh_gateway_events.realtime_eval.jsonl
+# then §3 (gateway) and §4 (fdh-voice); check the fingerprint as in §6.1 with the arm's --profile and --gateway-config
+```
+
+What to check in an arm's events:
+- **liveness:** `delegation_guard` with `guard` `liveness_reply`, `question_never_silent` or `ping_as_status` (and
+  `turn_class`, `backend_state`); `answer_replayed` / `answer_replay_skipped` with `trigger`. A `lexicon_missing`
+  event means the session's ASR language has no phrase list (only `en` ships), so every F1/F2 rule is inactive in it.
+- **identity:** `session_rules.identification_tools` (review it per domain: a bill or usage lookup must not be
+  there); `identity_ledger` per identification output (`output_class`: `not_found`, `error`, `ambiguous`, `found`,
+  `unknown`; `episode`; `note_chars`).
+- **situational / identity_name:** the gateway `/health` and `backend_configured.backend_features` show the variant.
+
+The G2 replay (§6.3) now compares a `U` decision's **complete, ordered** tool-call list (`calls`, written by
+`extract` since 2026-10-09); decisions extracted earlier keep the old rule. It renders the arm's prompt with the
+same function as the gateway (`prompt_features.render_backend_system`).
+
 ## 7. Logs and what to look at
 
 | File | Content |
@@ -633,6 +696,9 @@ PINE_REALTIME_BASE_URL=ws://localhost:8779/v1/realtime PINE_API_KEY=unused \
 ```
 
 Unit tests: `uv run pytest tests/unit/prototypes/delegation tests/unit/prototypes/voice -q`.
+`test_fdh_fix_plan.py` also checks that the control `realtime_eval_124acf7.yaml` with `gateway.eval_124acf7.yaml`
+renders and decides exactly as agent `124acf7` (`fixtures/golden_eval_124acf7.json`; regenerate only for an intended change of the deployed
+behaviour: `PYTHONPATH=src uv run python tests/unit/prototypes/delegation/_fdh_golden_eval.py --write`).
 `test_fdh_golden_prompts.py` checks that, with every prompt variant off, every prompt is byte-identical to
 agent commit `3a7e04a`; regenerate the golden files only for an intended baseline change
 (`PYTHONPATH=src uv run python tests/unit/prototypes/delegation/_fdh_golden.py --write`).
@@ -674,6 +740,11 @@ Profiles are in `src/prototypes/voice_delegation_hermes_agent/config/`. Unknown 
 | A1 / A1-lite format retry | `voice/*.yaml` `normalization.tool_arguments.format_retry.{enabled,mode,fields,hint_message_key,found_message_key,not_found_message_key}` (needs the retry guard); texts `format_retry_*` in `voice_frontend_backend_agent/config/prompts.voice.yaml` | on in `voice/realtime_eval.yaml` (`mode: call`, `fields: phone`); off in `voice/realtime_eval_control.yaml` and the code defaults |
 | A3 field provenance | `voice/*.yaml` `normalization.tool_arguments.result_hints.field_provenance` | on in `voice/realtime_eval.yaml` (with the A2 note `lookup_not_found_hint_format`); off in `voice/realtime_eval_control.yaml` and the code defaults |
 | Backend decision trace (P0.3) | `gateway.yaml` `hermes.backend_trace`, env `FDH_BACKEND_TRACE` | off; on in `gateway.eval.yaml` and `gateway.eval_control.yaml` |
+| F2 no-silence guards | `delegation.guards.{liveness_reply,question_never_silent,ping_as_status}`; phrase lists `delegation.guards.lexicon.<language>` (picked by the voice profile's ASR `language_code`: the exact tag, then the base language); lines in `prompts.yaml` `liveness_lines` | on in `realtime_eval.yaml` and `realtime_eval_liveness.yaml`, off in the controls and the code defaults; `en` ships in the code defaults |
+| F1 replay triggers | `delegation.replay_unheard_answer.{triggers,whole_if_heard_below}` (`status_intent` is M2 and needs `replay_intent`; `backchannel`, `ping`, `repeat` do not) | `[status_intent]`, 0 (controls, code defaults); `[backchannel, ping, repeat]`, 0.2, `ttl_s: 60` in `realtime_eval.yaml` and `realtime_eval_liveness.yaml` |
+| F4 situational facts | `gateway.yaml` `prompt_features.situational_facts` | on (`gateway.yaml`, `gateway.eval.yaml`, `gateway.eval_situational.yaml`); off in `gateway.eval_124acf7.yaml` and every other control |
+| F8 identification ledger | `voice/*.yaml` `normalization.tool_arguments.result_hints.{ledger,ledger_message_key,identification_tools,ledger_max_age_turns,ledger_correction_cues}`; text `lookup_ledger` in `voice_frontend_backend_agent/config/prompts.voice.yaml` | on in `voice/realtime_eval.yaml` and `voice/realtime_eval_identity.yaml` (`identification_tools: auto`, `max_hints: 6`, A3 off); off in `voice/realtime_eval_124acf7.yaml`, `voice/realtime_eval_control.yaml` and the code defaults |
+| F8 name inside an identifier | `gateway.yaml` `prompt_features.identity_from_identifier` | on (`gateway.yaml`, `gateway.eval.yaml`, `gateway.eval_identity_name.yaml`); off in `gateway.eval_124acf7.yaml` and every other control |
 
 ## 10. Stop and clean up
 
@@ -711,4 +782,6 @@ when each worker exits), `/tmp/fdh-workers/` (sockets), and `logs/`.
 | No `logs/fdh_workers/*.trace.jsonl` with `gateway.eval.yaml` | Check `"backend_trace": true` in the gateway `/health`, then the worker log for `backend trace:` warnings (a Hermes version without the plugin hook registry writes no trace) |
 | `relay_replay` reports every session `skipped` | The event log was written before 2026-10-07 (`tool_calls_out` without `call_ids` and `arguments`), or no `--session-update` matches the sessions' `session_tools_sha256` (`sessions_without_tools`) |
 | `backend_decision_replay replay` fails with `occurs 0 times in the system messages` | The decisions or traces come from another control, or Hermes changed how it embeds the ephemeral system prompt. Re-extract from the control's own traces |
+| An F1/F2 arm shows no `delegation_guard` or `answer_replayed` events | Look for `lexicon_missing`: the session's ASR `language_code` has no `delegation.guards.lexicon` entry, so the rules are inactive by design |
+| `identity_ledger` never appears in an identity arm | `session_rules.identification_tools` is empty or misses the lookup: check the tool's name or description says it returns a person, or list the tools in `result_hints.identification_tools` |
 | Manual-mode client gets `conversation_already_has_active_response` | It sent `response.create` while the previous turn was still deciding or speaking. Wait for `response.done`, as Realtime requires |

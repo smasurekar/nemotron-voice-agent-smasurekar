@@ -1,0 +1,217 @@
+{
+  "benchmark": "nemo_asr_nemotron_speech_streaming",
+  "model": "nemotron-speech-streaming-en-0.6b",
+  "server": "localhost:50051",
+  "started_utc": "2026-10-08T09:40:00Z",
+  "ended_utc": "2026-10-08T09:41:01Z",
+  "concurrency": 1,
+  "chunk_ms": 80,
+  "audio_source": "/localhome/local-smasurekar/smasurekar/voice-agent-evaluation-dump/tau-3-voice/2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_retail_regular_rerun43/tau2/fdh_voice_geval_retail_regular_rerun43/artifacts/task_100/sim_e407d341-df3c-4878-9a4a-02809cbc2c45/audio",
+  "summary_paced": {
+    "n": 6,
+    "n_ok": 6,
+    "final_after_last_chunk_ms": {
+      "p50": 15.45,
+      "p90": 21.65,
+      "mean": 17.3,
+      "min": 14.5,
+      "max": 21.7
+    },
+    "first_partial_s": {
+      "p50": 1.291,
+      "p90": 1.452,
+      "mean": 1.264,
+      "min": 0.971,
+      "max": 1.611
+    },
+    "audio_s": {
+      "p50": 9.3,
+      "p90": 13.8,
+      "mean": 9.6,
+      "min": 3.3,
+      "max": 15.9
+    }
+  },
+  "summary_burst": {
+    "n": 6,
+    "n_ok": 6,
+    "rtf": {
+      "p50": 0.044,
+      "p90": 0.048,
+      "mean": 0.045,
+      "min": 0.042,
+      "max": 0.052
+    },
+    "total_s": {
+      "p50": 0.408,
+      "p90": 0.586,
+      "mean": 0.421,
+      "min": 0.171,
+      "max": 0.676
+    },
+    "audio_s": {
+      "p50": 9.3,
+      "p90": 13.8,
+      "mean": 9.6,
+      "min": 3.3,
+      "max": 15.9
+    }
+  },
+  "summary": {
+    "n": 12,
+    "n_ok": 12,
+    "audio_s": {
+      "p50": 9.3,
+      "p90": 15.48,
+      "mean": 9.6,
+      "min": 3.3,
+      "max": 15.9
+    }
+  },
+  "rows": [
+    {
+      "ok": true,
+      "i": 0,
+      "mode": "paced",
+      "label": "Uh hi\u2014yeah, I need help with a return and an exchange. I, um, wanna return my lu",
+      "audio_s": 15.9,
+      "total_s": 15.958,
+      "final_after_last_chunk_ms": 15.7,
+      "first_partial_s": 1.292,
+      "rtf": null,
+      "transcript": "Uh hi yeah I need help with a return and an exchange I wanna return my luggage set and get the exact same one but in bed and also return the skateboard from that same order and get a new one that's thirty four inch length with custom design ."
+    },
+    {
+      "ok": true,
+      "i": 0,
+      "mode": "burst",
+      "label": "Uh hi\u2014yeah, I need help with a return and an exchange. I, um, wanna return my lu",
+      "audio_s": 15.9,
+      "total_s": 0.676,
+      "final_after_last_chunk_ms": 674.8,
+      "first_partial_s": 0.076,
+      "rtf": 0.0425,
+      "transcript": "Uh hi yeah I need help with a return and an exchange I wanna return my luggage set and get the exact same one but in bed and also return the skateboard from that same order and get a new one that's thirty four inch length with custom design ."
+    },
+    {
+      "ok": true,
+      "i": 1,
+      "mode": "paced",
+      "label": "Uh, I don\u2019t\u2014sorry, I don\u2019t remember my email address. Can we look it up another ",
+      "audio_s": 11.7,
+      "total_s": 11.791,
+      "final_after_last_chunk_ms": 14.5,
+      "first_partial_s": 0.971,
+      "rtf": null,
+      "transcript": "Uh, I don't I don't remember my email address . Can we look it up another way ? My name's Liam Thomas and my zip code is eight five zero four nine ."
+    },
+    {
+      "ok": true,
+      "i": 1,
+      "mode": "burst",
+      "label": "Uh, I don\u2019t\u2014sorry, I don\u2019t remember my email address. Can we look it up another ",
+      "audio_s": 11.7,
+      "total_s": 0.496,
+      "final_after_last_chunk_ms": 494.7,
+      "first_partial_s": 0.052,
+      "rtf": 0.0424,
+      "transcript": "Uh, I don't I don't remember my email address . Can we look it up another way ? My name's Liam Thomas and my zip code is eight five zero four nine ."
+    },
+    {
+      "ok": true,
+      "i": 2,
+      "mode": "paced",
+      "label": "No\u2014sorry, it\u2019s Liam Thomas. L, I, A, M\u2026 Thomas. And the zip is eight, five, zero",
+      "audio_s": 9.3,
+      "total_s": 9.388,
+      "final_after_last_chunk_ms": 15.1,
+      "first_partial_s": 1.291,
+      "rtf": null,
+      "transcript": "No sorry Liam Thomas Lia m Thomas and the zip is eight five zero four nine ."
+    },
+    {
+      "ok": true,
+      "i": 2,
+      "mode": "burst",
+      "label": "No\u2014sorry, it\u2019s Liam Thomas. L, I, A, M\u2026 Thomas. And the zip is eight, five, zero",
+      "audio_s": 9.3,
+      "total_s": 0.408,
+      "final_after_last_chunk_ms": 407.1,
+      "first_partial_s": 0.075,
+      "rtf": 0.0439,
+      "transcript": "No sorry Liam Thomas Lia m Thomas and the zip is eight five zero four nine ."
+    },
+    {
+      "ok": true,
+      "i": 3,
+      "mode": "paced",
+      "label": "Uh\u2026 are you still there? I\u2014I really don\u2019t want this to get messed up. Is there a",
+      "audio_s": 8.1,
+      "total_s": 8.194,
+      "final_after_last_chunk_ms": 21.6,
+      "first_partial_s": 1.611,
+      "rtf": null,
+      "transcript": "Uh, are you still there ? I really don't want this to get messed up. Is there any other way to find my order without the email ?"
+    },
+    {
+      "ok": true,
+      "i": 3,
+      "mode": "burst",
+      "label": "Uh\u2026 are you still there? I\u2014I really don\u2019t want this to get messed up. Is there a",
+      "audio_s": 8.1,
+      "total_s": 0.364,
+      "final_after_last_chunk_ms": 363.3,
+      "first_partial_s": 0.087,
+      "rtf": 0.0449,
+      "transcript": "Uh, are you still there ? I really don't want this to get messed up. Is there any other way to find my order without the email ?"
+    },
+    {
+      "ok": true,
+      "i": 4,
+      "mode": "paced",
+      "label": "Yeah\u2014first name L, I, A, M. Last name T, H, O, M, A, S. Zip code eight, five, ze",
+      "audio_s": 9.3,
+      "total_s": 9.39,
+      "final_after_last_chunk_ms": 15.2,
+      "first_partial_s": 1.131,
+      "rtf": null,
+      "transcript": "Yeah, first name L I A M last name T H O M A S zip code eight five zero four nine ."
+    },
+    {
+      "ok": true,
+      "i": 4,
+      "mode": "burst",
+      "label": "Yeah\u2014first name L, I, A, M. Last name T, H, O, M, A, S. Zip code eight, five, ze",
+      "audio_s": 9.3,
+      "total_s": 0.408,
+      "final_after_last_chunk_ms": 407.3,
+      "first_partial_s": 0.069,
+      "rtf": 0.0439,
+      "transcript": "Yeah, first name L I A M last name T H O M A S zip code eight five zero four nine ."
+    },
+    {
+      "ok": true,
+      "i": 5,
+      "mode": "paced",
+      "label": "Hello? Any update\u2014did it pull up this time?",
+      "audio_s": 3.3,
+      "total_s": 3.387,
+      "final_after_last_chunk_ms": 21.7,
+      "first_partial_s": 1.291,
+      "rtf": null,
+      "transcript": "Uh any update did it pull up this time ?"
+    },
+    {
+      "ok": true,
+      "i": 5,
+      "mode": "burst",
+      "label": "Hello? Any update\u2014did it pull up this time?",
+      "audio_s": 3.3,
+      "total_s": 0.171,
+      "final_after_last_chunk_ms": 170.3,
+      "first_partial_s": 0.075,
+      "rtf": 0.0517,
+      "transcript": "Uh any update did it pull up this time ?"
+    }
+  ]
+}

@@ -1,0 +1,937 @@
+{
+ "run": "/localhome/local-smasurekar/smasurekar/voice-agent-evaluation-dump/tau-3-voice/2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_retail_regular_rerun43",
+ "summary": {
+  "n_sessions": 43,
+  "ref_words": 23973,
+  "wer_p50": 0.1637,
+  "wer_mean": 0.2205,
+  "wer_word_weighted": 0.2058,
+  "cer_p50": 0.1333,
+  "cer_mean": 0.1783,
+  "identity_entities_said": 123,
+  "identity_entities_heard": 106
+ },
+ "rows": [
+  {
+   "sim": "04e8db98-9563-49e9-ab01-ccda7bdaf3e4",
+   "task_id": "95",
+   "session": "sess_b8810111f4b14e4aa07a",
+   "ref_words": 1156,
+   "wer": 0.0796,
+   "cer": 0.0514,
+   "entities": [
+    {
+     "entity": "lei",
+     "heard": true
+    },
+    {
+     "entity": "wilson",
+     "heard": true
+    },
+    {
+     "entity": "32255",
+     "heard": true
+    },
+    {
+     "entity": "lei dot wilson 1253",
+     "heard": false
+    }
+   ]
+  },
+  {
+   "sim": "088a5cf9-3958-4bd9-92a4-8f634513f6d1",
+   "task_id": "86",
+   "session": "sess_eb9367bb96474f008ce7",
+   "ref_words": 200,
+   "wer": 0.38,
+   "cer": 0.298,
+   "entities": [
+    {
+     "entity": "yusuf",
+     "heard": true
+    },
+    {
+     "entity": "hernandez",
+     "heard": true
+    },
+    {
+     "entity": "yusuf dot hernandez 8836",
+     "heard": false
+    }
+   ]
+  },
+  {
+   "sim": "0c37b615-4ceb-4ce7-b392-f5c0d30394f0",
+   "task_id": "65",
+   "session": "sess_10c56165975c46058569",
+   "ref_words": 544,
+   "wer": 0.1213,
+   "cer": 0.0881,
+   "entities": [
+    {
+     "entity": "james",
+     "heard": true
+    },
+    {
+     "entity": "kovacs",
+     "heard": true
+    },
+    {
+     "entity": "95190",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "0eb866a0-2d54-4df7-8641-aa46ca070429",
+   "task_id": "55",
+   "session": "sess_2c1e5cfb186842e5b608",
+   "ref_words": 1753,
+   "wer": 0.1563,
+   "cer": 0.1232,
+   "entities": [
+    {
+     "entity": "silva 7872",
+     "heard": false
+    }
+   ]
+  },
+  {
+   "sim": "12985e86-fc68-47c6-931b-20dc31154e67",
+   "task_id": "69",
+   "session": "sess_b9b5397a12564b1c88f5",
+   "ref_words": 328,
+   "wer": 0.1189,
+   "cer": 0.0873,
+   "entities": [
+    {
+     "entity": "emma",
+     "heard": true
+    },
+    {
+     "entity": "smith",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "19efd9b4-e902-4ea3-9482-7dda033c225c",
+   "task_id": "88",
+   "session": "sess_926f0165379e4327a777",
+   "ref_words": 236,
+   "wer": 0.1059,
+   "cer": 0.0716,
+   "entities": [
+    {
+     "entity": "daiki",
+     "heard": true
+    },
+    {
+     "entity": "silva",
+     "heard": true
+    },
+    {
+     "entity": "daiki dot silva 6295",
+     "heard": false
+    }
+   ]
+  },
+  {
+   "sim": "341b0bbe-38c0-41db-902d-51fc411038ba",
+   "task_id": "51",
+   "session": "sess_cfa420630737496da755",
+   "ref_words": 604,
+   "wer": 0.1275,
+   "cer": 0.1003,
+   "entities": [
+    {
+     "entity": "sofia",
+     "heard": true
+    },
+    {
+     "entity": "li",
+     "heard": true
+    },
+    {
+     "entity": "78260",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "3781aa92-9460-4a6a-ad9a-627d1855c565",
+   "task_id": "67",
+   "session": "sess_bd467634053843a2acca",
+   "ref_words": 71,
+   "wer": 0.2254,
+   "cer": 0.2086,
+   "entities": [
+    {
+     "entity": "noah",
+     "heard": true
+    },
+    {
+     "entity": "ito",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "45e23ab4-489e-4323-8a99-8e2808708265",
+   "task_id": "83",
+   "session": "sess_8eea5fb38aa548e9ab50",
+   "ref_words": 179,
+   "wer": 0.0615,
+   "cer": 0.0459,
+   "entities": [
+    {
+     "entity": "chen",
+     "heard": true
+    },
+    {
+     "entity": "silva",
+     "heard": true
+    },
+    {
+     "entity": "46281",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "48008171-8410-4c9c-8c57-22bf4a0c3ad1",
+   "task_id": "60",
+   "session": "sess_9fc0ca2fbecd486ea578",
+   "ref_words": 157,
+   "wer": 0.1401,
+   "cer": 0.1151,
+   "entities": [
+    {
+     "entity": "chen",
+     "heard": true
+    },
+    {
+     "entity": "johnson",
+     "heard": true
+    },
+    {
+     "entity": "77004",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "52d4e44f-900d-4547-9dba-61f3a863f3ac",
+   "task_id": "96",
+   "session": "sess_27fd8e8df8e14e499dfe",
+   "ref_words": 656,
+   "wer": 0.1296,
+   "cer": 0.1057,
+   "entities": [
+    {
+     "entity": "yusuf",
+     "heard": true
+    },
+    {
+     "entity": "li",
+     "heard": true
+    },
+    {
+     "entity": "91148",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "5db9b433-74c9-494a-bfb8-a44cd9e164d8",
+   "task_id": "98",
+   "session": "sess_8769a35cbb1245adbd7a",
+   "ref_words": 808,
+   "wer": 0.0829,
+   "cer": 0.0537,
+   "entities": [
+    {
+     "entity": "sofia",
+     "heard": true
+    },
+    {
+     "entity": "li",
+     "heard": true
+    },
+    {
+     "entity": "78260",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "5df9e27d-86ef-4ce2-81e8-f1866b8ac55d",
+   "task_id": "99",
+   "session": "sess_fd381e3e63dd4d1cbffd",
+   "ref_words": 539,
+   "wer": 0.1948,
+   "cer": 0.175,
+   "entities": [
+    {
+     "entity": "sofia",
+     "heard": true
+    },
+    {
+     "entity": "li",
+     "heard": true
+    },
+    {
+     "entity": "78260",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "65cfc052-a122-4752-a421-0e6b5bfd926b",
+   "task_id": "104",
+   "session": "sess_f30f717123e142e4887f",
+   "ref_words": 965,
+   "wer": 0.1585,
+   "cer": 0.1333,
+   "entities": [
+    {
+     "entity": "lucas",
+     "heard": true
+    },
+    {
+     "entity": "brown",
+     "heard": true
+    },
+    {
+     "entity": "lucas dot brown 9344",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "6725b0cb-fb48-423a-a457-b5e8eeb01348",
+   "task_id": "94",
+   "session": "sess_1a1e41c71b9f46a88452",
+   "ref_words": 611,
+   "wer": 0.1637,
+   "cer": 0.1263,
+   "entities": [
+    {
+     "entity": "lei",
+     "heard": true
+    },
+    {
+     "entity": "wilson",
+     "heard": true
+    },
+    {
+     "entity": "32255",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "687a2e24-d416-4835-89ed-18beb37b0d0f",
+   "task_id": "57",
+   "session": "sess_f6ad26c218334ca0b317",
+   "ref_words": 378,
+   "wer": 0.291,
+   "cer": 0.237,
+   "entities": []
+  },
+  {
+   "sim": "7208f061-385e-44f8-9874-baefe4bad4c1",
+   "task_id": "63",
+   "session": "sess_0d10b5f738744c60bc1c",
+   "ref_words": 448,
+   "wer": 0.2589,
+   "cer": 0.1944,
+   "entities": [
+    {
+     "entity": "chen",
+     "heard": true
+    },
+    {
+     "entity": "johnson",
+     "heard": true
+    },
+    {
+     "entity": "77004",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "7b3e25ff-2cc1-4084-8efa-2f27ecae621d",
+   "task_id": "78",
+   "session": "sess_f4e5322de9d149678379",
+   "ref_words": 437,
+   "wer": 0.2975,
+   "cer": 0.2107,
+   "entities": [
+    {
+     "entity": "yara",
+     "heard": true
+    },
+    {
+     "entity": "muller",
+     "heard": false
+    },
+    {
+     "entity": "yara dot muller 9246",
+     "heard": false
+    }
+   ]
+  },
+  {
+   "sim": "80513062-55d0-4f7a-beba-391762460d3c",
+   "task_id": "71",
+   "session": "sess_fcfee72ddd804fadbdea",
+   "ref_words": 396,
+   "wer": 0.4369,
+   "cer": 0.35,
+   "entities": [
+    {
+     "entity": "ivan",
+     "heard": true
+    },
+    {
+     "entity": "khan",
+     "heard": true
+    },
+    {
+     "entity": "28243",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "81a3e4aa-11cc-45b5-8608-0b802969f21e",
+   "task_id": "87",
+   "session": "sess_d3ab6341697c408c9b5c",
+   "ref_words": 275,
+   "wer": 0.1491,
+   "cer": 0.1145,
+   "entities": [
+    {
+     "entity": "yusuf",
+     "heard": true
+    },
+    {
+     "entity": "hernandez",
+     "heard": true
+    },
+    {
+     "entity": "yusuf dot hernandez 8836",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "8983ba2e-32e1-4f8d-9e98-87a33d46d578",
+   "task_id": "103",
+   "session": "sess_151bb44376314d12b36e",
+   "ref_words": 510,
+   "wer": 0.5078,
+   "cer": 0.4593,
+   "entities": [
+    {
+     "entity": "lucas",
+     "heard": true
+    },
+    {
+     "entity": "brown",
+     "heard": true
+    },
+    {
+     "entity": "lucas dot brown 9344",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "a71a48c6-5c62-4861-9979-3abdb952111f",
+   "task_id": "105",
+   "session": "sess_d50e20ef430c46f1a7d6",
+   "ref_words": 1706,
+   "wer": 0.1061,
+   "cer": 0.0758,
+   "entities": [
+    {
+     "entity": "aarav",
+     "heard": true
+    },
+    {
+     "entity": "anderson",
+     "heard": true
+    },
+    {
+     "entity": "19031",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "aeb316c5-8369-48d0-8175-608fd819746b",
+   "task_id": "89",
+   "session": "sess_e46ba42121224856b3b5",
+   "ref_words": 304,
+   "wer": 0.1579,
+   "cer": 0.1253,
+   "entities": [
+    {
+     "entity": "raj",
+     "heard": true
+    },
+    {
+     "entity": "santos",
+     "heard": true
+    },
+    {
+     "entity": "98157",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "af2d2a6c-7622-408c-85fe-b636c68eee58",
+   "task_id": "74",
+   "session": "sess_01827563318348e58058",
+   "ref_words": 434,
+   "wer": 0.4747,
+   "cer": 0.4136,
+   "entities": [
+    {
+     "entity": "lei",
+     "heard": true
+    },
+    {
+     "entity": "li",
+     "heard": true
+    },
+    {
+     "entity": "85033",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "b04d951e-a263-44a3-87d6-a91410513040",
+   "task_id": "101",
+   "session": "sess_8101fedd95e44922b0d1",
+   "ref_words": 628,
+   "wer": 0.1545,
+   "cer": 0.1102,
+   "entities": [
+    {
+     "entity": "noah",
+     "heard": true
+    },
+    {
+     "entity": "ito",
+     "heard": true
+    },
+    {
+     "entity": "98187",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "b89f0b84-430f-4fe7-898a-404d1c6e973e",
+   "task_id": "80",
+   "session": "sess_6bc06b805c1241ad9ddf",
+   "ref_words": 634,
+   "wer": 0.1293,
+   "cer": 0.1019,
+   "entities": [
+    {
+     "entity": "amelia",
+     "heard": true
+    },
+    {
+     "entity": "gonzalez",
+     "heard": true
+    },
+    {
+     "entity": "amelia dot gonzalez 4271",
+     "heard": false
+    }
+   ]
+  },
+  {
+   "sim": "bc5f0656-77b2-4c40-9049-530193a74fe2",
+   "task_id": "59",
+   "session": "sess_7c7c47aa0b4a4c2b959f",
+   "ref_words": 457,
+   "wer": 0.2735,
+   "cer": 0.2297,
+   "entities": [
+    {
+     "entity": "yusuf",
+     "heard": true
+    },
+    {
+     "entity": "taylor",
+     "heard": true
+    },
+    {
+     "entity": "95154",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "bff6e8ff-5338-48e7-b81e-eb390987c9b9",
+   "task_id": "92",
+   "session": "sess_3d4e585ca81a4b7da0b1",
+   "ref_words": 339,
+   "wer": 0.3156,
+   "cer": 0.2349,
+   "entities": [
+    {
+     "entity": "mei",
+     "heard": true
+    },
+    {
+     "entity": "ahmed",
+     "heard": true
+    },
+    {
+     "entity": "78705",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "c3561673-4c8e-4e2f-864a-71a1f5a7141b",
+   "task_id": "54",
+   "session": "sess_460775caa8f84af5a073",
+   "ref_words": 446,
+   "wer": 0.157,
+   "cer": 0.127,
+   "entities": [
+    {
+     "entity": "silva 7872",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "c3edd5d6-77f5-4b80-89ab-4bf0607be2ce",
+   "task_id": "102",
+   "session": "sess_40c5ac2a7da54587af28",
+   "ref_words": 855,
+   "wer": 0.3485,
+   "cer": 0.2976,
+   "entities": [
+    {
+     "entity": "noah",
+     "heard": true
+    },
+    {
+     "entity": "ito",
+     "heard": true
+    },
+    {
+     "entity": "98187",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "ca6ab1f3-88ca-4f3d-a856-0ed9ad8c916a",
+   "task_id": "72",
+   "session": "sess_6ed9629d94324dd9afe4",
+   "ref_words": 229,
+   "wer": 0.2227,
+   "cer": 0.1871,
+   "entities": [
+    {
+     "entity": "ivan",
+     "heard": true
+    },
+    {
+     "entity": "khan",
+     "heard": true
+    },
+    {
+     "entity": "28243",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "d11dd8c6-5221-426c-b5ee-21217946795f",
+   "task_id": "79",
+   "session": "sess_ff607cf722a24cb58ae2",
+   "ref_words": 254,
+   "wer": 0.2047,
+   "cer": 0.198,
+   "entities": [
+    {
+     "entity": "emma",
+     "heard": true
+    },
+    {
+     "entity": "kovacs",
+     "heard": true
+    },
+    {
+     "entity": "32190",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "d2382bd9-22d8-46a1-9989-5b5b58b7f82b",
+   "task_id": "97",
+   "session": "sess_57c947bc691649e38712",
+   "ref_words": 499,
+   "wer": 0.2365,
+   "cer": 0.2129,
+   "entities": [
+    {
+     "entity": "yusuf",
+     "heard": true
+    },
+    {
+     "entity": "li",
+     "heard": true
+    },
+    {
+     "entity": "91148",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "d61b3233-2763-4a9c-8d69-067e8f87c04f",
+   "task_id": "81",
+   "session": "sess_bdb3ed455c09480f9cdc",
+   "ref_words": 229,
+   "wer": 0.4803,
+   "cer": 0.3783,
+   "entities": [
+    {
+     "entity": "james",
+     "heard": true
+    },
+    {
+     "entity": "kim",
+     "heard": true
+    },
+    {
+     "entity": "james dot kim 1995",
+     "heard": false
+    }
+   ]
+  },
+  {
+   "sim": "e2824691-25c1-4d70-a2b6-fbde50561693",
+   "task_id": "85",
+   "session": "sess_eb5e7a7263d243959573",
+   "ref_words": 630,
+   "wer": 0.3794,
+   "cer": 0.3309,
+   "entities": [
+    {
+     "entity": "yusuf",
+     "heard": false
+    },
+    {
+     "entity": "hernandez",
+     "heard": true
+    },
+    {
+     "entity": "yusuf dot hernandez 8836",
+     "heard": false
+    }
+   ]
+  },
+  {
+   "sim": "e407d341-df3c-4878-9a4a-02809cbc2c45",
+   "task_id": "100",
+   "session": "sess_9d1a62e4f74f4b609854",
+   "ref_words": 668,
+   "wer": 0.1617,
+   "cer": 0.1176,
+   "entities": [
+    {
+     "entity": "liam",
+     "heard": false
+    },
+    {
+     "entity": "thomas",
+     "heard": true
+    },
+    {
+     "entity": "85049",
+     "heard": true
+    },
+    {
+     "entity": "liam dot thomas 9081",
+     "heard": false
+    }
+   ]
+  },
+  {
+   "sim": "e50e18ec-2e44-49b4-b174-c2aade567e46",
+   "task_id": "76",
+   "session": "sess_9ceeb4fcd10c429ea4af",
+   "ref_words": 659,
+   "wer": 0.3217,
+   "cer": 0.2473,
+   "entities": [
+    {
+     "entity": "ava",
+     "heard": false
+    },
+    {
+     "entity": "nguyen",
+     "heard": false
+    },
+    {
+     "entity": "94128",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "e8640f0e-0add-4ce4-ad6f-8e845625ab35",
+   "task_id": "93",
+   "session": "sess_ed51331891d44be6908e",
+   "ref_words": 267,
+   "wer": 0.0899,
+   "cer": 0.0712,
+   "entities": [
+    {
+     "entity": "lei",
+     "heard": true
+    },
+    {
+     "entity": "wilson",
+     "heard": true
+    },
+    {
+     "entity": "32255",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "e8e1e2d8-5227-4a5b-9233-edf124978b3f",
+   "task_id": "84",
+   "session": "sess_930553759d7d4523b5e9",
+   "ref_words": 1064,
+   "wer": 0.2039,
+   "cer": 0.1685,
+   "entities": [
+    {
+     "entity": "chen",
+     "heard": false
+    },
+    {
+     "entity": "silva",
+     "heard": true
+    },
+    {
+     "entity": "46281",
+     "heard": true
+    },
+    {
+     "entity": "chen dot silva 2698",
+     "heard": false
+    }
+   ]
+  },
+  {
+   "sim": "f4a94734-2f51-4434-9852-cbae60377d35",
+   "task_id": "56",
+   "session": "sess_c65da0290eb44e64b4f4",
+   "ref_words": 349,
+   "wer": 0.1461,
+   "cer": 0.1102,
+   "entities": [
+    {
+     "entity": "ivan",
+     "heard": true
+    },
+    {
+     "entity": "hernandez",
+     "heard": true
+    },
+    {
+     "entity": "92133",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "f875bf43-a5bd-4ad4-a2e3-91f0d61d9929",
+   "task_id": "58",
+   "session": "sess_7157d89e80e944c2adaa",
+   "ref_words": 503,
+   "wer": 0.4274,
+   "cer": 0.3627,
+   "entities": [
+    {
+     "entity": "ivan",
+     "heard": true
+    },
+    {
+     "entity": "hernandez",
+     "heard": true
+    },
+    {
+     "entity": "92133",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "fbf8ee24-c856-4b00-930d-2fe60a539695",
+   "task_id": "61",
+   "session": "sess_4e62582c1ca4400aa20b",
+   "ref_words": 419,
+   "wer": 0.0835,
+   "cer": 0.0539,
+   "entities": [
+    {
+     "entity": "chen",
+     "heard": true
+    },
+    {
+     "entity": "johnson",
+     "heard": true
+    },
+    {
+     "entity": "77004",
+     "heard": true
+    }
+   ]
+  },
+  {
+   "sim": "feaccffa-3c8d-4303-a673-0fd6ebb99707",
+   "task_id": "75",
+   "session": "sess_a9cd90c068014891bf10",
+   "ref_words": 1149,
+   "wer": 0.2176,
+   "cer": 0.1645,
+   "entities": [
+    {
+     "entity": "liam",
+     "heard": true
+    },
+    {
+     "entity": "moore",
+     "heard": true
+    },
+    {
+     "entity": "liam dot moore 6985",
+     "heard": false
+    }
+   ]
+  }
+ ]
+}

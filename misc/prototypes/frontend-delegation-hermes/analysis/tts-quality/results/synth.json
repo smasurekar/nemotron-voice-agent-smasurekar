@@ -1,0 +1,2487 @@
+{
+ "meta": {
+  "started_utc": "2026-10-08T10:21:36Z",
+  "ended_utc": "2026-10-08T10:29:32Z",
+  "hub_model": "openai/openai/gpt-4o-mini-tts",
+  "style": "You are a middle-aged caller, calm and slightly impatient, with a neutral American accent.\nRead the text exactly as written, as a caller on a phone line.",
+  "local_server": "localhost:50051",
+  "repeats": 2,
+  "arms": {
+   "magpie_john": [
+    "Magpie (local NeMo Speech), voice John",
+    22050
+   ],
+   "gpt4omini_ash": [
+    "gpt-4o-mini-tts (Hub), voice ash + persona instructions",
+    24000
+   ],
+   "gpt4omini_coral": [
+    "gpt-4o-mini-tts (Hub), voice coral + persona instructions",
+    24000
+   ]
+  },
+  "skipped_arm": "nvidia/nvidia/magpie-tts-multilingual-357m on the Hub: audio.speech.create returns 400 'litellm.BadRequestError: LLM Provider NOT provided' (2 tries, 2026-10-08)"
+ },
+ "rows": [
+  {
+   "arm": "magpie_john",
+   "id": "p01",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.821,
+   "audio_s": 6.177,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p01",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.712,
+   "audio_s": 6.1,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p01",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.381,
+   "audio_s": 5.4,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p02",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 4.809,
+   "audio_s": 6.25,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p02",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.362,
+   "audio_s": 6.85,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p02",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.863,
+   "audio_s": 6.594,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p03",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.876,
+   "audio_s": 6.594,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p03",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.602,
+   "audio_s": 8.4,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p03",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.162,
+   "audio_s": 7.55,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p04",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.91,
+   "audio_s": 6.45,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p04",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.562,
+   "audio_s": 7.1,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p04",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.883,
+   "audio_s": 6.641,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p05",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.893,
+   "audio_s": 6.827,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p05",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.806,
+   "audio_s": 7.75,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p05",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 4.531,
+   "audio_s": 7.05,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p06",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.543,
+   "audio_s": 8.0,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p06",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.777,
+   "audio_s": 8.05,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p06",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.803,
+   "audio_s": 6.084,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p07",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.83,
+   "audio_s": 6.409,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p07",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.528,
+   "audio_s": 6.95,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p07",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.808,
+   "audio_s": 7.0,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p08",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.462,
+   "audio_s": 7.45,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p08",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.754,
+   "audio_s": 6.85,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p08",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.94,
+   "audio_s": 7.152,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n01",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.022,
+   "audio_s": 8.081,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n01",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.798,
+   "audio_s": 9.2,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n01",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 4.701,
+   "audio_s": 8.3,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n02",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.219,
+   "audio_s": 5.55,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n02",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.515,
+   "audio_s": 5.75,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n02",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.644,
+   "audio_s": 4.923,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n03",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.972,
+   "audio_s": 7.291,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n03",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 5.495,
+   "audio_s": 8.05,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n03",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.487,
+   "audio_s": 7.4,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n04",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.109,
+   "audio_s": 6.4,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n04",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 8.502,
+   "audio_s": 6.9,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n04",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.819,
+   "audio_s": 6.177,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n05",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.977,
+   "audio_s": 7.43,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n05",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.468,
+   "audio_s": 6.35,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n05",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.6,
+   "audio_s": 7.2,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n06",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.476,
+   "audio_s": 4.95,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n06",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 3.441,
+   "audio_s": 5.4,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n06",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.845,
+   "audio_s": 6.455,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n07",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.094,
+   "audio_s": 8.406,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n07",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.267,
+   "audio_s": 8.15,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n07",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 5.625,
+   "audio_s": 6.65,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n08",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.422,
+   "audio_s": 6.45,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n08",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.046,
+   "audio_s": 6.45,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n08",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.727,
+   "audio_s": 5.48,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s01",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.489,
+   "audio_s": 3.669,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s01",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.444,
+   "audio_s": 5.85,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s01",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.208,
+   "audio_s": 4.7,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s02",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.195,
+   "audio_s": 5.55,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s02",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.401,
+   "audio_s": 5.05,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s02",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.556,
+   "audio_s": 4.319,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s03",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.817,
+   "audio_s": 6.316,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s03",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.873,
+   "audio_s": 6.45,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s03",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 3.223,
+   "audio_s": 7.9,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s04",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.176,
+   "audio_s": 7.4,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s04",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.449,
+   "audio_s": 6.9,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s04",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.85,
+   "audio_s": 6.594,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s05",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.502,
+   "audio_s": 3.855,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s05",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.344,
+   "audio_s": 5.35,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s05",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.738,
+   "audio_s": 5.8,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s06",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.236,
+   "audio_s": 5.05,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s06",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.743,
+   "audio_s": 5.55,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s06",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.644,
+   "audio_s": 4.923,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s07",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.437,
+   "audio_s": 3.251,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s07",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 8.366,
+   "audio_s": 4.85,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s07",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.476,
+   "audio_s": 6.05,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s08",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 8.074,
+   "audio_s": 6.15,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s08",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.44,
+   "audio_s": 5.9,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s08",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.721,
+   "audio_s": 5.526,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e01",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.725,
+   "audio_s": 5.619,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e01",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.845,
+   "audio_s": 7.85,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e01",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.541,
+   "audio_s": 6.75,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e02",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.577,
+   "audio_s": 8.15,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e02",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.635,
+   "audio_s": 8.85,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e02",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.022,
+   "audio_s": 7.709,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e03",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.683,
+   "audio_s": 5.341,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e03",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 6.178,
+   "audio_s": 6.85,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e03",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.201,
+   "audio_s": 6.2,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e04",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.906,
+   "audio_s": 6.8,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e04",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.28,
+   "audio_s": 6.45,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e04",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.892,
+   "audio_s": 6.734,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e05",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.87,
+   "audio_s": 6.594,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e05",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 3.361,
+   "audio_s": 6.9,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e05",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.69,
+   "audio_s": 6.65,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e06",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.542,
+   "audio_s": 7.8,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e06",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.506,
+   "audio_s": 7.9,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e06",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.028,
+   "audio_s": 7.848,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e07",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.801,
+   "audio_s": 6.316,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e07",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 3.346,
+   "audio_s": 7.1,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e07",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 3.072,
+   "audio_s": 7.2,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e08",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.862,
+   "audio_s": 8.75,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e08",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.596,
+   "audio_s": 7.6,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e08",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.14,
+   "audio_s": 8.684,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d01",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.902,
+   "audio_s": 6.92,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d01",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.483,
+   "audio_s": 6.9,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d01",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.617,
+   "audio_s": 7.25,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d02",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.388,
+   "audio_s": 5.35,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d02",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.391,
+   "audio_s": 6.6,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d02",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.73,
+   "audio_s": 5.666,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d03",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.824,
+   "audio_s": 6.409,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d03",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.546,
+   "audio_s": 7.6,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d03",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.637,
+   "audio_s": 7.25,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d04",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.766,
+   "audio_s": 9.65,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d04",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.099,
+   "audio_s": 9.35,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d04",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.205,
+   "audio_s": 9.056,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d05",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.665,
+   "audio_s": 5.155,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d05",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.694,
+   "audio_s": 6.25,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d05",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.227,
+   "audio_s": 6.1,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d06",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.308,
+   "audio_s": 6.45,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d06",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.275,
+   "audio_s": 6.4,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d06",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.863,
+   "audio_s": 6.548,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d07",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.382,
+   "audio_s": 2.833,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d07",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.632,
+   "audio_s": 3.95,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d07",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.556,
+   "audio_s": 4.55,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d08",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.677,
+   "audio_s": 8.25,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d08",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.684,
+   "audio_s": 8.85,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d08",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.974,
+   "audio_s": 7.477,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d09",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.78,
+   "audio_s": 6.13,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d09",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.6,
+   "audio_s": 5.65,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d09",
+   "rep": 0,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.273,
+   "audio_s": 4.5,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p01",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.771,
+   "audio_s": 6.1,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p01",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.597,
+   "audio_s": 5.95,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p01",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.787,
+   "audio_s": 6.037,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p02",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.839,
+   "audio_s": 6.316,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p02",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.554,
+   "audio_s": 7.0,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p02",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.629,
+   "audio_s": 6.85,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p03",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.453,
+   "audio_s": 6.15,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p03",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.371,
+   "audio_s": 6.8,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p03",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.866,
+   "audio_s": 6.687,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p04",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.871,
+   "audio_s": 6.641,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p04",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.765,
+   "audio_s": 7.45,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p04",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.498,
+   "audio_s": 6.6,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p05",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 3.385,
+   "audio_s": 7.3,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p05",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.63,
+   "audio_s": 6.2,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p05",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.885,
+   "audio_s": 6.827,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p06",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.888,
+   "audio_s": 6.78,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p06",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 5.062,
+   "audio_s": 7.25,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p06",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.535,
+   "audio_s": 6.8,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p07",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 4.242,
+   "audio_s": 6.4,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p07",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.386,
+   "audio_s": 6.9,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p07",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.818,
+   "audio_s": 6.269,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p08",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.846,
+   "audio_s": 6.594,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p08",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.704,
+   "audio_s": 7.55,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p08",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.71,
+   "audio_s": 6.4,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n01",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.562,
+   "audio_s": 7.85,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n01",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.779,
+   "audio_s": 8.45,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n01",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.146,
+   "audio_s": 8.266,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n02",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.696,
+   "audio_s": 5.341,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n02",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.294,
+   "audio_s": 5.55,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n02",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.472,
+   "audio_s": 6.15,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n03",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.877,
+   "audio_s": 7.65,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n03",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.111,
+   "audio_s": 9.0,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n03",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.006,
+   "audio_s": 7.755,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n04",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.806,
+   "audio_s": 6.084,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n04",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.352,
+   "audio_s": 6.55,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n04",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.469,
+   "audio_s": 7.2,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n05",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.132,
+   "audio_s": 7.1,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n05",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.369,
+   "audio_s": 6.45,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n05",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.875,
+   "audio_s": 6.734,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n06",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.836,
+   "audio_s": 6.316,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n06",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.402,
+   "audio_s": 6.25,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n06",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.53,
+   "audio_s": 6.35,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n07",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.151,
+   "audio_s": 7.25,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n07",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.715,
+   "audio_s": 9.3,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n07",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.135,
+   "audio_s": 8.638,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n08",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.751,
+   "audio_s": 5.666,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n08",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.316,
+   "audio_s": 6.2,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n08",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 3.652,
+   "audio_s": 5.75,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s01",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.616,
+   "audio_s": 5.3,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s01",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.266,
+   "audio_s": 6.05,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s01",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.501,
+   "audio_s": 3.855,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s02",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.519,
+   "audio_s": 4.087,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s02",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 6.605,
+   "audio_s": 6.0,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s02",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 3.558,
+   "audio_s": 5.95,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s03",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.602,
+   "audio_s": 7.6,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s03",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.495,
+   "audio_s": 8.4,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s03",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.815,
+   "audio_s": 6.362,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s04",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.867,
+   "audio_s": 6.734,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s04",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.424,
+   "audio_s": 7.1,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s04",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.72,
+   "audio_s": 7.15,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s05",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.418,
+   "audio_s": 5.85,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s05",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.412,
+   "audio_s": 6.05,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s05",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.548,
+   "audio_s": 4.18,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s06",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.637,
+   "audio_s": 5.016,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s06",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.406,
+   "audio_s": 5.8,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s06",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.55,
+   "audio_s": 4.75,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s07",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.322,
+   "audio_s": 5.05,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s07",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.962,
+   "audio_s": 4.8,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s07",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.423,
+   "audio_s": 3.158,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s08",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.683,
+   "audio_s": 5.387,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s08",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 4.656,
+   "audio_s": 6.2,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s08",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.191,
+   "audio_s": 7.85,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e01",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.464,
+   "audio_s": 5.1,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e01",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.321,
+   "audio_s": 7.0,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e01",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.872,
+   "audio_s": 6.734,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e02",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.998,
+   "audio_s": 7.616,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e02",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 3.895,
+   "audio_s": 8.75,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e02",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.619,
+   "audio_s": 7.15,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e03",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 4.106,
+   "audio_s": 5.9,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e03",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.523,
+   "audio_s": 6.8,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e03",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.683,
+   "audio_s": 5.341,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e04",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.816,
+   "audio_s": 6.223,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e04",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.478,
+   "audio_s": 7.65,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e04",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 3.196,
+   "audio_s": 6.4,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e05",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 3.075,
+   "audio_s": 7.65,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e05",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.592,
+   "audio_s": 7.4,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e05",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.976,
+   "audio_s": 7.477,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e06",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.18,
+   "audio_s": 9.056,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e06",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.389,
+   "audio_s": 7.3,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e06",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.587,
+   "audio_s": 6.9,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e07",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.647,
+   "audio_s": 7.25,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e07",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 3.546,
+   "audio_s": 8.4,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e07",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.759,
+   "audio_s": 5.944,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e08",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.125,
+   "audio_s": 8.591,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e08",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.955,
+   "audio_s": 8.25,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e08",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 4.775,
+   "audio_s": 7.4,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d01",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.7,
+   "audio_s": 7.5,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d01",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.442,
+   "audio_s": 8.05,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d01",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.884,
+   "audio_s": 6.734,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d02",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.692,
+   "audio_s": 5.433,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d02",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.212,
+   "audio_s": 5.7,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d02",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.204,
+   "audio_s": 5.8,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d03",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.305,
+   "audio_s": 7.25,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d03",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.458,
+   "audio_s": 7.7,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d03",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.8,
+   "audio_s": 6.084,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d04",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.251,
+   "audio_s": 9.427,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d04",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.679,
+   "audio_s": 10.0,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d04",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.631,
+   "audio_s": 7.7,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d05",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.612,
+   "audio_s": 6.8,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d05",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.949,
+   "audio_s": 6.05,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d05",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.782,
+   "audio_s": 6.084,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d06",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.894,
+   "audio_s": 6.734,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d06",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.548,
+   "audio_s": 6.85,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d06",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.427,
+   "audio_s": 6.05,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d07",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.381,
+   "audio_s": 3.3,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d07",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.527,
+   "audio_s": 4.25,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d07",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.424,
+   "audio_s": 3.204,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d08",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.062,
+   "audio_s": 8.173,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d08",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.351,
+   "audio_s": 7.9,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d08",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.834,
+   "audio_s": 8.25,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d09",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 2.356,
+   "audio_s": 5.5,
+   "error": null
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d09",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 1.765,
+   "audio_s": 6.1,
+   "error": null
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d09",
+   "rep": 1,
+   "ok": true,
+   "attempts": 1,
+   "total_s": 0.83,
+   "audio_s": 6.455,
+   "error": null
+  }
+ ]
+}

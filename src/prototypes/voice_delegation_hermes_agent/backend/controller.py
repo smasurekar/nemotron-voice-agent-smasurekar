@@ -28,7 +28,7 @@ from typing import Any, Protocol
 
 from prototypes.voice_delegation_hermes_agent.backend import protocol as proto
 from prototypes.voice_delegation_hermes_agent.backend.context_queue import ContextEntry, ContextQueue
-from prototypes.voice_delegation_hermes_agent.prompt_features import sha256_text
+from prototypes.voice_delegation_hermes_agent.prompt_features import render_backend_system, sha256_text
 
 logger = logging.getLogger(__name__)
 
@@ -264,9 +264,7 @@ class BackendController:
         """The rendered ``backend_system``: the one render input of both the worker and the fingerprint."""
         note_of = getattr(self._templates, "domain_note", None)
         note = note_of(self._domain()) if callable(note_of) else ""
-        if not note:
-            return self._templates.render("backend_system", instructions=self._instructions)
-        return self._templates.render("backend_system", instructions=self._instructions, domain_note=note)
+        return render_backend_system(self._templates, self._instructions, note)
 
     def append(self, entries: list[dict[str, Any]]) -> None:
         """``history.append``: context entries (deduplicated by ``seq``)."""

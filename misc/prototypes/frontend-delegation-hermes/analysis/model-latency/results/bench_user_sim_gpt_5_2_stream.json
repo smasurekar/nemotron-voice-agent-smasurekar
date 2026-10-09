@@ -1,0 +1,128 @@
+{
+  "benchmark": "user_sim_gpt_5_2_stream",
+  "model": "azure/openai/gpt-5.2",
+  "call_name": "user_streaming_response",
+  "started_utc": "2026-10-08T09:36:36Z",
+  "ended_utc": "2026-10-08T09:36:53Z",
+  "concurrency": 1,
+  "streaming": true,
+  "summary": {
+    "n": 4,
+    "n_ok": 4,
+    "ttft_s": {
+      "p50": 1.95,
+      "p90": 4.343,
+      "mean": 2.736,
+      "min": 1.745,
+      "max": 5.297
+    },
+    "total_s": {
+      "p50": 3.647,
+      "p90": 5.049,
+      "mean": 3.738,
+      "min": 2.359,
+      "max": 5.299
+    },
+    "prompt_tokens": {
+      "p50": 3329.0,
+      "p90": 3944.2,
+      "mean": 3196.5,
+      "min": 1921,
+      "max": 4207
+    },
+    "completion_tokens": {
+      "p50": 44.5,
+      "p90": 73.5,
+      "mean": 46.25,
+      "min": 12,
+      "max": 84
+    },
+    "reasoning_tokens": {
+      "p50": 0.0,
+      "p90": 0.0,
+      "mean": 0.0,
+      "min": 0,
+      "max": 0
+    },
+    "decode_tok_s": {
+      "p50": 57.4,
+      "p90": 3927.61,
+      "mean": 1432.9,
+      "min": 35.8,
+      "max": 5581.0
+    },
+    "e2e_tok_s": {
+      "p50": 17.15,
+      "p90": 18.35,
+      "mean": 13.85,
+      "min": 2.3,
+      "max": 18.8
+    }
+  },
+  "rows": [
+    {
+      "ok": true,
+      "ttft_s": 2.116,
+      "ttft_visible_s": 2.116,
+      "total_s": 4.465,
+      "prompt_tokens": 4207,
+      "completion_tokens": 84,
+      "reasoning_tokens": 0,
+      "decode_tok_s": 35.8,
+      "e2e_tok_s": 18.8,
+      "finish_reason": "stop",
+      "stream_chunks": 54,
+      "i": 0,
+      "source": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_retail_regular_rerun43/tau2/fdh_voice_geval_retail_regular_rerun43/artifacts/task_100/sim_e407d341-df3c-4878-9a4a-02809cbc2c45/llm_debug/20261008_064457_887_user_streaming_response_91afbe43.json",
+      "recorded_generation_time_s": 2.8398017827421427
+    },
+    {
+      "ok": true,
+      "ttft_s": 5.297,
+      "ttft_visible_s": 5.297,
+      "total_s": 5.299,
+      "prompt_tokens": 3327,
+      "completion_tokens": 12,
+      "reasoning_tokens": 0,
+      "decode_tok_s": 5581.0,
+      "e2e_tok_s": 2.3,
+      "finish_reason": "stop",
+      "stream_chunks": 8,
+      "i": 1,
+      "source": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_retail_regular_rerun43/tau2/fdh_voice_geval_retail_regular_rerun43/artifacts/task_81/sim_d61b3233-2763-4a9c-8d69-067e8f87c04f/llm_debug/20261008_044910_116_user_streaming_response_476cc954.json",
+      "recorded_generation_time_s": 2.730162128806114
+    },
+    {
+      "ok": true,
+      "ttft_s": 1.745,
+      "ttft_visible_s": 1.745,
+      "total_s": 2.83,
+      "prompt_tokens": 1921,
+      "completion_tokens": 49,
+      "reasoning_tokens": 0,
+      "decode_tok_s": 45.1,
+      "e2e_tok_s": 17.3,
+      "finish_reason": "stop",
+      "stream_chunks": 39,
+      "i": 2,
+      "source": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_airline_regular/tau2/fdh_voice_geval_airline_regular/artifacts/task_17/sim_29f4b9be-de93-4307-ae9e-348173f1e806/llm_debug/20261007_111945_489_user_streaming_response_62f5fa39.json",
+      "recorded_generation_time_s": 4.646165642887354
+    },
+    {
+      "ok": true,
+      "ttft_s": 1.785,
+      "ttft_visible_s": 1.785,
+      "total_s": 2.359,
+      "prompt_tokens": 3331,
+      "completion_tokens": 40,
+      "reasoning_tokens": 0,
+      "decode_tok_s": 69.7,
+      "e2e_tok_s": 17.0,
+      "finish_reason": "stop",
+      "stream_chunks": 34,
+      "i": 3,
+      "source": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_airline_regular/tau2/fdh_voice_geval_airline_regular/artifacts/task_31/sim_ee94992c-e8da-414c-8824-5f9096304282/llm_debug/20261007_131759_937_user_streaming_response_de784232.json",
+      "recorded_generation_time_s": 3.8273844607174397
+    }
+  ]
+}

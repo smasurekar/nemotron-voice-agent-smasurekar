@@ -190,6 +190,12 @@ DEFAULTS: dict[str, Any] = {
                 "message_key": "lookup_not_found_hint",
                 "escalate_message_key": "",
                 "field_provenance": False,
+                # F8 (fix-plan-f1-f2-f4-f8.md section 4), off by default.
+                "ledger": False,
+                "ledger_message_key": "lookup_ledger",
+                "identification_tools": "auto",
+                "ledger_max_age_turns": 8,
+                "ledger_correction_cues": ["not", "no,", "it's", "with two", "double", "instead", "wrong"],
             },
             "format_retry": {
                 "enabled": False,
@@ -760,6 +766,10 @@ def _normalization(reader: _Reader, tools: ToolsConfig, warnings: list[str]) -> 
         raise VoiceConfigError(f"{prefix}.rules must be a list or 'auto'")
     raw_hint_tools = reader.raw(f"{prefix}.result_hints.tools")
     auto_hint_tools = raw_hint_tools == "auto"  # every read tool of the session
+    raw_identification = reader.raw(f"{prefix}.result_hints.identification_tools")
+    auto_identification = raw_identification == "auto"  # F8: derived from the tool schemas
+    if not auto_identification and not isinstance(raw_identification, list):
+        raise VoiceConfigError(f"{prefix}.result_hints.identification_tools must be a list or 'auto'")
     guard = RetryGuardSettings(
         enabled=reader.bool(f"{prefix}.retry_guard.enabled"),
         scope=reader.enum(f"{prefix}.retry_guard.scope"),
@@ -783,6 +793,16 @@ def _normalization(reader: _Reader, tools: ToolsConfig, warnings: list[str]) -> 
         message_key=reader.str(f"{prefix}.result_hints.message_key").strip(),
         escalate_message_key=reader.str(f"{prefix}.result_hints.escalate_message_key").strip(),
         field_provenance=reader.bool(f"{prefix}.result_hints.field_provenance"),
+        ledger=reader.bool(f"{prefix}.result_hints.ledger"),
+        ledger_message_key=reader.str(f"{prefix}.result_hints.ledger_message_key").strip(),
+        identification_tools=()
+        if auto_identification
+        else tuple(str(t).strip() for t in raw_identification if str(t).strip()),
+        auto_identification_tools=auto_identification,
+        ledger_max_age_turns=reader.int(f"{prefix}.result_hints.ledger_max_age_turns", minimum=1),
+        ledger_correction_cues=tuple(
+            c.strip().lower() for c in reader.str_list(f"{prefix}.result_hints.ledger_correction_cues") if c.strip()
+        ),
     )
     format_retry = FormatRetrySettings(
         enabled=reader.bool(f"{prefix}.format_retry.enabled"),
@@ -820,6 +840,8 @@ def _normalization(reader: _Reader, tools: ToolsConfig, warnings: list[str]) -> 
             raise VoiceConfigError(f"{prefix}.result_hints.failure_pattern is required when result hints are enabled")
         if not hints.message_key:
             raise VoiceConfigError(f"{prefix}.result_hints.message_key is required when result hints are enabled")
+    if hints.ledger and not hints.enabled:
+        raise VoiceConfigError(f"{prefix}.result_hints.ledger requires {prefix}.result_hints.enabled")
     if arguments.enabled:
         if tools.source != "client":
             raise VoiceConfigError(
@@ -872,6 +894,8 @@ def _check_normalization_prompts(config: VoiceConfig) -> None:
                 keys.append(
                     ("normalization.tool_arguments.result_hints.escalate_message_key", hints.escalate_message_key)
                 )
+            if hints.ledger:
+                keys.append(("normalization.tool_arguments.result_hints.ledger_message_key", hints.ledger_message_key))
     if not keys:
         return
     catalog = load_catalog(config.agent.prompts_path, config.agent.prompts.inline)

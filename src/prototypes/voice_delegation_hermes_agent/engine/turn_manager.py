@@ -19,6 +19,10 @@ M1 one proactive status line per run while the backend works in silence
 mid-spelling (``delegation.spelling_hold``); M2 replaying an unheard answer on an
 explicit "status" request in IDLE (``delegation.replay_unheard_answer``, RC2); G1 filler
 de-duplication (``delegation.filler_dedupe``); G2 answer cleanup (``output.clean_answers``).
+
+fix-plan-f1-f2-f4-f8.md adds, also off by default: F2 rules R1-R3 that never leave a liveness ping or a
+question silent (``delegation.guards``), and F1 replay triggers that speak an unheard answer again when the
+user only backchannelled, pinged or asked to repeat (``delegation.replay_unheard_answer.triggers``).
 """
 
 from __future__ import annotations
@@ -60,11 +64,25 @@ from prototypes.voice_delegation_hermes_agent.engine.transcript import (
     Entry,
     SharedTranscript,
 )
-from prototypes.voice_delegation_hermes_agent.frontend.decider import Decider, DecisionContext, apply_guards
+from prototypes.voice_delegation_hermes_agent.frontend.decider import (
+    LIVENESS_REPLY,
+    PING_AS_STATUS,
+    QUESTION_NEVER_SILENT,
+    Decider,
+    DecisionContext,
+    apply_guards,
+)
 from prototypes.voice_delegation_hermes_agent.frontend.delegate_tool import Decision
 from prototypes.voice_delegation_hermes_agent.frontend.prompts import PromptCatalog
 from prototypes.voice_delegation_hermes_agent.frontend.status_verbalizer import StatusVerbalizer
-from prototypes.voice_delegation_hermes_agent.prompt_features import sha256_text
+from prototypes.voice_delegation_hermes_agent.frontend.turn_class import (
+    BACKCHANNEL,
+    LIVENESS,
+    TurnClass,
+    classify_turn,
+    lexicon_for,
+)
+from prototypes.voice_delegation_hermes_agent.prompt_features import sha256_text, tools_canonical_sha256
 from prototypes.voice_delegation_hermes_agent.tools.field_provenance import FieldProvenance, SpelledSpan
 from prototypes.voice_delegation_hermes_agent.tools.format_retry import FormatRetry
 from prototypes.voice_delegation_hermes_agent.tools.relay import FormatRetryMessages, ToolRelay
@@ -202,6 +220,7 @@ class DelegationTurnManager:
         self._configured_with: tuple[list[dict[str, Any]], str] | None = None
         self._tools_sha256 = ""  # the tools the backend runs with (session_tools_sha256)
         self._pending_tools_sha256 = ""  # the tools of the session.configure in flight
+        self._pending_tools_canonical = ""  # the same tools' tools_canonical_sha256 (joins the backend trace)
         self._turns: dict[int, _Turn] = {}
         self._turn_counter = 0
         self._awaiting = 0  # utterances started (speech_started) whose transcript has not arrived
@@ -229,6 +248,15 @@ class DelegationTurnManager:
         # G1: the session's recent delegated fillers (normalized).
         self._recent_fillers: deque[str] = deque(maxlen=max(1, config.delegation.filler_dedupe.recent))
         self._filler_alternatives = parts.prompts.lines("filler_alternatives")
+        # F1/F2 (fix-plan-f1-f2-f4-f8.md section 2): the session's phrase lists, chosen by the ASR language.
+        language = self._voice.asr.endpoint.language_code
+        self._lexicon_name, self._lexicon = lexicon_for(language, config.delegation.liveness.lexicons)
+        self._lexicon_missing_logged = False
+        self._liveness_lines = (
+            parts.prompts.lines("liveness_lines") if config.delegation.liveness.liveness_reply else []
+        )
+        self._liveness_next = 0
+        self._alternative_used: dict[str, int] = {}  # filler alternative -> the turn that last spoke it
 
     # -- TurnManagerLike: lifecycle ------------------------------------------------------------
 
@@ -337,6 +365,7 @@ class DelegationTurnManager:
             # Only a real change reaches the gateway: a browser re-sending the same (or ignored) tools
             # must not trip session.update_after_start.
             self._pending_tools_sha256 = tools_sha256(tools)
+            self._pending_tools_canonical = tools_canonical_sha256(tools)
             configured = await self._configure(tools, policy)
             self._configured_with = sent
             if configured.get("applied", True):
@@ -360,11 +389,13 @@ class DelegationTurnManager:
         self._parts.spelling_hold = rules.spelling_hold
         self._parts.format_retry = rules.format_retry
         self._relay.reconfigure(rules.argument_normalizer, rules.result_hints, rules.format_retry)
+        ledger = rules.result_hints.ledger if rules.result_hints is not None else None
         self._log(
             "session_rules",
             session_tools_sha256=self._tools_sha256,
             schema_auto=self._config.schema_auto,
             **(rules.schema.snapshot() if rules.schema is not None else {}),
+            **({"identification_tools": list(ledger.identification)} if ledger is not None else {}),
         )
 
     async def _configure(self, tools: list[dict[str, Any]], instructions: str) -> dict[str, Any]:
@@ -607,17 +638,58 @@ class DelegationTurnManager:
         # Everything below is synchronous: a barge-in can no longer undo this decision.
         if self._provenance is not None:
             self._provenance.add_turn(turn.text, spelled, question)
+        hints = self._parts.result_hints
+        if hints is not None and hints.ledger is not None:
+            hints.ledger.add_turn(turn.turn_id, turn.text, [span.written for span in spelled], question)
+        turn_class = self._classify(text)
+        liveness = self._config.delegation.liveness
         guarded = apply_guards(
             decision,
             context,
             backend_question_needs_delegate=self._config.delegation.backend_question_needs_delegate,
             backchannel_words=self._config.delegation.backchannel_words,
+            turn_class=turn_class,
+            liveness_reply=liveness.liveness_reply,
+            question_never_silent=liveness.question_never_silent,
+            ping_as_status=liveness.ping_as_status,
         )
         if guarded is not decision:
-            self._log("delegation_guard", turn_id=turn.turn_id, guard="backend_question_needs_delegate")
-        if self._replay(turn, text, guarded, context):
+            details: dict[str, Any] = {}
+            if turn_class is not None:
+                details = {"turn_class": turn_class.kind, "backend_state": context.state}
+            self._log("delegation_guard", turn_id=turn.turn_id, guard=guarded.repair, **details)
+        trigger = self._replay_trigger(guarded, context, turn_class)
+        if trigger and self._replay(turn, text, guarded, context, trigger=trigger):
             return
         self._apply(turn, text, guarded, context)
+
+    def _classify(self, text: str) -> TurnClass | None:
+        """The F1/F2 class of a turn, or None when no rule needs it (today's path)."""
+        if not self._config.delegation.classifies_turns:
+            return None
+        if self._lexicon is None and not self._lexicon_missing_logged:
+            self._lexicon_missing_logged = True
+            self._log("lexicon_missing", language=self._voice.asr.endpoint.language_code)
+        return classify_turn(text, self._lexicon)
+
+    def _replay_trigger(self, decision: Decision, context: DecisionContext, turn_class: TurnClass | None) -> str:
+        """The F1 trigger this decision matches ("" for none); see fix-plan-f1-f2-f4-f8.md section 2.4."""
+        replay = self._config.delegation.replay
+        if not replay.enabled:
+            return ""
+        triggers = replay.triggers
+        if "status_intent" in triggers and decision.delegate and decision.request == REQUEST_STATUS:
+            return "status_intent"  # M2: _replay checks the state
+        if turn_class is None or context.state == WORKING:
+            return ""
+        silent = not decision.delegate and not decision.filler_text
+        if turn_class.kind == BACKCHANNEL and silent and "backchannel" in triggers:
+            return "backchannel"
+        if turn_class.kind == LIVENESS and (silent or decision.repair == LIVENESS_REPLY):
+            name = "repeat" if turn_class.repeat else "ping"
+            if name in triggers:
+                return name
+        return ""
 
     async def _spelling_hold(self, turn: _Turn) -> None:
         """M3.2: wait ``hold_ms`` before deciding a turn that ends mid-spelling (speech merges it)."""
@@ -646,7 +718,7 @@ class DelegationTurnManager:
             return text, ()
         normalized = normalizer.normalize(text)
         if normalized.changed:
-            spans = [{"spoken": span.spoken, "written": span.written} for span in normalized.spans]
+            spans = [{"spoken": span.spoken, "written": span.written, "kind": span.kind} for span in normalized.spans]
             self._log("transcript_normalized", raw=text, text=normalized.text, spans=spans)
         spelled = tuple(
             SpelledSpan(written=span.written, start=span.start, end=span.end)
@@ -664,16 +736,20 @@ class DelegationTurnManager:
         entry = self.transcript.last_backend_answer()
         return entry is not None and entry.outcome in (NOT_HEARD, PARTIAL) and not entry.replayed
 
-    def _replay(self, turn: _Turn, text: str, decision: Decision, context: DecisionContext) -> bool:
-        """Speak the unheard answer again instead of delegating, when every guard passes."""
+    def _replay(
+        self, turn: _Turn, text: str, decision: Decision, context: DecisionContext, *, trigger: str = "status_intent"
+    ) -> bool:
+        """Speak the unheard answer again instead of the decision, when every guard passes."""
         if not self._config.delegation.replay.enabled:
             return False
-        if not decision.delegate or decision.request != REQUEST_STATUS or context.state == WORKING:
+        if trigger == "status_intent" and (
+            not decision.delegate or decision.request != REQUEST_STATUS or context.state == WORKING
+        ):
             return False  # no explicit intent in IDLE: today's path (RC1)
         entry = self.transcript.last_backend_answer()
         reason, replay_text = self._replay_check(entry)
         if reason or entry is None:
-            self._log("answer_replay_skipped", turn_id=turn.turn_id, reason=reason or "no_answer")
+            self._log("answer_replay_skipped", turn_id=turn.turn_id, reason=reason or "no_answer", trigger=trigger)
             return False
         turn.decided = Stamp.now(self._ctx.clock, self._ctx.audio_now())
         self.transcript.add_user(text, turn_id=turn.turn_id, delegated=False)
@@ -704,6 +780,7 @@ class DelegationTurnManager:
             outcome_before=entry.outcome,
             age_s=round(self._ctx.clock.monotonic() - entry.released_mono, 2),
             chars=len(replay_text),
+            trigger=trigger,
         )
         spoken = self.transcript.add_spoken("frontend_speech", "frontend", replay_text, turn_id=turn.turn_id)
         self._push(
@@ -741,6 +818,9 @@ class DelegationTurnManager:
         if entry.replayed:
             return "already_replayed", ""
         text = entry.text if entry.outcome == NOT_HEARD else _unheard_part(entry.text, entry.heard_text)
+        whole_below = self._config.delegation.replay.whole_if_heard_below
+        if text and whole_below > 0 and len(entry.heard_text) < whole_below * len(entry.text):
+            text = entry.text  # F1: almost nothing was heard, so the whole answer is repeated
         if not text:
             return "question_heard", ""
         return "", text
@@ -766,7 +846,7 @@ class DelegationTurnManager:
         )
         # Earlier context (acks, heard fillers, delivery notes) must reach the gateway before the delegation.
         self._flush_context()
-        filler = decision.filler_text
+        filler = self._guard_filler(turn, decision)
         if decision.delegate:
             if self._backend.unavailable or not self._link_open:
                 self._speak_local_apology(turn, reason="backend_unavailable")
@@ -781,8 +861,9 @@ class DelegationTurnManager:
                 request=decision.request,
                 run_input=[{"seq": user_entry.seq, "text": text}],
             )
-            if filler and self._config.delegation.filler_dedupe.enabled:
-                filler = self._dedupe_filler(turn, filler, backend_state=context.state)
+            if filler and self._config.delegation.filler_dedupe.enabled and decision.repair != LIVENESS_REPLY:
+                never_empty = decision.repair in (QUESTION_NEVER_SILENT, PING_AS_STATUS)
+                filler = self._dedupe_filler(turn, filler, backend_state=context.state, never_empty=never_empty)
             if filler and self._config.delegation.speak_when_delegating:
                 self._queue_frontend(turn, decision, filler, kind="filler")
             elif filler:
@@ -795,18 +876,50 @@ class DelegationTurnManager:
             self._push(CallsItem(batch_id=f"empty_response_{turn.turn_id}", calls=[]))
         self._wake.set()
 
-    def _dedupe_filler(self, turn: _Turn, filler: str, *, backend_state: str) -> str:
-        """G1: a delegated filler that repeats a recent one is dropped (WORKING) or replaced."""
+    def _guard_filler(self, turn: _Turn, decision: Decision) -> str:
+        """The filler of an F2 decision (R1: a liveness line, R2: an alternative); else the model's."""
+        if decision.repair == LIVENESS_REPLY and self._liveness_lines:
+            line = self._liveness_lines[self._liveness_next % len(self._liveness_lines)]
+            self._liveness_next += 1
+            return line  # rotated, never de-duplicated (section 2.3)
+        if decision.repair == QUESTION_NEVER_SILENT and self._filler_alternatives:
+            for alternative in self._filler_alternatives:
+                if _filler_key(alternative) not in self._recent_fillers:
+                    self._alternative_used[alternative] = turn.turn_id
+                    return alternative
+            return self._least_recent_alternative(turn)
+        return decision.filler_text
+
+    def _least_recent_alternative(self, turn: _Turn) -> str:
+        alternative = min(self._filler_alternatives, key=lambda line: self._alternative_used.get(line, -1))
+        self._alternative_used[alternative] = turn.turn_id
+        return alternative
+
+    def _dedupe_filler(self, turn: _Turn, filler: str, *, backend_state: str, never_empty: bool = False) -> str:
+        """G1: a delegated filler that repeats a recent one is dropped (WORKING) or replaced.
+
+        ``never_empty`` (F2 R2/R3 decisions): replaced in every state, and with every alternative recent the
+        least recently used one is spoken instead of nothing.
+        """
         key = _filler_key(filler)
         if key not in self._recent_fillers:
             self._recent_fillers.append(key)
             return filler
-        if backend_state != WORKING:
+        if backend_state != WORKING or never_empty:
             for alternative in self._filler_alternatives:
                 if _filler_key(alternative) not in self._recent_fillers:
                     self._recent_fillers.append(_filler_key(alternative))
+                    self._alternative_used[alternative] = turn.turn_id
                     self._log("filler_deduped", turn_id=turn.turn_id, text=filler, action="replaced", new=alternative)
                     return alternative
+            if never_empty and self._filler_alternatives:
+                alternative = self._least_recent_alternative(turn)
+                self._recent_fillers.append(_filler_key(alternative))
+                self._log(
+                    "filler_deduped", turn_id=turn.turn_id, text=filler, action="replaced", new=alternative,
+                    reason="least_recent",
+                )  # fmt: skip
+                return alternative
         reason = "working" if backend_state == WORKING else "all_recent"
         self._log("filler_deduped", turn_id=turn.turn_id, text=filler, action="dropped", reason=reason)
         return ""
@@ -865,6 +978,7 @@ class DelegationTurnManager:
         self._log(
             "backend_configured",
             session_tools_sha256=self._tools_sha256,
+            tools_canonical_sha256=self._pending_tools_canonical,
             **_pick(
                 data,
                 "applied",
@@ -934,6 +1048,7 @@ class DelegationTurnManager:
             turn_ids=turn_ids,
             chars=len(text),
             reason=data.get("reason"),
+            text=text,
         )
         if not text:
             return
@@ -1228,6 +1343,8 @@ class DelegationTurnManager:
             if entry.outcome == PARTIAL
             else (len(entry.text) if entry.outcome == HEARD else 0),
             reason=reason,
+            answer_id=entry.answer_id,
+            heard_text=entry.heard_text[:300] if entry.outcome == PARTIAL else "",
         )
         if note is not None:
             self._log("delivery_note", seq=note.seq, answer_id=note.answer_id, outcome=note.outcome)

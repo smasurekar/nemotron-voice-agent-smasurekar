@@ -181,6 +181,7 @@ class VoiceCatalogTests(unittest.TestCase):
             "lookup_not_found_hint",
             "lookup_not_found_hint_format",
             "lookup_not_found_hint_words",
+            "lookup_ledger",
             "format_retry_hint",
             "format_retry_found",
             "format_retry_not_found",

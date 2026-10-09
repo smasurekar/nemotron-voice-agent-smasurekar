@@ -37,6 +37,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from prototypes.voice_delegation_hermes_agent.prompt_features import tools_canonical_sha256
 from prototypes.voice_delegation_hermes_agent.worker.tool_futures import ToolFutures
 from prototypes.voice_delegation_hermes_agent.worker.worker_core import ActivityEmit
 
@@ -89,6 +90,7 @@ class BackendTrace:
             model=model,
             tools=tools,
             tools_sha256=_sha256_json(tools),
+            tools_canonical_sha256=tools_canonical_sha256(tools),
             ephemeral_system_prompt=instructions,
             request_overrides=request_overrides,
         )

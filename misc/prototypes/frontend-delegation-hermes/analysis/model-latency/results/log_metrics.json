@@ -1,0 +1,1685 @@
+{
+  "old_airline": {
+    "arm": "control",
+    "path": "2026-10-05_05-33-27Z_fdh-voice-geval/fdh_voice_geval_airline_regular",
+    "machine": "other(/home, IST)",
+    "hermes_commit": "af26acab73",
+    "max_concurrency": [
+      4
+    ],
+    "frontend_decision_ms": {
+      "n": 1075,
+      "p50": 1495.0,
+      "p90": 3239.0,
+      "p99": 4001.0,
+      "mean": 1907.715,
+      "max": 4002
+    },
+    "frontend_tokens": {
+      "in_p50": 2340.0,
+      "out_p50": 52.0
+    },
+    "frontend_repairs": {
+      "clean": 974,
+      "timeout": 62,
+      "guard_backchannel": 39
+    },
+    "frontend_timeouts": 62,
+    "asr_user_stop_to_final_ms": {
+      "n": 875,
+      "p50": 25.0,
+      "p90": 35.0,
+      "p99": 50.0,
+      "mean": 26.33,
+      "max": 65
+    },
+    "asr_final_latency_ms": {
+      "n": 2242,
+      "p50": 25.0,
+      "p90": 35.0,
+      "p99": 49.0,
+      "mean": 26.38,
+      "max": 65
+    },
+    "tts_decision_to_first_audio_ms": {
+      "n": 904,
+      "p50": 58.0,
+      "p90": 439.2,
+      "p99": 1534.37,
+      "mean": 158.132,
+      "max": 2252
+    },
+    "filler_user_stop_to_first_audio_ms": {
+      "n": 904,
+      "p50": 1731.5,
+      "p90": 3259.7,
+      "p99": 4538.38,
+      "mean": 2052.594,
+      "max": 5747
+    },
+    "nemo_speech_log_errors": {
+      "tts_pcm_callback_failed": 131,
+      "tts_codec_worker_failed": 131,
+      "protobuf_invalid_utf8": 144
+    },
+    "backend_run_ms": {
+      "n": 911,
+      "p50": 3641.0,
+      "p90": 13031.0,
+      "p99": 45565.9,
+      "mean": 6516.682,
+      "max": 56734.0
+    },
+    "backend_run_status": {
+      "ok": 880,
+      "closed": 31
+    },
+    "backend_llm_call_s": {
+      "n": 1423,
+      "p50": 2.6,
+      "p90": 5.3,
+      "p99": 9.256,
+      "mean": 3.16,
+      "max": 18.2
+    },
+    "backend_llm_call_out_tok_per_s": {
+      "n": 1423,
+      "p50": 68.421,
+      "p90": 155.871,
+      "p99": 217.788,
+      "mean": 81.66,
+      "max": 266.703
+    },
+    "backend_tokens": {
+      "in_p50": 9569.0,
+      "out_p50": 180.0
+    },
+    "backend_turn_ms": {
+      "n": 911,
+      "p50": 3613.0,
+      "p90": 13022.0,
+      "p99": 45559.2,
+      "mean": 6506.474,
+      "max": 56730.0
+    },
+    "backend_api_calls_per_turn": {
+      "n": 911,
+      "p50": 1.0,
+      "p90": 2.0,
+      "p99": 9.0,
+      "mean": 1.568,
+      "max": 12
+    },
+    "backend_429_retries": 0,
+    "backend_429_sessions": 0,
+    "backend_429_window_utc": null,
+    "backend_other_retries": {},
+    "user_sim_gpt52_s": {
+      "n": 1049,
+      "p50": 2.973,
+      "p90": 6.054,
+      "p99": 9.54,
+      "mean": 3.492,
+      "max": 12.908
+    },
+    "user_sim_gpt52_llm_debug_s": {
+      "n": 60,
+      "p50": 3.085,
+      "p90": 5.353,
+      "p99": 7.955,
+      "mean": 3.52,
+      "max": 9.305
+    },
+    "user_tts_s": {
+      "n": 1013,
+      "p50": 4.64,
+      "p90": 7.698,
+      "p99": 12.323,
+      "mean": 5.087,
+      "max": 37.993
+    },
+    "user_tts_rtf": {
+      "n": 1013,
+      "p50": 0.423,
+      "p90": 1.076,
+      "p99": 3.289,
+      "mean": 0.638,
+      "max": 21.443
+    },
+    "decision_gpt41_interrupt_s": {
+      "n": 4094,
+      "p50": 1.338,
+      "p90": 2.947,
+      "p99": 6.632,
+      "mean": 1.694,
+      "max": 13.818
+    },
+    "decision_gpt41_backchannel_s": {
+      "n": 4094,
+      "p50": 1.439,
+      "p90": 3.121,
+      "p99": 6.918,
+      "mean": 1.814,
+      "max": 13.663
+    },
+    "decision_gpt41_llm_debug_s": {
+      "n": 120,
+      "p50": 1.515,
+      "p90": 3.301,
+      "p99": 5.215,
+      "mean": 1.84,
+      "max": 6.653
+    },
+    "tau2_retries": {
+      "synthesize_voice:APITimeoutError": 6
+    },
+    "judge_gpt52_calls_outside_sims": 60,
+    "tau2_main_log_error_lines": {},
+    "sim_duration_s": {
+      "n": 50,
+      "p50": 697.554,
+      "p90": 1250.118,
+      "p99": 1735.319,
+      "mean": 719.298,
+      "max": 1849.503
+    },
+    "sims": {
+      "n": 50,
+      "first_start_utc": "2026-10-05T05:37:35.820538Z",
+      "last_end_utc": "2026-10-05T08:48:38.611403Z",
+      "wall_h": 3.18,
+      "busy_h": 9.99,
+      "effective_concurrency": 3.14
+    }
+  },
+  "old_retail_r3": {
+    "arm": "control",
+    "path": "2026-10-05_05-59-44Z_fdh-voice-geval/fdh_voice_geval_retail_regular_r3",
+    "machine": "this(/localhome, UTC)",
+    "hermes_commit": "a076673437",
+    "max_concurrency": [
+      4
+    ],
+    "frontend_decision_ms": {
+      "n": 3152,
+      "p50": 518.5,
+      "p90": 1399.8,
+      "p99": 2319.52,
+      "mean": 696.659,
+      "max": 4001
+    },
+    "frontend_tokens": {
+      "in_p50": 2553.0,
+      "out_p50": 53.0
+    },
+    "frontend_repairs": {
+      "clean": 3039,
+      "guard_backchannel": 109,
+      "guard_backend_question": 3,
+      "timeout": 1
+    },
+    "frontend_timeouts": 1,
+    "asr_user_stop_to_final_ms": {
+      "n": 2573,
+      "p50": 28.0,
+      "p90": 44.0,
+      "p99": 65.28,
+      "mean": 30.671,
+      "max": 87
+    },
+    "asr_final_latency_ms": {
+      "n": 5005,
+      "p50": 28.0,
+      "p90": 44.0,
+      "p99": 67.0,
+      "mean": 31.035,
+      "max": 110
+    },
+    "tts_decision_to_first_audio_ms": {
+      "n": 2690,
+      "p50": 68.0,
+      "p90": 500.8,
+      "p99": 2029.41,
+      "mean": 194.631,
+      "max": 4749
+    },
+    "filler_user_stop_to_first_audio_ms": {
+      "n": 2690,
+      "p50": 655.0,
+      "p90": 2114.0,
+      "p99": 3564.55,
+      "mean": 1015.572,
+      "max": 5341
+    },
+    "nemo_speech_log_errors": {
+      "tts_pcm_callback_failed": 705,
+      "tts_codec_worker_failed": 705,
+      "protobuf_invalid_utf8": 168
+    },
+    "backend_run_ms": {
+      "n": 2652,
+      "p50": 1913.0,
+      "p90": 7323.9,
+      "p99": 26501.85,
+      "mean": 3596.421,
+      "max": 51977.0
+    },
+    "backend_run_status": {
+      "ok": 2619,
+      "closed": 33
+    },
+    "backend_llm_call_s": {
+      "n": 3770,
+      "p50": 1.4,
+      "p90": 3.8,
+      "p99": 7.8,
+      "mean": 1.977,
+      "max": 31.4
+    },
+    "backend_llm_call_out_tok_per_s": {
+      "n": 3770,
+      "p50": 111.938,
+      "p90": 195.345,
+      "p99": 258.771,
+      "mean": 116.215,
+      "max": 308.947
+    },
+    "backend_tokens": {
+      "in_p50": 9818.0,
+      "out_p50": 151.0
+    },
+    "backend_turn_ms": {
+      "n": 2652,
+      "p50": 1902.0,
+      "p90": 7314.8,
+      "p99": 26493.38,
+      "mean": 3584.48,
+      "max": 51970.0
+    },
+    "backend_api_calls_per_turn": {
+      "n": 2652,
+      "p50": 1.0,
+      "p90": 2.0,
+      "p99": 7.49,
+      "mean": 1.422,
+      "max": 12
+    },
+    "backend_429_retries": 0,
+    "backend_429_sessions": 0,
+    "backend_429_window_utc": null,
+    "backend_other_retries": {},
+    "user_sim_gpt52_s": {
+      "n": 2496,
+      "p50": 2.39,
+      "p90": 4.927,
+      "p99": 9.003,
+      "mean": 3.116,
+      "max": 205.818
+    },
+    "user_sim_gpt52_llm_debug_s": {
+      "n": 135,
+      "p50": 2.704,
+      "p90": 4.883,
+      "p99": 10.084,
+      "mean": 3.815,
+      "max": 100.377
+    },
+    "user_tts_s": {
+      "n": 2393,
+      "p50": 2.822,
+      "p90": 5.958,
+      "p99": 19.072,
+      "mean": 3.56,
+      "max": 43.403
+    },
+    "user_tts_rtf": {
+      "n": 2393,
+      "p50": 0.242,
+      "p90": 0.638,
+      "p99": 1.925,
+      "mean": 0.368,
+      "max": 9.58
+    },
+    "decision_gpt41_interrupt_s": {
+      "n": 12258,
+      "p50": 1.101,
+      "p90": 2.887,
+      "p99": 6.769,
+      "mean": 1.531,
+      "max": 15.778
+    },
+    "decision_gpt41_backchannel_s": {
+      "n": 12258,
+      "p50": 1.123,
+      "p90": 2.883,
+      "p99": 6.902,
+      "mean": 1.539,
+      "max": 42.699
+    },
+    "decision_gpt41_llm_debug_s": {
+      "n": 270,
+      "p50": 1.096,
+      "p90": 2.954,
+      "p99": 6.242,
+      "mean": 1.523,
+      "max": 8.74
+    },
+    "tau2_retries": {
+      "synthesize_voice:APITimeoutError": 46,
+      "synthesize_voice:InternalServerError": 1
+    },
+    "judge_gpt52_calls_outside_sims": 131,
+    "tau2_main_log_error_lines": {
+      "Timeout": 2,
+      "APITimeoutError": 2
+    },
+    "sim_duration_s": {
+      "n": 114,
+      "p50": 687.142,
+      "p90": 1347.581,
+      "p99": 2058.907,
+      "mean": 759.505,
+      "max": 2240.783
+    },
+    "sims": {
+      "n": 114,
+      "first_start_utc": "2026-10-06T03:44:46.568610Z",
+      "last_end_utc": "2026-10-06T13:31:52.984136Z",
+      "wall_h": 9.79,
+      "busy_h": 24.05,
+      "effective_concurrency": 2.46
+    }
+  },
+  "old_retail_r2": {
+    "arm": "control",
+    "path": "2026-10-05_05-59-44Z_fdh-voice-geval/fdh_voice_geval_retail_regular_r2",
+    "machine": "this(/localhome, UTC)",
+    "hermes_commit": "a076673437",
+    "max_concurrency": [
+      4
+    ],
+    "frontend_decision_ms": {
+      "n": 3054,
+      "p50": 564.0,
+      "p90": 1521.0,
+      "p99": 2273.57,
+      "mean": 753.456,
+      "max": 4001
+    },
+    "frontend_tokens": {
+      "in_p50": 2508.0,
+      "out_p50": 53.0
+    },
+    "frontend_repairs": {
+      "clean": 2972,
+      "guard_backchannel": 75,
+      "guard_backend_question": 2,
+      "timeout": 5
+    },
+    "frontend_timeouts": 5,
+    "asr_user_stop_to_final_ms": {
+      "n": 1977,
+      "p50": 31.0,
+      "p90": 46.0,
+      "p99": 70.24,
+      "mean": 33.1,
+      "max": 112
+    },
+    "asr_final_latency_ms": {
+      "n": 4972,
+      "p50": 32.0,
+      "p90": 47.0,
+      "p99": 70.29,
+      "mean": 33.262,
+      "max": 112
+    },
+    "tts_decision_to_first_audio_ms": {
+      "n": 2290,
+      "p50": 70.0,
+      "p90": 711.1,
+      "p99": 2133.49,
+      "mean": 231.432,
+      "max": 5182
+    },
+    "filler_user_stop_to_first_audio_ms": {
+      "n": 2290,
+      "p50": 720.0,
+      "p90": 2151.3,
+      "p99": 3579.2,
+      "mean": 1075.915,
+      "max": 5959
+    },
+    "nemo_speech_log_errors": {
+      "tts_pcm_callback_failed": 574,
+      "tts_codec_worker_failed": 574,
+      "protobuf_invalid_utf8": 142
+    },
+    "backend_run_ms": {
+      "n": 2066,
+      "p50": 2396.0,
+      "p90": 61651.0,
+      "p99": 79857.7,
+      "mean": 11679.128,
+      "max": 219509.0
+    },
+    "backend_run_status": {
+      "ok": 2015,
+      "closed": 51
+    },
+    "backend_llm_call_s": {
+      "n": 2943,
+      "p50": 1.6,
+      "p90": 7.1,
+      "p99": 65.858,
+      "mean": 6.697,
+      "max": 71.7
+    },
+    "backend_llm_call_out_tok_per_s": {
+      "n": 2943,
+      "p50": 102.0,
+      "p90": 187.038,
+      "p99": 258.341,
+      "mean": 103.865,
+      "max": 297.059
+    },
+    "backend_tokens": {
+      "in_p50": 9546.0,
+      "out_p50": 154.0
+    },
+    "backend_turn_ms": {
+      "n": 2049,
+      "p50": 2341.0,
+      "p90": 61642.0,
+      "p99": 79860.76,
+      "mean": 11407.012,
+      "max": 219409.0
+    },
+    "backend_api_calls_per_turn": {
+      "n": 2049,
+      "p50": 1.0,
+      "p90": 2.0,
+      "p99": 8.0,
+      "mean": 1.433,
+      "max": 10
+    },
+    "backend_429_retries": 260,
+    "backend_429_sessions": 96,
+    "backend_429_window_utc": [
+      "2026-10-05T16:58:35.675000+00:00",
+      "2026-10-05T23:38:35.987000+00:00"
+    ],
+    "backend_other_retries": {},
+    "user_sim_gpt52_s": {
+      "n": 2516,
+      "p50": 2.575,
+      "p90": 5.612,
+      "p99": 11.103,
+      "mean": 3.961,
+      "max": 319.221
+    },
+    "user_sim_gpt52_llm_debug_s": {
+      "n": 130,
+      "p50": 2.912,
+      "p90": 5.487,
+      "p99": 134.607,
+      "mean": 7.575,
+      "max": 319.095
+    },
+    "user_tts_s": {
+      "n": 2409,
+      "p50": 2.713,
+      "p90": 6.644,
+      "p99": 19.491,
+      "mean": 3.733,
+      "max": 39.121
+    },
+    "user_tts_rtf": {
+      "n": 2409,
+      "p50": 0.254,
+      "p90": 0.757,
+      "p99": 3.132,
+      "mean": 0.45,
+      "max": 26.45
+    },
+    "decision_gpt41_interrupt_s": {
+      "n": 9765,
+      "p50": 1.184,
+      "p90": 3.03,
+      "p99": 7.143,
+      "mean": 1.624,
+      "max": 28.564
+    },
+    "decision_gpt41_backchannel_s": {
+      "n": 9765,
+      "p50": 1.251,
+      "p90": 3.013,
+      "p99": 7.066,
+      "mean": 1.669,
+      "max": 45.845
+    },
+    "decision_gpt41_llm_debug_s": {
+      "n": 260,
+      "p50": 1.253,
+      "p90": 3.666,
+      "p99": 6.551,
+      "mean": 1.716,
+      "max": 8.19
+    },
+    "tau2_retries": {
+      "synthesize_voice:APITimeoutError": 73
+    },
+    "judge_gpt52_calls_outside_sims": 129,
+    "tau2_main_log_error_lines": {},
+    "sim_duration_s": {
+      "n": 114,
+      "p50": 673.742,
+      "p90": 1390.86,
+      "p99": 2166.736,
+      "mean": 749.306,
+      "max": 2179.808
+    },
+    "sims": {
+      "n": 114,
+      "first_start_utc": "2026-10-05T16:57:14.486537Z",
+      "last_end_utc": "2026-10-06T00:10:18.190355Z",
+      "wall_h": 7.22,
+      "busy_h": 23.73,
+      "effective_concurrency": 3.29
+    }
+  },
+  "old_telecom": {
+    "arm": "control",
+    "path": "2026-10-05_05-59-44Z_fdh-voice-geval/fdh_voice_geval_telecom_regular",
+    "machine": "this(/localhome, UTC)",
+    "hermes_commit": "a076673437",
+    "max_concurrency": [
+      4
+    ],
+    "frontend_decision_ms": {
+      "n": 2930,
+      "p50": 687.0,
+      "p90": 2200.0,
+      "p99": 4000.0,
+      "mean": 1026.149,
+      "max": 4002
+    },
+    "frontend_tokens": {
+      "in_p50": 2420.0,
+      "out_p50": 52.0
+    },
+    "frontend_repairs": {
+      "clean": 2827,
+      "timeout": 46,
+      "guard_backchannel": 55,
+      "guard_backend_question": 2
+    },
+    "frontend_timeouts": 46,
+    "asr_user_stop_to_final_ms": {
+      "n": 2424,
+      "p50": 31.0,
+      "p90": 46.0,
+      "p99": 68.0,
+      "mean": 32.917,
+      "max": 88
+    },
+    "asr_final_latency_ms": {
+      "n": 4791,
+      "p50": 32.0,
+      "p90": 47.0,
+      "p99": 69.0,
+      "mean": 33.369,
+      "max": 174
+    },
+    "tts_decision_to_first_audio_ms": {
+      "n": 2490,
+      "p50": 68.0,
+      "p90": 436.2,
+      "p99": 1502.21,
+      "mean": 169.862,
+      "max": 2896
+    },
+    "filler_user_stop_to_first_audio_ms": {
+      "n": 2490,
+      "p50": 841.5,
+      "p90": 2329.0,
+      "p99": 3680.41,
+      "mean": 1212.259,
+      "max": 4823
+    },
+    "nemo_speech_log_errors": {
+      "tts_pcm_callback_failed": 457,
+      "tts_codec_worker_failed": 457,
+      "protobuf_invalid_utf8": 25
+    },
+    "backend_run_ms": {
+      "n": 2505,
+      "p50": 1796.0,
+      "p90": 9125.0,
+      "p99": 63978.52,
+      "mean": 5051.513,
+      "max": 113953.0
+    },
+    "backend_run_status": {
+      "ok": 2453,
+      "closed": 52
+    },
+    "backend_llm_call_s": {
+      "n": 3348,
+      "p50": 1.5,
+      "p90": 3.9,
+      "p99": 61.8,
+      "mean": 3.104,
+      "max": 69.1
+    },
+    "backend_llm_call_out_tok_per_s": {
+      "n": 3348,
+      "p50": 106.154,
+      "p90": 192.528,
+      "p99": 253.608,
+      "mean": 112.557,
+      "max": 284.545
+    },
+    "backend_tokens": {
+      "in_p50": 10988.0,
+      "out_p50": 147.0
+    },
+    "backend_turn_ms": {
+      "n": 2495,
+      "p50": 1775.0,
+      "p90": 8761.4,
+      "p99": 64001.9,
+      "mean": 4890.861,
+      "max": 113944.0
+    },
+    "backend_api_calls_per_turn": {
+      "n": 2495,
+      "p50": 1.0,
+      "p90": 2.0,
+      "p99": 7.0,
+      "mean": 1.343,
+      "max": 9
+    },
+    "backend_429_retries": 78,
+    "backend_429_sessions": 28,
+    "backend_429_window_utc": [
+      "2026-10-05T09:48:45.679000+00:00",
+      "2026-10-05T12:17:17.729000+00:00"
+    ],
+    "backend_other_retries": {
+      "litellm.InternalServerError: InternalServerError: OpenAIExce": 2
+    },
+    "user_sim_gpt52_s": {
+      "n": 2543,
+      "p50": 2.772,
+      "p90": 5.812,
+      "p99": 9.697,
+      "mean": 3.424,
+      "max": 40.674
+    },
+    "user_sim_gpt52_llm_debug_s": {
+      "n": 138,
+      "p50": 3.459,
+      "p90": 6.23,
+      "p99": 9.042,
+      "mean": 3.918,
+      "max": 10.153
+    },
+    "user_tts_s": {
+      "n": 2444,
+      "p50": 2.393,
+      "p90": 5.034,
+      "p99": 18.289,
+      "mean": 3.029,
+      "max": 43.467
+    },
+    "user_tts_rtf": {
+      "n": 2444,
+      "p50": 0.264,
+      "p90": 0.662,
+      "p99": 1.838,
+      "mean": 0.387,
+      "max": 8.733
+    },
+    "decision_gpt41_interrupt_s": {
+      "n": 6714,
+      "p50": 1.099,
+      "p90": 2.348,
+      "p99": 6.021,
+      "mean": 1.405,
+      "max": 80.245
+    },
+    "decision_gpt41_backchannel_s": {
+      "n": 6714,
+      "p50": 1.067,
+      "p90": 2.355,
+      "p99": 6.068,
+      "mean": 1.407,
+      "max": 90.373
+    },
+    "decision_gpt41_llm_debug_s": {
+      "n": 276,
+      "p50": 1.103,
+      "p90": 2.187,
+      "p99": 5.985,
+      "mean": 1.405,
+      "max": 8.578
+    },
+    "tau2_retries": {
+      "synthesize_voice:APITimeoutError": 32
+    },
+    "judge_gpt52_calls_outside_sims": 138,
+    "tau2_main_log_error_lines": {},
+    "sim_duration_s": {
+      "n": 114,
+      "p50": 493.75,
+      "p90": 955.323,
+      "p99": 1802.925,
+      "mean": 576.299,
+      "max": 2508.949
+    },
+    "sims": {
+      "n": 114,
+      "first_start_utc": "2026-10-05T06:08:46.019583Z",
+      "last_end_utc": "2026-10-05T12:18:46.620023Z",
+      "wall_h": 6.17,
+      "busy_h": 18.25,
+      "effective_concurrency": 2.96
+    }
+  },
+  "new_airline": {
+    "arm": "fixes",
+    "path": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_airline_regular",
+    "machine": "this(/localhome, UTC)",
+    "hermes_commit": "a076673437",
+    "max_concurrency": [
+      2,
+      4
+    ],
+    "frontend_decision_ms": {
+      "n": 1112,
+      "p50": 787.5,
+      "p90": 2179.9,
+      "p99": 3432.51,
+      "mean": 1106.06,
+      "max": 4001
+    },
+    "frontend_tokens": {
+      "in_p50": 2273.5,
+      "out_p50": 52.0
+    },
+    "frontend_repairs": {
+      "clean": 1073,
+      "guard_backchannel": 33,
+      "timeout": 6
+    },
+    "frontend_timeouts": 6,
+    "asr_user_stop_to_final_ms": {
+      "n": 903,
+      "p50": 25.0,
+      "p90": 39.0,
+      "p99": 65.9,
+      "mean": 28.849,
+      "max": 155
+    },
+    "asr_final_latency_ms": {
+      "n": 2043,
+      "p50": 25.0,
+      "p90": 41.0,
+      "p99": 65.58,
+      "mean": 29.079,
+      "max": 155
+    },
+    "tts_decision_to_first_audio_ms": {
+      "n": 964,
+      "p50": 69.0,
+      "p90": 237.5,
+      "p99": 1936.35,
+      "mean": 160.138,
+      "max": 3271
+    },
+    "filler_user_stop_to_first_audio_ms": {
+      "n": 964,
+      "p50": 1058.0,
+      "p90": 2625.1,
+      "p99": 3970.03,
+      "mean": 1437.477,
+      "max": 7035
+    },
+    "nemo_speech_log_errors": {
+      "tts_pcm_callback_failed": 1122,
+      "tts_codec_worker_failed": 1122,
+      "protobuf_invalid_utf8": 520
+    },
+    "backend_run_ms": {
+      "n": 935,
+      "p50": 2514.0,
+      "p90": 9347.2,
+      "p99": 35955.02,
+      "mean": 5062.242,
+      "max": 182737.0
+    },
+    "backend_run_status": {
+      "ok": 910,
+      "closed": 25
+    },
+    "backend_llm_call_s": {
+      "n": 1505,
+      "p50": 1.6,
+      "p90": 4.3,
+      "p99": 8.496,
+      "mean": 2.248,
+      "max": 18.2
+    },
+    "backend_llm_call_out_tok_per_s": {
+      "n": 1505,
+      "p50": 110.536,
+      "p90": 215.199,
+      "p99": 269.341,
+      "mean": 121.492,
+      "max": 302.462
+    },
+    "backend_tokens": {
+      "in_p50": 9928.0,
+      "out_p50": 172.0
+    },
+    "backend_turn_ms": {
+      "n": 935,
+      "p50": 2495.0,
+      "p90": 9343.4,
+      "p99": 35947.72,
+      "mean": 5048.434,
+      "max": 182726.0
+    },
+    "backend_api_calls_per_turn": {
+      "n": 935,
+      "p50": 1.0,
+      "p90": 2.0,
+      "p99": 9.0,
+      "mean": 1.611,
+      "max": 25
+    },
+    "backend_429_retries": 0,
+    "backend_429_sessions": 0,
+    "backend_429_window_utc": null,
+    "backend_other_retries": {},
+    "user_sim_gpt52_s": {
+      "n": 964,
+      "p50": 2.377,
+      "p90": 4.517,
+      "p99": 8.048,
+      "mean": 3.219,
+      "max": 281.224
+    },
+    "user_sim_gpt52_llm_debug_s": {
+      "n": 74,
+      "p50": 2.665,
+      "p90": 4.861,
+      "p99": 7.058,
+      "mean": 3.034,
+      "max": 9.708
+    },
+    "user_tts_s": {
+      "n": 914,
+      "p50": 3.71,
+      "p90": 18.477,
+      "p99": 37.002,
+      "mean": 6.459,
+      "max": 49.552
+    },
+    "user_tts_rtf": {
+      "n": 914,
+      "p50": 0.308,
+      "p90": 1.486,
+      "p99": 6.645,
+      "mean": 0.734,
+      "max": 26.969
+    },
+    "decision_gpt41_interrupt_s": {
+      "n": 4407,
+      "p50": 1.194,
+      "p90": 2.724,
+      "p99": 5.759,
+      "mean": 1.52,
+      "max": 24.25
+    },
+    "decision_gpt41_backchannel_s": {
+      "n": 4407,
+      "p50": 1.312,
+      "p90": 2.853,
+      "p99": 6.226,
+      "mean": 1.622,
+      "max": 20.607
+    },
+    "decision_gpt41_llm_debug_s": {
+      "n": 140,
+      "p50": 1.336,
+      "p90": 2.647,
+      "p99": 4.532,
+      "mean": 1.656,
+      "max": 20.026
+    },
+    "tau2_retries": {
+      "synthesize_voice:APITimeoutError": 171
+    },
+    "judge_gpt52_calls_outside_sims": 55,
+    "tau2_main_log_error_lines": {},
+    "sim_duration_s": {
+      "n": 50,
+      "p50": 669.127,
+      "p90": 982.798,
+      "p99": 1237.327,
+      "mean": 640.831,
+      "max": 1350.879
+    },
+    "sims": {
+      "n": 50,
+      "first_start_utc": "2026-10-07T10:22:58.167310Z",
+      "last_end_utc": "2026-10-07T15:29:37.796026Z",
+      "wall_h": 5.11,
+      "busy_h": 8.9,
+      "effective_concurrency": 1.74
+    }
+  },
+  "new_retail_fixes": {
+    "arm": "fixes",
+    "path": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_retail_regular_fixes",
+    "machine": "this(/localhome, UTC)",
+    "hermes_commit": "a076673437",
+    "max_concurrency": [
+      3
+    ],
+    "frontend_decision_ms": {
+      "n": 3070,
+      "p50": 536.0,
+      "p90": 1716.9,
+      "p99": 3026.31,
+      "mean": 792.797,
+      "max": 4001
+    },
+    "frontend_tokens": {
+      "in_p50": 2542.0,
+      "out_p50": 53.0
+    },
+    "frontend_repairs": {
+      "clean": 2976,
+      "guard_backchannel": 87,
+      "timeout": 5,
+      "guard_backend_question": 2
+    },
+    "frontend_timeouts": 5,
+    "asr_user_stop_to_final_ms": {
+      "n": 2303,
+      "p50": 28.0,
+      "p90": 42.0,
+      "p99": 66.98,
+      "mean": 30.684,
+      "max": 376
+    },
+    "asr_final_latency_ms": {
+      "n": 5152,
+      "p50": 29.0,
+      "p90": 43.0,
+      "p99": 63.0,
+      "mean": 30.807,
+      "max": 376
+    },
+    "tts_decision_to_first_audio_ms": {
+      "n": 2503,
+      "p50": 67.0,
+      "p90": 517.8,
+      "p99": 2023.8,
+      "mean": 193.683,
+      "max": 6396
+    },
+    "filler_user_stop_to_first_audio_ms": {
+      "n": 2503,
+      "p50": 676.0,
+      "p90": 2209.8,
+      "p99": 3577.26,
+      "mean": 1078.199,
+      "max": 6872
+    },
+    "nemo_speech_log_errors": {
+      "tts_pcm_callback_failed": 928,
+      "tts_codec_worker_failed": 928,
+      "protobuf_invalid_utf8": 381
+    },
+    "backend_run_ms": {
+      "n": 2377,
+      "p50": 2050.0,
+      "p90": 8766.2,
+      "p99": 65040.8,
+      "mean": 5599.119,
+      "max": 116616.0
+    },
+    "backend_run_status": {
+      "ok": 2336,
+      "closed": 41
+    },
+    "backend_llm_call_s": {
+      "n": 3380,
+      "p50": 1.5,
+      "p90": 3.7,
+      "p99": 61.9,
+      "mean": 3.082,
+      "max": 66.3
+    },
+    "backend_llm_call_out_tok_per_s": {
+      "n": 3380,
+      "p50": 110.32,
+      "p90": 192.353,
+      "p99": 262.7,
+      "mean": 114.766,
+      "max": 313.273
+    },
+    "backend_tokens": {
+      "in_p50": 10332.0,
+      "out_p50": 159.0
+    },
+    "backend_turn_ms": {
+      "n": 2362,
+      "p50": 2021.5,
+      "p90": 8438.3,
+      "p99": 64179.89,
+      "mean": 5272.013,
+      "max": 96623.0
+    },
+    "backend_api_calls_per_turn": {
+      "n": 2362,
+      "p50": 1.0,
+      "p90": 2.0,
+      "p99": 7.0,
+      "mean": 1.431,
+      "max": 16
+    },
+    "backend_429_retries": 89,
+    "backend_429_sessions": 47,
+    "backend_429_window_utc": [
+      "2026-10-07T20:45:29.657000+00:00",
+      "2026-10-08T00:15:48.745000+00:00"
+    ],
+    "backend_other_retries": {},
+    "user_sim_gpt52_s": {
+      "n": 2469,
+      "p50": 2.327,
+      "p90": 4.015,
+      "p99": 6.902,
+      "mean": 2.788,
+      "max": 183.041
+    },
+    "user_sim_gpt52_llm_debug_s": {
+      "n": 134,
+      "p50": 2.551,
+      "p90": 4.087,
+      "p99": 5.835,
+      "mean": 2.68,
+      "max": 7.784
+    },
+    "user_tts_s": {
+      "n": 2358,
+      "p50": 2.748,
+      "p90": 6.05,
+      "p99": 20.44,
+      "mean": 3.624,
+      "max": 41.095
+    },
+    "user_tts_rtf": {
+      "n": 2358,
+      "p50": 0.24,
+      "p90": 0.59,
+      "p99": 1.997,
+      "mean": 0.367,
+      "max": 14.252
+    },
+    "decision_gpt41_interrupt_s": {
+      "n": 11292,
+      "p50": 1.029,
+      "p90": 1.979,
+      "p99": 4.254,
+      "mean": 1.245,
+      "max": 23.295
+    },
+    "decision_gpt41_backchannel_s": {
+      "n": 11292,
+      "p50": 1.176,
+      "p90": 2.139,
+      "p99": 4.301,
+      "mean": 1.423,
+      "max": 601.995
+    },
+    "decision_gpt41_llm_debug_s": {
+      "n": 268,
+      "p50": 1.081,
+      "p90": 2.066,
+      "p99": 3.672,
+      "mean": 1.273,
+      "max": 3.91
+    },
+    "tau2_retries": {
+      "synthesize_voice:APITimeoutError": 63
+    },
+    "judge_gpt52_calls_outside_sims": 134,
+    "tau2_main_log_error_lines": {},
+    "sim_duration_s": {
+      "n": 114,
+      "p50": 605.038,
+      "p90": 1196.568,
+      "p99": 1909.755,
+      "mean": 716.014,
+      "max": 2144.943
+    },
+    "sims": {
+      "n": 114,
+      "first_start_utc": "2026-10-07T15:39:59.438978Z",
+      "last_end_utc": "2026-10-08T01:02:13.654883Z",
+      "wall_h": 9.37,
+      "busy_h": 22.67,
+      "effective_concurrency": 2.42
+    }
+  },
+  "new_retail_rerun43": {
+    "arm": "fixes",
+    "path": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_retail_regular_rerun43",
+    "machine": "this(/localhome, UTC)",
+    "hermes_commit": "a076673437",
+    "max_concurrency": [
+      2
+    ],
+    "frontend_decision_ms": {
+      "n": 1078,
+      "p50": 1305.0,
+      "p90": 2644.0,
+      "p99": 4000.0,
+      "mean": 1511.77,
+      "max": 4001
+    },
+    "frontend_tokens": {
+      "in_p50": 2618.0,
+      "out_p50": 54.0
+    },
+    "frontend_repairs": {
+      "clean": 1027,
+      "guard_backchannel": 35,
+      "timeout": 14,
+      "guard_backend_question": 2
+    },
+    "frontend_timeouts": 14,
+    "asr_user_stop_to_final_ms": {
+      "n": 911,
+      "p50": 24.0,
+      "p90": 36.0,
+      "p99": 52.0,
+      "mean": 26.473,
+      "max": 66
+    },
+    "asr_final_latency_ms": {
+      "n": 2055,
+      "p50": 24.0,
+      "p90": 37.0,
+      "p99": 53.0,
+      "mean": 26.998,
+      "max": 83
+    },
+    "tts_decision_to_first_audio_ms": {
+      "n": 957,
+      "p50": 67.0,
+      "p90": 87.0,
+      "p99": 1471.6,
+      "mean": 119.999,
+      "max": 3249
+    },
+    "filler_user_stop_to_first_audio_ms": {
+      "n": 957,
+      "p50": 1528.0,
+      "p90": 2903.8,
+      "p99": 4074.56,
+      "mean": 1701.62,
+      "max": 6616
+    },
+    "nemo_speech_log_errors": {
+      "tts_pcm_callback_failed": 212,
+      "tts_codec_worker_failed": 212,
+      "protobuf_invalid_utf8": 95
+    },
+    "backend_run_ms": {
+      "n": 927,
+      "p50": 1978.0,
+      "p90": 6488.0,
+      "p99": 22686.42,
+      "mean": 3466.225,
+      "max": 42420.0
+    },
+    "backend_run_status": {
+      "ok": 913,
+      "closed": 14
+    },
+    "backend_llm_call_s": {
+      "n": 1344,
+      "p50": 1.5,
+      "p90": 3.2,
+      "p99": 6.4,
+      "mean": 1.871,
+      "max": 13.7
+    },
+    "backend_llm_call_out_tok_per_s": {
+      "n": 1344,
+      "p50": 124.365,
+      "p90": 210.547,
+      "p99": 270.838,
+      "mean": 129.397,
+      "max": 305.5
+    },
+    "backend_tokens": {
+      "in_p50": 11102.5,
+      "out_p50": 181.0
+    },
+    "backend_turn_ms": {
+      "n": 927,
+      "p50": 1967.0,
+      "p90": 6480.6,
+      "p99": 22675.94,
+      "mean": 3454.235,
+      "max": 42411.0
+    },
+    "backend_api_calls_per_turn": {
+      "n": 927,
+      "p50": 1.0,
+      "p90": 2.0,
+      "p99": 8.0,
+      "mean": 1.45,
+      "max": 12
+    },
+    "backend_429_retries": 0,
+    "backend_429_sessions": 0,
+    "backend_429_window_utc": null,
+    "backend_other_retries": {},
+    "user_sim_gpt52_s": {
+      "n": 976,
+      "p50": 2.808,
+      "p90": 4.675,
+      "p99": 8.382,
+      "mean": 3.436,
+      "max": 222.298
+    },
+    "user_sim_gpt52_llm_debug_s": {
+      "n": 48,
+      "p50": 3.124,
+      "p90": 4.957,
+      "p99": 9.046,
+      "mean": 3.442,
+      "max": 9.967
+    },
+    "user_tts_s": {
+      "n": 944,
+      "p50": 2.787,
+      "p90": 5.409,
+      "p99": 12.538,
+      "mean": 3.277,
+      "max": 22.344
+    },
+    "user_tts_rtf": {
+      "n": 944,
+      "p50": 0.227,
+      "p90": 0.486,
+      "p99": 1.807,
+      "mean": 0.369,
+      "max": 17.233
+    },
+    "decision_gpt41_interrupt_s": {
+      "n": 4691,
+      "p50": 0.998,
+      "p90": 2.164,
+      "p99": 4.804,
+      "mean": 1.262,
+      "max": 11.477
+    },
+    "decision_gpt41_backchannel_s": {
+      "n": 4691,
+      "p50": 1.033,
+      "p90": 2.131,
+      "p99": 4.442,
+      "mean": 1.269,
+      "max": 9.778
+    },
+    "decision_gpt41_llm_debug_s": {
+      "n": 96,
+      "p50": 1.02,
+      "p90": 1.809,
+      "p99": 3.262,
+      "mean": 1.239,
+      "max": 7.546
+    },
+    "tau2_retries": {
+      "synthesize_voice:APITimeoutError": 7
+    },
+    "judge_gpt52_calls_outside_sims": 48,
+    "tau2_main_log_error_lines": {},
+    "sim_duration_s": {
+      "n": 43,
+      "p50": 774.41,
+      "p90": 1274.458,
+      "p99": 1984.45,
+      "mean": 809.324,
+      "max": 2035.174
+    },
+    "sims": {
+      "n": 43,
+      "first_start_utc": "2026-10-08T01:56:23.561329Z",
+      "last_end_utc": "2026-10-08T07:54:11.460674Z",
+      "wall_h": 5.96,
+      "busy_h": 9.67,
+      "effective_concurrency": 1.62
+    }
+  },
+  "new_telecom": {
+    "arm": "fixes",
+    "path": "2026-10-07_16-18-35Z_fdh-voice-geval-fixes/fdh_voice_geval_telecom_regular",
+    "machine": "other(/home, IST)",
+    "hermes_commit": "af26acab73",
+    "max_concurrency": [
+      2
+    ],
+    "frontend_decision_ms": {
+      "n": 2455,
+      "p50": 1321.0,
+      "p90": 2878.0,
+      "p99": 3999.0,
+      "mean": 1665.066,
+      "max": 4003
+    },
+    "frontend_tokens": {
+      "in_p50": 2342.0,
+      "out_p50": 52.0
+    },
+    "frontend_repairs": {
+      "clean": 2346,
+      "guard_backchannel": 79,
+      "timeout": 29,
+      "guard_backend_question": 1
+    },
+    "frontend_timeouts": 29,
+    "asr_user_stop_to_final_ms": {
+      "n": 1979,
+      "p50": 21.0,
+      "p90": 31.0,
+      "p99": 47.22,
+      "mean": 23.394,
+      "max": 54
+    },
+    "asr_final_latency_ms": {
+      "n": 4413,
+      "p50": 21.0,
+      "p90": 31.0,
+      "p99": 46.0,
+      "mean": 23.431,
+      "max": 65
+    },
+    "tts_decision_to_first_audio_ms": {
+      "n": 2143,
+      "p50": 58.0,
+      "p90": 64.0,
+      "p99": 524.12,
+      "mean": 70.585,
+      "max": 1254
+    },
+    "filler_user_stop_to_first_audio_ms": {
+      "n": 2143,
+      "p50": 1443.0,
+      "p90": 2959.6,
+      "p99": 3942.9,
+      "mean": 1773.73,
+      "max": 4521
+    },
+    "nemo_speech_log_errors": {
+      "tts_pcm_callback_failed": 141,
+      "tts_codec_worker_failed": 141,
+      "protobuf_invalid_utf8": 9
+    },
+    "backend_run_ms": {
+      "n": 2033,
+      "p50": 3320.0,
+      "p90": 15029.4,
+      "p99": 69398.4,
+      "mean": 7309.359,
+      "max": 108158.0
+    },
+    "backend_run_status": {
+      "ok": 1984,
+      "closed": 49
+    },
+    "backend_llm_call_s": {
+      "n": 2911,
+      "p50": 2.6,
+      "p90": 4.7,
+      "p99": 63.6,
+      "mean": 3.894,
+      "max": 69.2
+    },
+    "backend_llm_call_out_tok_per_s": {
+      "n": 2911,
+      "p50": 54.286,
+      "p90": 125.806,
+      "p99": 183.472,
+      "mean": 65.097,
+      "max": 223.333
+    },
+    "backend_tokens": {
+      "in_p50": 11783.0,
+      "out_p50": 144.0
+    },
+    "backend_turn_ms": {
+      "n": 2027,
+      "p50": 3306.0,
+      "p90": 14533.8,
+      "p99": 69231.16,
+      "mean": 7148.544,
+      "max": 108105.0
+    },
+    "backend_api_calls_per_turn": {
+      "n": 2027,
+      "p50": 1.0,
+      "p90": 2.0,
+      "p99": 7.0,
+      "mean": 1.435,
+      "max": 8
+    },
+    "backend_429_retries": 56,
+    "backend_429_sessions": 31,
+    "backend_429_window_utc": [
+      "2026-10-07T20:45:30.753000+00:00",
+      "2026-10-08T00:13:53.730000+00:00"
+    ],
+    "backend_other_retries": {},
+    "user_sim_gpt52_s": {
+      "n": 2395,
+      "p50": 2.974,
+      "p90": 4.845,
+      "p99": 8.254,
+      "mean": 3.337,
+      "max": 51.808
+    },
+    "user_sim_gpt52_llm_debug_s": {
+      "n": 131,
+      "p50": 3.43,
+      "p90": 5.191,
+      "p99": 8.737,
+      "mean": 3.741,
+      "max": 22.921
+    },
+    "user_tts_s": {
+      "n": 2301,
+      "p50": 4.046,
+      "p90": 6.43,
+      "p99": 20.328,
+      "mean": 4.572,
+      "max": 38.337
+    },
+    "user_tts_rtf": {
+      "n": 2301,
+      "p50": 0.496,
+      "p90": 1.17,
+      "p99": 2.742,
+      "mean": 0.675,
+      "max": 9.317
+    },
+    "decision_gpt41_interrupt_s": {
+      "n": 6672,
+      "p50": 1.461,
+      "p90": 2.454,
+      "p99": 4.4,
+      "mean": 1.64,
+      "max": 12.503
+    },
+    "decision_gpt41_backchannel_s": {
+      "n": 6672,
+      "p50": 1.461,
+      "p90": 2.411,
+      "p99": 4.466,
+      "mean": 1.638,
+      "max": 27.649
+    },
+    "decision_gpt41_llm_debug_s": {
+      "n": 262,
+      "p50": 1.578,
+      "p90": 2.558,
+      "p99": 5.629,
+      "mean": 1.798,
+      "max": 10.43
+    },
+    "tau2_retries": {
+      "synthesize_voice:APITimeoutError": 37
+    },
+    "judge_gpt52_calls_outside_sims": 131,
+    "tau2_main_log_error_lines": {},
+    "sim_duration_s": {
+      "n": 114,
+      "p50": 547.145,
+      "p90": 1102.529,
+      "p99": 2017.657,
+      "mean": 631.712,
+      "max": 2206.852
+    },
+    "sims": {
+      "n": 114,
+      "first_start_utc": "2026-10-07T17:03:41.814415Z",
+      "last_end_utc": "2026-10-08T05:03:49.384060Z",
+      "wall_h": 12.0,
+      "busy_h": 20.0,
+      "effective_concurrency": 1.67
+    }
+  },
+  "_backend_fit_per_run": {
+    "old_airline": {
+      "n": 1423,
+      "fixed_s": 2.109,
+      "s_per_out_token": 0.00379,
+      "implied_decode_tok_s": 264.1
+    },
+    "old_retail_r3": {
+      "n": 3770,
+      "fixed_s": 1.231,
+      "s_per_out_token": 0.00355,
+      "implied_decode_tok_s": 282.1
+    },
+    "old_retail_r2": {
+      "n": 2725,
+      "fixed_s": 1.33,
+      "s_per_out_token": 0.00399,
+      "implied_decode_tok_s": 250.4
+    },
+    "old_telecom": {
+      "n": 3284,
+      "fixed_s": 1.17,
+      "s_per_out_token": 0.00364,
+      "implied_decode_tok_s": 274.8
+    },
+    "new_airline": {
+      "n": 1505,
+      "fixed_s": 1.253,
+      "s_per_out_token": 0.00363,
+      "implied_decode_tok_s": 275.5
+    },
+    "new_retail_fixes": {
+      "n": 3316,
+      "fixed_s": 1.131,
+      "s_per_out_token": 0.00369,
+      "implied_decode_tok_s": 271.1
+    },
+    "new_retail_rerun43": {
+      "n": 1344,
+      "fixed_s": 1.08,
+      "s_per_out_token": 0.0032,
+      "implied_decode_tok_s": 312.7
+    },
+    "new_telecom": {
+      "n": 2873,
+      "fixed_s": 2.309,
+      "s_per_out_token": 0.00365,
+      "implied_decode_tok_s": 274.0
+    }
+  },
+  "_backend_fit_shared_window_2026-10-05T06_to_08": {
+    "other(/home, IST)": {
+      "n": 1243,
+      "fixed_s": 2.114,
+      "s_per_out_token": 0.00382,
+      "implied_decode_tok_s": 262.1
+    },
+    "this(/localhome, UTC)": {
+      "n": 1696,
+      "fixed_s": 1.24,
+      "s_per_out_token": 0.00354,
+      "implied_decode_tok_s": 282.9
+    }
+  },
+  "_backend_small_output_calls_2026-10-05T06_to_08": {
+    "other(/home, IST)": {
+      "n": 530,
+      "p50": 2.0,
+      "p90": 3.61,
+      "p99": 6.9,
+      "mean": 2.436,
+      "max": 8.5
+    },
+    "this(/localhome, UTC)": {
+      "n": 869,
+      "p50": 1.1,
+      "p90": 2.9,
+      "p99": 7.232,
+      "mean": 1.596,
+      "max": 13.0
+    }
+  },
+  "_backend_fit_shared_window_2026-10-07T17_to_10-08T04": {
+    "other(/home, IST)": {
+      "n": 2854,
+      "fixed_s": 2.309,
+      "s_per_out_token": 0.00365,
+      "implied_decode_tok_s": 273.6
+    },
+    "this(/localhome, UTC)": {
+      "n": 3465,
+      "fixed_s": 1.135,
+      "s_per_out_token": 0.00354,
+      "implied_decode_tok_s": 282.5
+    }
+  },
+  "_backend_small_output_calls_2026-10-07T17_to_10-08T04": {
+    "other(/home, IST)": {
+      "n": 1479,
+      "p50": 2.3,
+      "p90": 3.62,
+      "p99": 7.0,
+      "mean": 2.653,
+      "max": 15.9
+    },
+    "this(/localhome, UTC)": {
+      "n": 1587,
+      "p50": 1.1,
+      "p90": 2.4,
+      "p99": 6.256,
+      "mean": 1.438,
+      "max": 16.6
+    }
+  }
+}

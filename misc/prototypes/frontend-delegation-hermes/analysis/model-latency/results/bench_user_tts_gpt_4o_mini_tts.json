@@ -1,0 +1,97 @@
+{
+  "benchmark": "user_tts_gpt_4o_mini_tts",
+  "model": "openai/openai/gpt-4o-mini-tts",
+  "started_utc": "2026-10-08T09:38:51Z",
+  "ended_utc": "2026-10-08T09:39:07Z",
+  "concurrency": 1,
+  "response_format": "pcm",
+  "client_timeout_s": 15,
+  "summary": {
+    "n": 6,
+    "n_ok": 6,
+    "ttfa_s": {
+      "p50": 1.861,
+      "p90": 2.966,
+      "mean": 2.033,
+      "min": 1.182,
+      "max": 2.972
+    },
+    "total_s": {
+      "p50": 1.933,
+      "p90": 3.034,
+      "mean": 2.093,
+      "min": 1.205,
+      "max": 3.051
+    },
+    "audio_s": {
+      "p50": 4.575,
+      "p90": 8.8,
+      "mean": 5.15,
+      "min": 1.9,
+      "max": 10.35
+    },
+    "rtf": {
+      "p50": 0.603,
+      "p90": 0.709,
+      "mean": 0.51,
+      "min": 0.197,
+      "max": 0.784
+    }
+  },
+  "rows": [
+    {
+      "ok": true,
+      "ttfa_s": 2.961,
+      "total_s": 3.051,
+      "audio_s": 5.3,
+      "rtf": 0.576,
+      "chars": 67,
+      "i": 0
+    },
+    {
+      "ok": true,
+      "ttfa_s": 2.972,
+      "total_s": 3.017,
+      "audio_s": 3.85,
+      "rtf": 0.784,
+      "chars": 40,
+      "i": 1
+    },
+    {
+      "ok": true,
+      "ttfa_s": 1.182,
+      "total_s": 1.205,
+      "audio_s": 1.9,
+      "rtf": 0.634,
+      "chars": 5,
+      "i": 2
+    },
+    {
+      "ok": true,
+      "ttfa_s": 2.346,
+      "total_s": 2.438,
+      "audio_s": 10.35,
+      "rtf": 0.236,
+      "chars": 124,
+      "i": 3
+    },
+    {
+      "ok": true,
+      "ttfa_s": 1.359,
+      "total_s": 1.428,
+      "audio_s": 7.25,
+      "rtf": 0.197,
+      "chars": 122,
+      "i": 4
+    },
+    {
+      "ok": true,
+      "ttfa_s": 1.375,
+      "total_s": 1.42,
+      "audio_s": 2.25,
+      "rtf": 0.631,
+      "chars": 14,
+      "i": 5
+    }
+  ]
+}

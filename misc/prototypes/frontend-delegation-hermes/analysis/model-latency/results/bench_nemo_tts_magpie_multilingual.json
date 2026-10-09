@@ -1,0 +1,124 @@
+{
+  "benchmark": "nemo_tts_magpie_multilingual",
+  "model": "magpie-tts-multilingual",
+  "voice": "John",
+  "server": "localhost:50051",
+  "sample_rate": 22050,
+  "started_utc": "2026-10-08T09:41:12Z",
+  "ended_utc": "2026-10-08T09:41:16Z",
+  "concurrency": 1,
+  "summary": {
+    "n": 8,
+    "n_ok": 8,
+    "ttfa_ms": {
+      "p50": 35.15,
+      "p90": 42.09,
+      "mean": 35.9,
+      "min": 29.9,
+      "max": 43.0
+    },
+    "total_s": {
+      "p50": 0.334,
+      "p90": 0.913,
+      "mean": 0.44,
+      "min": 0.079,
+      "max": 1.107
+    },
+    "audio_s": {
+      "p50": 2.577,
+      "p90": 7.106,
+      "mean": 3.373,
+      "min": 0.464,
+      "max": 8.731
+    },
+    "rtf": {
+      "p50": 0.13,
+      "p90": 0.152,
+      "mean": 0.137,
+      "min": 0.127,
+      "max": 0.17
+    }
+  },
+  "rows": [
+    {
+      "i": 0,
+      "text": "Let me check that for you.",
+      "ok": true,
+      "ttfa_ms": 43.0,
+      "total_s": 0.254,
+      "audio_s": 1.765,
+      "rtf": 0.1437,
+      "chars": 26
+    },
+    {
+      "i": 1,
+      "text": "One moment.",
+      "ok": true,
+      "ttfa_ms": 29.9,
+      "total_s": 0.143,
+      "audio_s": 1.022,
+      "rtf": 0.1401,
+      "chars": 11
+    },
+    {
+      "i": 2,
+      "text": "I'll look up your account with your name and zip code.",
+      "ok": true,
+      "ttfa_ms": 35.3,
+      "total_s": 0.442,
+      "audio_s": 3.437,
+      "rtf": 0.1287,
+      "chars": 54
+    },
+    {
+      "i": 3,
+      "text": "I found your order. It was delivered on Monday, and the headphones are eligible for a return.",
+      "ok": true,
+      "ttfa_ms": 37.4,
+      "total_s": 0.83,
+      "audio_s": 6.409,
+      "rtf": 0.1295,
+      "chars": 93
+    },
+    {
+      "i": 4,
+      "text": "Your return is set up. The refund of fifty four dollars will go back to your original credit card in five to seven business days.",
+      "ok": true,
+      "ttfa_ms": 41.7,
+      "total_s": 1.107,
+      "audio_s": 8.731,
+      "rtf": 0.1268,
+      "chars": 129
+    },
+    {
+      "i": 5,
+      "text": "Could you spell your last name for me, please?",
+      "ok": true,
+      "ttfa_ms": 34.7,
+      "total_s": 0.324,
+      "audio_s": 2.508,
+      "rtf": 0.1292,
+      "chars": 46
+    },
+    {
+      "i": 6,
+      "text": "Sure.",
+      "ok": true,
+      "ttfa_ms": 30.2,
+      "total_s": 0.079,
+      "audio_s": 0.464,
+      "rtf": 0.1704,
+      "chars": 5
+    },
+    {
+      "i": 7,
+      "text": "Is there anything else I can help you with today?",
+      "ok": true,
+      "ttfa_ms": 35.0,
+      "total_s": 0.344,
+      "audio_s": 2.647,
+      "rtf": 0.1299,
+      "chars": 49
+    }
+  ]
+}

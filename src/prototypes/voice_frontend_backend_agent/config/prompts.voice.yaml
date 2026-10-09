@@ -472,6 +472,20 @@ lookup_not_found_hint_words:
     attempts fail and your instructions allow another way to identify or look up the user,
     offer it.]
 
+lookup_ledger:
+  description: >-
+    F8 (fix-plan-f1-f2-f4-f8.md section 4.2): the facts of the identification so far, appended after the
+    recovery note to a failed identification lookup. {lines} is built by the relay: the lookups tried,
+    what the user spelled and where it was sent, the user's corrections, and the other identification
+    lookups the session's tools offer. Facts only; it never says which field is wrong.
+  content: |
+    [Identification so far in this call (not found yet):
+    {lines}
+    Prefer what the user spelled over a word you heard. A later spelling replaces an earlier one only
+    if the user said so; otherwise ask which is right. Before a lookup that combines values from
+    different attempts, read the combination back and wait for the user to confirm it. Do not send
+    values the user has not given.]
+
 # --- Barge-in: frontend verdict ---------------------------------------------------------------
 # Included by the frontend template (a Jinja template) while a delegated request is still being
 # worked on and the user has spoken again (barge_in.while_thinking: frontend_verdict;

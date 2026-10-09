@@ -1,0 +1,23 @@
+run,machine,utc_hour,retries_429
+old_telecom,"this(/localhome, UTC)",2026-10-05T09,1
+old_telecom,"this(/localhome, UTC)",2026-10-05T10,27
+old_telecom,"this(/localhome, UTC)",2026-10-05T11,44
+old_telecom,"this(/localhome, UTC)",2026-10-05T12,6
+old_retail_r2,"this(/localhome, UTC)",2026-10-05T16,4
+old_retail_r2,"this(/localhome, UTC)",2026-10-05T17,46
+old_retail_r2,"this(/localhome, UTC)",2026-10-05T18,49
+old_retail_r2,"this(/localhome, UTC)",2026-10-05T19,19
+old_retail_r2,"this(/localhome, UTC)",2026-10-05T20,21
+old_retail_r2,"this(/localhome, UTC)",2026-10-05T21,39
+old_retail_r2,"this(/localhome, UTC)",2026-10-05T22,46
+old_retail_r2,"this(/localhome, UTC)",2026-10-05T23,36
+new_retail_fixes,"this(/localhome, UTC)",2026-10-07T20,10
+new_telecom,"other(/home, IST)",2026-10-07T20,8
+new_retail_fixes,"this(/localhome, UTC)",2026-10-07T21,14
+new_telecom,"other(/home, IST)",2026-10-07T21,19
+new_retail_fixes,"this(/localhome, UTC)",2026-10-07T22,20
+new_telecom,"other(/home, IST)",2026-10-07T22,8
+new_retail_fixes,"this(/localhome, UTC)",2026-10-07T23,38
+new_telecom,"other(/home, IST)",2026-10-07T23,17
+new_retail_fixes,"this(/localhome, UTC)",2026-10-08T00,7
+new_telecom,"other(/home, IST)",2026-10-08T00,4

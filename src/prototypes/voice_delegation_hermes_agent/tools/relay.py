@@ -35,6 +35,7 @@ from prototypes.text_frontend_backend_agent.tools import ToolRegistry, ToolSpec
 from prototypes.voice_delegation_hermes_agent.engine.output_scheduler import CallsItem
 from prototypes.voice_delegation_hermes_agent.tools.field_provenance import FieldProvenance
 from prototypes.voice_delegation_hermes_agent.tools.format_retry import Candidate, FormatRetry
+from prototypes.voice_delegation_hermes_agent.tools.identity_ledger import FOUND, IdentityLedger
 from prototypes.voice_delegation_hermes_agent.tools.result_hints import ResultHints
 from prototypes.voice_frontend_backend_agent.errors import WireProtocolError
 from prototypes.voice_frontend_backend_agent.normalization.arguments import (
@@ -159,6 +160,9 @@ class ToolRelay:
         if call is not None:
             self._mark_output(call_id, "")
         self._log("tool_cancelled", call_id=call_id, reason=reason)
+        ledger = self._ledger
+        if ledger is not None:
+            ledger.on_cancel(call_id)
         for retry in [r for r in self._retries.values() if r.original.call_id == call_id]:
             self._drop_retry(retry, outcome="cancelled")
 
@@ -256,6 +260,10 @@ class ToolRelay:
             return
         for call in sent:
             call.batch_id = batch_id
+        ledger = self._ledger
+        if ledger is not None:
+            for call in sent:
+                ledger.on_issue(call.call_id, call.name, call.arguments)
         if self._executor == "local":
             for call in sent:
                 task = asyncio.create_task(self._run_local(call), name=f"local-tool-{call.call_id}")
@@ -299,6 +307,10 @@ class ToolRelay:
                 self._invalid_counts[answer.tool] = self._invalid_counts.get(answer.tool, 0) + 1
                 if self._hints is not None:
                     self._hints.on_local_invalid(answer.tool, answer.argument)
+                ledger = self._ledger
+                if ledger is not None:
+                    ledger.on_issue(call.call_id, call.name, call.arguments)
+                    ledger.on_local_invalid(call.call_id)
             self._log(
                 "call_answered_locally",
                 call_id=answer.call_id,
@@ -325,14 +337,31 @@ class ToolRelay:
         self._log("tool_output_in", call_id=call.call_id, output=result.content, local_executor=True)
         self._send_result(call.call_id, call.epoch, self._annotate(call, result.content), False)
 
-    def _annotate(self, call: _Call, output: str, *, hint_output: str | None = None) -> str:
+    @property
+    def _ledger(self) -> IdentityLedger | None:
+        return self._hints.ledger if self._hints is not None else None
+
+    def _annotate(
+        self,
+        call: _Call,
+        output: str,
+        *,
+        hint_output: str | None = None,
+        ledger_outputs: Sequence[tuple[str, str]] | None = None,
+    ) -> str:
         """The output with a recovery note appended when ``ResultHints`` asks for one.
 
         ``hint_output`` is what the hints judge (the lookup's own result), when ``output`` carries more.
+        ``ledger_outputs`` (F8): the ``(call_id, output)`` pairs the ledger classifies, in order (an A1
+        retry adds its own call); by default the call's own judged output.
         """
         if self._hints is None:
             return output
-        hint = self._hints.on_output(call.name, output if hint_output is None else hint_output)
+        judged = output if hint_output is None else hint_output
+        reset, ledger_note = self._observe_identification(call, judged, ledger_outputs)
+        hint = self._hints.on_output(call.name, judged, reset=reset)
+        if ledger_note and hint is None:
+            return f"{output.rstrip()}\n\n{ledger_note}"
         if hint is None:
             return output
         self._log("result_hint", call_id=call.call_id, tool=call.name, message_key=hint.message_key, n=hint.miss)
@@ -342,7 +371,35 @@ class ToolRelay:
             if line:
                 note = f"{note}\n{line}"
                 self._log("field_provenance", call_id=call.call_id, tool=call.name, line=line)
+        if ledger_note:
+            note = f"{note}\n{ledger_note}"
         return f"{output.rstrip()}\n\n{note}"
+
+    def _observe_identification(
+        self, call: _Call, judged: str, ledger_outputs: Sequence[tuple[str, str]] | None
+    ) -> tuple[bool | None, str]:
+        """F8: classify identification outputs; ``(reset, note)`` for the hints and the appended text."""
+        ledger = self._ledger
+        if ledger is None:
+            return None, ""
+        found, note = False, ""
+        for call_id, text in ledger_outputs if ledger_outputs is not None else ((call.call_id, judged),):
+            output_class, ledger_note = ledger.on_output(call_id, text)
+            if not output_class:
+                continue
+            self._log(
+                "identity_ledger",
+                call_id=call_id,
+                tool=call.name,
+                output_class=output_class,
+                episode=ledger.episode,
+                note_chars=len(ledger_note),
+            )
+            found = found or output_class == FOUND
+            note = ledger_note or note
+        if found:
+            note = ""  # identified in this round: no ledger note
+        return (found if ledger.watches(call.name) else False), note
 
     def _mark_output(self, call_id: str, output: str) -> None:
         for batch in self._batches:
@@ -389,6 +446,9 @@ class ToolRelay:
     def _emit_retry(self, retry: _Retry) -> None:
         retry.emitted = True
         call = retry.call
+        ledger = self._ledger
+        if ledger is not None:
+            ledger.on_issue(call.call_id, call.name, call.arguments, origin="format_retry")
         call.batch_id = f"batch_{next(_BATCH_IDS)}"
         self._open[call.call_id] = call
         self._batches.append(_Batch(batch_id=call.batch_id, call_ids=(call.call_id,)))
@@ -414,15 +474,20 @@ class ToolRelay:
             self._failed = self._failed | {candidate.key}
             note = render_message(self._format_messages.not_found, value=candidate.after)
             combined = f"{retry.output.rstrip()}\n\n{note}" if note else retry.output
-            result = self._annotate(original, combined, hint_output=retry.output)
+            pairs = ((original.call_id, retry.output), (retry.call.call_id, output))
+            result = self._annotate(original, combined, hint_output=retry.output, ledger_outputs=pairs)
             outcome = "not_found"
         elif not output.strip() or output.lstrip().startswith("Error"):
-            result = self._annotate(original, retry.output)  # transient: the other form stays unmarked
+            pairs = ((original.call_id, retry.output), (retry.call.call_id, output))
+            result = self._annotate(
+                original, retry.output, ledger_outputs=pairs
+            )  # transient: the other form stays unmarked
             outcome = "transient"
         else:
             note = render_message(self._format_messages.found, value=candidate.after)
             combined = f"{note}\n{output}" if note else output
-            result = self._annotate(original, combined, hint_output=output)
+            pairs = ((original.call_id, retry.output), (retry.call.call_id, output))
+            result = self._annotate(original, combined, hint_output=output, ledger_outputs=pairs)
             outcome = "found"
         self._log_format(original, candidate, outcome=outcome)
         self._send_result(original.call_id, original.epoch, result, False)
@@ -445,6 +510,9 @@ class ToolRelay:
         self._cancelled.add(call_id)
         if self._open.pop(call_id, None) is not None:
             self._mark_output(call_id, "")
+        ledger = self._ledger
+        if ledger is not None:
+            ledger.on_cancel(call_id)
         self._log_format(retry.original, retry.candidate, outcome=outcome)
 
     def _log_format(self, call: _Call, candidate: Candidate, *, outcome: str) -> None:

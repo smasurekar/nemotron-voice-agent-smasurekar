@@ -1,0 +1,122 @@
+{
+  "benchmark": "decision_gpt_4_1",
+  "model": "azure/openai/gpt-4.1",
+  "call_name": "interruption_decision",
+  "started_utc": "2026-10-08T09:36:54Z",
+  "ended_utc": "2026-10-08T09:37:03Z",
+  "concurrency": 1,
+  "streaming": false,
+  "summary": {
+    "n": 6,
+    "n_ok": 6,
+    "total_s": {
+      "p50": 1.093,
+      "p90": 1.386,
+      "mean": 1.073,
+      "min": 0.7,
+      "max": 1.5
+    },
+    "prompt_tokens": {
+      "p50": 1226.0,
+      "p90": 2165.0,
+      "mean": 1252.833,
+      "min": 354,
+      "max": 2388
+    },
+    "completion_tokens": {
+      "p50": 1.0,
+      "p90": 1.0,
+      "mean": 1.0,
+      "min": 1,
+      "max": 1
+    },
+    "reasoning_tokens": {
+      "p50": 0.0,
+      "p90": 0.0,
+      "mean": 0.0,
+      "min": 0,
+      "max": 0
+    },
+    "e2e_tok_s": {
+      "p50": 0.9,
+      "p90": 1.35,
+      "mean": 1.0,
+      "min": 0.7,
+      "max": 1.4
+    }
+  },
+  "rows": [
+    {
+      "ok": true,
+      "total_s": 1.5,
+      "prompt_tokens": 2388,
+      "completion_tokens": 1,
+      "reasoning_tokens": 0,
+      "e2e_tok_s": 0.7,
+      "finish_reason": "stop",
+      "i": 0,
+      "source": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_retail_regular_rerun43/tau2/fdh_voice_geval_retail_regular_rerun43/artifacts/task_100/sim_e407d341-df3c-4878-9a4a-02809cbc2c45/llm_debug/20261008_064524_259_interruption_decision_9fca0e33.json",
+      "recorded_generation_time_s": 1.5294685438275337
+    },
+    {
+      "ok": true,
+      "total_s": 0.78,
+      "prompt_tokens": 354,
+      "completion_tokens": 1,
+      "reasoning_tokens": 0,
+      "e2e_tok_s": 1.3,
+      "finish_reason": "stop",
+      "i": 1,
+      "source": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_retail_regular_rerun43/tau2/fdh_voice_geval_retail_regular_rerun43/artifacts/task_67/sim_3781aa92-9460-4a6a-ad9a-627d1855c565/llm_debug/20261008_032500_471_interruption_decision_3c982711.json",
+      "recorded_generation_time_s": 0.8735442571341991
+    },
+    {
+      "ok": true,
+      "total_s": 0.7,
+      "prompt_tokens": 1129,
+      "completion_tokens": 1,
+      "reasoning_tokens": 0,
+      "e2e_tok_s": 1.4,
+      "finish_reason": "stop",
+      "i": 2,
+      "source": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_retail_regular_rerun43/tau2/fdh_voice_geval_retail_regular_rerun43/artifacts/task_92/sim_bff6e8ff-5338-48e7-b81e-eb390987c9b9/llm_debug/20261008_053342_490_interruption_decision_ff5b5c87.json",
+      "recorded_generation_time_s": 1.4765393882989883
+    },
+    {
+      "ok": true,
+      "total_s": 1.114,
+      "prompt_tokens": 381,
+      "completion_tokens": 1,
+      "reasoning_tokens": 0,
+      "e2e_tok_s": 0.9,
+      "finish_reason": "stop",
+      "i": 3,
+      "source": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_airline_regular/tau2/fdh_voice_geval_airline_regular/artifacts/task_16/sim_2e0b5a99-90fc-4e85-9ed6-8d7d0b484996/llm_debug/20261007_112135_254_interruption_decision_69f7d9d0.json",
+      "recorded_generation_time_s": 2.73557230271399
+    },
+    {
+      "ok": true,
+      "total_s": 1.072,
+      "prompt_tokens": 1942,
+      "completion_tokens": 1,
+      "reasoning_tokens": 0,
+      "e2e_tok_s": 0.9,
+      "finish_reason": "stop",
+      "i": 4,
+      "source": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_airline_regular/tau2/fdh_voice_geval_airline_regular/artifacts/task_24/sim_837dfe61-d718-427c-b4b2-05a9cc79787e/llm_debug/20261007_122114_732_interruption_decision_fd50d2a4.json",
+      "recorded_generation_time_s": 1.8322019185870886
+    },
+    {
+      "ok": true,
+      "total_s": 1.273,
+      "prompt_tokens": 1323,
+      "completion_tokens": 1,
+      "reasoning_tokens": 0,
+      "e2e_tok_s": 0.8,
+      "finish_reason": "stop",
+      "i": 5,
+      "source": "2026-10-07_09-34-31Z_fdh-voice-geval-fixes/fdh_voice_geval_airline_regular/tau2/fdh_voice_geval_airline_regular/artifacts/task_38/sim_5a2d8214-cf75-4905-a783-8eed2b20fe12/llm_debug/20261007_135854_081_interruption_decision_416ce443.json",
+      "recorded_generation_time_s": 1.2476050090044737
+    }
+  ]
+}

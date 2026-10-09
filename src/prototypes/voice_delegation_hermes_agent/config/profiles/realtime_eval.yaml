@@ -16,7 +16,12 @@ delegation:
     enabled: true
     hold_ms: 1500
     complete_patterns: auto   # strict shapes of the identifier examples in the session's tool schemas
-  replay_unheard_answer: {enabled: false, ttl_s: 30}
+  # fix-plan-f1-f2-f4-f8.md F1 + F2 (no dead air), on by default; realtime_eval_124acf7.yaml turns them off.
+  guards:
+    liveness_reply: true          # R1: a silent reply to a ping or a repeat request is delegated (or replayed)
+    question_never_silent: true   # R2: a silent reply to a question is delegated
+    ping_as_status: true          # R3: a ping while WORKING is a status request, never a steer
+  replay_unheard_answer: {enabled: true, ttl_s: 60, triggers: [backchannel, ping, repeat], whole_if_heard_below: 0.2}
   filler_dedupe: {enabled: true, recent: 3}
 backend:
   link: websocket

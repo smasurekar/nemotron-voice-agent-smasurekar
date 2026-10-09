@@ -22,6 +22,7 @@ from typing import Any
 import yaml
 
 from prototypes.text_frontend_backend_agent.config import interpolate_env
+from prototypes.voice_delegation_hermes_agent.frontend.turn_class import ENGLISH, Lexicon, lexicon_from_mapping
 from prototypes.voice_delegation_hermes_agent.prompt_features import FRONTEND_FEATURES, features
 from prototypes.voice_frontend_backend_agent.config import VoiceConfig, deep_merge, load_voice_config
 
@@ -32,7 +33,9 @@ PROFILES_DIR = CONFIG_DIR / "profiles"
 #: Keys resolved against the file that declares them.
 IN_PATH_KEYS = ("voice_profile", "delegation.prompts.path", "backend.gateway_config")
 #: Mappings whose keys are not checked (passed through as data).
-_FREE_FORM = ("frontend.llm.extra_body",)
+_FREE_FORM = ("frontend.llm.extra_body", "delegation.guards.lexicon")
+#: F1 replay triggers (fix-plan-f1-f2-f4-f8.md section 2.4); status_intent is the M2 path.
+REPLAY_TRIGGERS = ("status_intent", "backchannel", "ping", "repeat")
 
 DEFAULTS: dict[str, Any] = {
     "voice_profile": "voice/tau3.yaml",
@@ -81,11 +84,23 @@ DEFAULTS: dict[str, Any] = {
                 "got it",
                 "cool",
             ],
+            # fix-plan-f1-f2-f4-f8.md section 2.3 (F2), each off by default.
+            "liveness_reply": False,  # R1: a silent reply to a ping or repeat request is delegated (or replayed)
+            "question_never_silent": False,  # R2: a silent reply to a question is delegated
+            "ping_as_status": False,  # R3: a ping while WORKING is a status request, never a steer
+            # Phrase lists per language (BCP-47 tag or base language); the session's ASR language picks one.
+            # The backchannel list is always delegation.guards.backchannel_words.
+            "lexicon": {"en": {key: value for key, value in ENGLISH.items() if key != "backchannel"}},
         },
         "prompts": {"path": "prompts.yaml"},
         # tau3-failure-fixes-plan.md: every behaviour below is off by default (the baseline).
         "spelling_hold": {"enabled": False, "hold_ms": 1500, "complete_patterns": []},
-        "replay_unheard_answer": {"enabled": False, "ttl_s": 30},
+        "replay_unheard_answer": {
+            "enabled": False,
+            "ttl_s": 30,
+            "triggers": ["status_intent"],
+            "whole_if_heard_below": 0.0,
+        },
         "filler_dedupe": {"enabled": False, "recent": 3},
     },
     "backend": {
@@ -172,10 +187,29 @@ class SpellingHoldSettings:
 
 @dataclass(frozen=True, slots=True)
 class ReplaySettings:
-    """``delegation.replay_unheard_answer`` (M2, experimental)."""
+    """``delegation.replay_unheard_answer`` (M2; F1 adds the triggers and the whole-answer threshold)."""
 
     enabled: bool = False
     ttl_s: float = 30.0
+    #: When a replay is tried: status_intent (M2, the model's "status" in IDLE), backchannel, ping, repeat.
+    triggers: tuple[str, ...] = ("status_intent",)
+    #: Replay the whole answer when less than this share of its characters was heard (0 = the unheard part).
+    whole_if_heard_below: float = 0.0
+
+
+@dataclass(frozen=True, slots=True)
+class LivenessSettings:
+    """``delegation.guards`` F2 rules R1-R3 and the phrase lists (fix-plan-f1-f2-f4-f8.md section 2.3)."""
+
+    liveness_reply: bool = False
+    question_never_silent: bool = False
+    ping_as_status: bool = False
+    lexicons: dict[str, Lexicon] = field(default_factory=dict)
+
+    @property
+    def any_rule(self) -> bool:
+        """Whether any of R1-R3 is on."""
+        return self.liveness_reply or self.question_never_silent or self.ping_as_status
 
 
 @dataclass(frozen=True, slots=True)
@@ -199,6 +233,13 @@ class DelegationSettings:
     spelling_hold: SpellingHoldSettings = field(default_factory=SpellingHoldSettings)
     replay: ReplaySettings = field(default_factory=ReplaySettings)
     filler_dedupe: FillerDedupeSettings = field(default_factory=FillerDedupeSettings)
+    liveness: LivenessSettings = field(default_factory=LivenessSettings)
+
+    @property
+    def classifies_turns(self) -> bool:
+        """Whether a rule needs the turn class (F2 R1-R3 or an F1 trigger other than status_intent)."""
+        replay_classes = self.replay.enabled and any(t != "status_intent" for t in self.replay.triggers)
+        return self.liveness.any_rule or replay_classes
 
 
 @dataclass(frozen=True, slots=True)
@@ -271,11 +312,16 @@ class DelegationConfig:
             "clean_answers": out.clean_answers,
             "spelling_hold": dl.spelling_hold.enabled,
             "replay_unheard_answer": dl.replay.enabled,
+            "replay_triggers": list(dl.replay.triggers) if dl.replay.enabled else [],
             "filler_dedupe": dl.filler_dedupe.enabled,
+            "liveness_reply": dl.liveness.liveness_reply,
+            "question_never_silent": dl.liveness.question_never_silent,
+            "ping_as_status": dl.liveness.ping_as_status,
             "spelled_runs": self.voice.normalization.transcript.spelled_runs.enabled,
             "result_hints": self.voice.normalization.tool_arguments.enabled
             and self.voice.normalization.tool_arguments.result_hints.enabled,
             "field_provenance": self._field_provenance,
+            "identity_ledger": self._identity_ledger,
             "format_retry": self._format_retry_mode,
             **{f"schema_{name}": on for name, on in self.schema_auto.items()},
         }
@@ -284,6 +330,12 @@ class DelegationConfig:
     def _field_provenance(self) -> bool:
         arguments = self.voice.normalization.tool_arguments
         return arguments.enabled and arguments.result_hints.enabled and arguments.result_hints.field_provenance
+
+    @property
+    def _identity_ledger(self) -> bool:
+        """F8 (fix-plan-f1-f2-f4-f8.md section 4): the identification ledger's note after a failed lookup."""
+        arguments = self.voice.normalization.tool_arguments
+        return arguments.enabled and arguments.result_hints.enabled and arguments.result_hints.ledger
 
     @property
     def _format_retry_mode(self) -> str | bool:
@@ -374,14 +426,12 @@ def build_delegation_config(merged: dict[str, Any], files: tuple[Path, ...] = ()
             ),
             auto_patterns=dl["spelling_hold"]["complete_patterns"] == "auto",
         ),
-        replay=ReplaySettings(
-            enabled=_bool(dl["replay_unheard_answer"]["enabled"], "delegation.replay_unheard_answer.enabled"),
-            ttl_s=_float(dl["replay_unheard_answer"]["ttl_s"], "delegation.replay_unheard_answer.ttl_s"),
-        ),
+        replay=_replay_settings(dl["replay_unheard_answer"]),
         filler_dedupe=FillerDedupeSettings(
             enabled=_bool(dl["filler_dedupe"]["enabled"], "delegation.filler_dedupe.enabled"),
             recent=_int(dl["filler_dedupe"]["recent"], "delegation.filler_dedupe.recent", minimum=1),
         ),
+        liveness=_liveness_settings(dl["guards"]),
     )
     gateway_config = str(be.get("gateway_config") or "")
     backend = BackendSettings(
@@ -429,10 +479,14 @@ def build_delegation_config(merged: dict[str, Any], files: tuple[Path, ...] = ()
         prompt_features = dict(features(merged.get("prompt_features"), FRONTEND_FEATURES))
     except ValueError as exc:
         raise DelegationConfigError(f"prompt_features: {exc}") from exc
-    if delegation.replay.enabled and not prompt_features["replay_intent"]:
+    if (
+        delegation.replay.enabled
+        and "status_intent" in delegation.replay.triggers
+        and not prompt_features["replay_intent"]
+    ):
         raise DelegationConfigError(
-            "delegation.replay_unheard_answer.enabled needs prompt_features.replay_intent (the frontend must be "
-            "told when its last answer was not heard)"
+            "delegation.replay_unheard_answer.enabled needs prompt_features.replay_intent with the status_intent "
+            "trigger (the frontend must be told when its last answer was not heard)"
         )
     effective = copy.deepcopy(merged)
     effective["frontend"]["llm"]["api_key"] = "***" if frontend.llm.api_key else ""
@@ -448,6 +502,41 @@ def build_delegation_config(merged: dict[str, Any], files: tuple[Path, ...] = ()
         source_files=(*files, *voice.source_files),
         effective=effective,
         prompt_features=prompt_features,
+    )
+
+
+def _replay_settings(section: dict[str, Any]) -> ReplaySettings:
+    key = "delegation.replay_unheard_answer"
+    triggers = tuple(str(t) for t in section.get("triggers") or ())
+    unknown = [t for t in triggers if t not in REPLAY_TRIGGERS]
+    if unknown:
+        raise DelegationConfigError(f"{key}.triggers: {unknown} (allowed: {list(REPLAY_TRIGGERS)})")
+    whole = _float(section.get("whole_if_heard_below", 0.0), f"{key}.whole_if_heard_below")
+    if whole > 1.0:
+        raise DelegationConfigError(f"{key}.whole_if_heard_below: {whole} is above 1")
+    return ReplaySettings(
+        enabled=_bool(section["enabled"], f"{key}.enabled"),
+        ttl_s=_float(section["ttl_s"], f"{key}.ttl_s"),
+        triggers=triggers,
+        whole_if_heard_below=whole,
+    )
+
+
+def _liveness_settings(guards: dict[str, Any]) -> LivenessSettings:
+    backchannel = [str(word).lower() for word in guards["backchannel_words"] or ()]
+    lexicons: dict[str, Lexicon] = {}
+    for language, lists in (guards.get("lexicon") or {}).items():
+        if not isinstance(lists, dict):
+            raise DelegationConfigError(f"delegation.guards.lexicon.{language}: must be a mapping of phrase lists")
+        try:
+            lexicons[str(language)] = lexicon_from_mapping({**lists, "backchannel": backchannel})
+        except ValueError as exc:
+            raise DelegationConfigError(f"delegation.guards.lexicon.{language}: {exc}") from exc
+    return LivenessSettings(
+        liveness_reply=_bool(guards["liveness_reply"], "delegation.guards.liveness_reply"),
+        question_never_silent=_bool(guards["question_never_silent"], "delegation.guards.question_never_silent"),
+        ping_as_status=_bool(guards["ping_as_status"], "delegation.guards.ping_as_status"),
+        lexicons=lexicons,
     )
 
 

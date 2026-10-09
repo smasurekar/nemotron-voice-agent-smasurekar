@@ -1,0 +1,3947 @@
+{
+ "meta": {
+  "started_utc": "2026-10-08T10:29:37Z",
+  "local_server": "localhost:50051",
+  "hub_asr": "openai/openai/gpt-4o-mini-transcribe",
+  "input": "16 kHz mono",
+  "ended_utc": "2026-10-08T10:36:38Z"
+ },
+ "rows": [
+  {
+   "arm": "magpie_john",
+   "id": "p01",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Sure I can help you with that . Could you tell me a bit more about what went wrong with your order ?"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p01",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Sure, I can help you with that. Could you tell me a bit more about what went wrong with your order?"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p01",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Sure I can help you with that . Could you tell me a bit more about what went wrong with your order"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p01",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Sure, I can help you with that. Could you tell me a bit more about what went wrong with your order?"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p01",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Sure, I can help you with that . Could you tell me a bit more about what went wrong with your order?"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p01",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Sure, I can help you with that. Could you tell me a bit more about what went wrong with your order?"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p02",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'm sorry to hear about the delay . Let me look into your reservat ion and see what options we have ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p02",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'm sorry to hear about the delay. Let me look into your reservation and see what options we have."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p02",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'm sorry to hear about the delay . Let me look into your reservat ion and see what options we have ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p02",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'm sorry to hear about the delay. Let me look into your reservation and see what options we have."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p02",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'm sorry to hear about the delay . Let me look into your reservation and see what options we have ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p02",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'm sorry to hear about the delay. Let me look into your reservation and see what options we have."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p03",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Hi yeah, I need to cancel my flight . Something came up at work and I can't travel next week ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p03",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Hi, yeah, I need to cancel my flight. Something came up at work and I can't travel next week."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p03",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Hi yeah , I need to cancel my flight . Something came up at work and I can't travel next week ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p03",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Hi, yeah, I need to cancel my flight. Something came up at work, and I can't travel next week."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p03",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Hi yeah , I need to cancel my flight . Something came up at work and I can't travel next week ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p03",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Hi, yeah, I need to cancel my flight. Something came up at work and I can't travel next week."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p04",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "No, I'd rather keep the original payment method . Can you just refund it to the credit card instead?"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p04",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "No, I'd rather keep the original payment method. Can you just refund it to the credit card instead?"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p04",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "No, I'd rather keep the original payment method . Can you just refund it to the credit card instead ?"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p04",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "No, I'd rather keep the original payment method. Can you just refund it to the credit card instead?"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p04",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "No , I'd rather keep the original payment method . Can you just refund it to the credit card instead ?"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p04",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "No, I'd rather keep the original payment method. Can you just refund it to the credit card instead?"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p05",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your Internet should be working again . Please restart the router and let me know if the light turns green ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p05",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your Internet should be working again. Please restart the router and let me know if the light turns green."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p05",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your Internet should be working again . Please restart the router and let me know if the light turns green ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p05",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your internet should be working again. Please restart the router and let me know if the light turns green."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p05",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your Internet should be working again . Please restart the router and let me know if the light turns green ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p05",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your internet should be working again. Please restart the router and let me know if the light turns green."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p06",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Okay , I turned airplane mode off and restarted the phone , but I still don't have any signal."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p06",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Okay, I turned airplane mode off and restarted the phone, but I still don't have any signal."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p06",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Okay , I turned airplane mode off and restarted the phone , but I still don't have any signal."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p06",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Okay, I turned airplane mode off and restarted the phone, but I still don't have any signal."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p06",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Okay , I turned airplane mode off and restarted the phone , but I still don't have any signal ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p06",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "OK, I turned airplane mode off and restarted the phone, but I still don't have any signal."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p07",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Before I make this change , please confirm that you want to exchange the blue jacket for the black one ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p07",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Before I make this change, please confirm that you want to exchange the blue jacket for the black one."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p07",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Before I make this change , please confirm that you want to exchange the blue jacket for the black one."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p07",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Before I make this change, please confirm that you want to exchange the blue jacket for the black one."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p07",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Before I make this change , please confirm that you want to exchange the blue jacket for the black one."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p07",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Before I make this change, please confirm that you want to exchange the blue jacket for the black one."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p08",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Yes , that's correct . Go ahead and process the exchange and send the new one to my home address ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p08",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Yes, that's correct. Go ahead and process the exchange, and send the new one to my home address."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p08",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Yes , that's correct . Go ahead and process the exchange and send the new one to my home address ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p08",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Yes, that's correct. Go ahead and process the exchange and send the new one to my home address."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p08",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Yes , that's correct . Go ahead and process the exchange and send the new one to my home address ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p08",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Yes, that's correct. Go ahead and process the exchange and send the new one to my home address."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n01",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The total for your new flight is one thousand two hundred and eighty six dollars forty cents , which will be charged to your credit card ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n01",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The total for your new flight is $1,286.40, which will be charged to your credit card."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n01",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The total for your new flight is one thousand two hundred eighty six dollars and forty cents , which will be charged to your credit card ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n01",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The total for your new flight is $1,286.40, which will be charged to your credit card."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n01",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The total for your new flight is one thousand two hundred eighty six dollars and forty cents , which will be charged to your credit card."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n01",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The total for your new flight is $1,286.40, which will be charged to your credit card."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n02",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your flight departs on May fifteenth at five thirty P.M. from Newark."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n02",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your flight departs on May fifteenth at five thirty p.m. from Newark."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n02",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your flight departs on May fifteenth at five thirty PM from Newark."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n02",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your flight departs on May fifteenth at 5:30 p.m. from Newark."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n02",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your flight departs on May fifteenth at five thirty PM from Newark."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n02",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your flight departs on May 15th at 5:30 p.m. from Newark."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n03",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I was charged fifty four dollars and twenty cents , but the item was only thirty nine dollars and ninety nine cents ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n03",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I was charged $54.20, but the item was only $39.99."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n03",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I was charged fifty four dollars and twenty cents , but the item was only thirty nine dollars and ninety nine cents ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n03",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I was charged $54.20, but the item was only $39.99."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n03",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I was charged fifty four dollars and twenty cents , but the item was only thirty nine dollars and ninety nine cents ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n03",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I was charged fifty-four dollars and twenty cents, but the item was only thirty-nine dollars and ninety-nine cents."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n04",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My data plan is to point zero gigabytes , and I've already used one point eight this month ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n04",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My data plan is to point zero gigabytes, and I've already used one point eight this month."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n04",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My data plan is two point zero gigabytes , and I've already used one point eight this month ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n04",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My data plan is 2.0 gigabytes, and I've already used 1.8 this month."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n04",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My data plan is two point zero gigabytes and I've already used one point eight this month."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n04",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My data plan is 2.0 gigabytes, and I've already used 1.8 this month."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n05",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The refund of fifty four dollars twenty cents will appear on your statement in five to seven business days ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n05",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The refund of $54.20 will appear on your statement in five to seven business days."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n05",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "A refund of fifty four dollars and twenty cents will appear on your statement in five to seven business days."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n05",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The refund of $54.20 will appear on your statement in five to seven business days."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n05",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The refund of fifty four dollars and twenty cents will appear on your statement in five to seven business days."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n05",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The refund of $54.20 will appear on your statement in five to seven business days."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n06",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The flight was on March third , and it was delayed by about three and Eads half hours ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n06",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The flight was on March third, and it was delayed by about three and a half hours."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n06",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The flight was on March third , and it was delayed by about three and a half hours ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n06",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The flight was on March third, and it was delayed by about three and a half hours."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n06",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The flight was on March third , and it was delayed by about three and a half hours ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n06",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The flight was on March third, and it was delayed by about three and a half hours."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n07",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your new departure is Tuesday , June fourth , at eleven forty five A.M. arriving at two ten P.M."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n07",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your new departure is Tuesday, June fourth, at 11:45 a.m., arriving at 2:10 p.m."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n07",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your new departure is Tuesday , June fourth at eleven forty five AM , arriving at two ten PM"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n07",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your new departure is Tuesday, June fourth, at 11:45 a.m., arriving at 2:10 p.m."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n07",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your new departure is Tuesday, June fourth at eleven forty five A.M. arriving at two ten P.M."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n07",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your new departure is Tuesday, June fourth, at 11:45 a.m., arriving at 2:10 p.m."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n08",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'd like to upgrade to passengers , and my budget is around five hundred dollars total ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n08",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'd like to upgrade to passengers, and my budget is around $500 total."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n08",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'd like to upgrade two passengers and my budget is around five hundred dollars total"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n08",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'd like to upgrade two passengers, and my budget is around $500 total."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n08",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'd like to upgrade two passengers and my budget is around five hundred dollars total."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n08",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'd like to upgrade two passengers, and my budget is around $500 total."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s01",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "By last name is Rossi R O S. I."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s01",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My last name is Rossi, R-O-S-S-I."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s01",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My last name is Rossi R O S S I."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s01",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My last name is Rossi, R-O-S-S-I."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s01",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My last name is Rossi R O S S I"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s01",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My last name is Rossi, R-O-S-S-I."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s02",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Its chin C as in Charlie Hen"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s02",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "It's chin, C as in Charlie, H-E-N."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s02",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "It's Chen C as in Charlie H E N."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s02",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "It's Chen, C as in Charlie, H-E-N."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s02",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "It's Chen C as in Charlie H E N"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s02",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "It's Chen, C as in Charlie, H-E-N."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s03",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My first name is Dyke D Aik , and my last name is Sanchez."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s03",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My first name is Daiki (\u30c0\u30a4\u30ad) and my last name is Sanchez."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s03",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My first name is Dikey Daiki and my last name is Sanchez ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s03",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My first name is Daiki, D-A-I-K-I, and my last name is Sanchez."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s03",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My first name is Dikey D Aiki and my last name is Sanchez."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s03",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My first name is Daiki, D-A-I-K-I, and my last name is Sanchez."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s04",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The reservation is under Sophia Lee . That Sophia with an F and Lee is L . L. L. L. L. L. L. L. L. L. L."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s04",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The reservation is under Sophia Li. That's Sophia with an F, and Li is L-I."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s04",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The reservation is under Sophia Lee that Sophia with an F and Lee is L.I."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s04",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The reservation is under Sophia Li, that's Sophia with an F, and Li is L-I."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s04",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The reservation is under Sophia Lee that Sophia with an F and Lee is L.I."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s04",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The reservation is under Sophia Li. That's Sophia with an F, and Li is L-I."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s05",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My last name is Covax K O V A C. S."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s05",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My last name is Kovacs, K-O-V-A-C-S."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s05",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My last name is Kovax K O V A C S"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s05",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My last name is Kovacs, K-O-V-A-C-S."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s05",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My last name is Kovax K O V A C S ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s05",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My last name is Kovacs, K-O-V-A-C-S."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s06",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Thank you, Mr. Kowalski. I've found the booking for you and Miss Nguyen."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s06",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Thank you, Mr. Kowalski. I found the booking for you and Ms. Nguyen."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s06",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Thank you , Mister Kowalski . I found the booking for you and Miss W."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s06",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Thank you, Mr. Kowalski. I found the booking for you and Ms. Nguyen."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s06",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Thank you, Mister Kowalski . I found the booking for you and Miss Nguyen."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s06",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Thank you, Mr. Kowalski. I found the booking for you and Ms. Nguyen."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s07",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The name is Yusuf Ahmed U. S. U. F."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s07",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The name is Yusuf Ahmed, U-S-U-F."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s07",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The name is Yusuf Ahmed Yusuf"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s07",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The name is Yusuf Ahmed, Y-U-S-U-F."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s07",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The name is Yusuf Ahmed Y U S U F ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s07",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The name is Yusuf Ahmed, Y-U-S-U-F."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s08",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Just to confirm that 's Daki Sanchez spelled D A I K"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s08",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Just to confirm, that's Daiki Sanchez, spelled D-A-I-K?"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s08",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Just to confirm that's Daiki Sanchez spelled D A I K.I."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s08",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Just to confirm, that's Daiki Sanchez, spelled D-A-I-K-I."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s08",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Just to confirm that's Dikey Sanchez spelled D A I K I."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s08",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Just to confirm, that's Daiki Sanchez, spelled D-A-I-K-I?"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e01",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Sure , my email is Mia dot Garcia for seven at example dot com ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e01",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Sure, my email is mia.garcia47@example.com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e01",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Sure , my email is Mia dot Garcia four seven at example dot com"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e01",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Sure, my email is mia.garcia47@example.com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e01",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Sure , my email is Mia dot Garcia four seven at example dot com ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e01",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Sure, my email is mia.barcia47@example.com."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e02",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I have your email as Daki dot Sanchez one for seven nine at example dot com . Is that right ?"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e02",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I have your email as daiki.sanchez1479@example.com. Is that right?"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e02",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I have your email as deikey dot Sanchez dot one four seven nine at example dot com . Is that right ?"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e02",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I have your email as daiky.sanchez.1479@example.com. Is that right?"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e02",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I have your email as Dikey dot Sanchez one four seven nine at example dot com . Is that right?"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e02",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I have your email as daiky.sanchez1479@example.com. Is that right?"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e03",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Its Sophia dot Lee nine to one nine at example dot com ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e03",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "it's sophia.lee9219@example.com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e03",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "It's Sophia dot Lee nine two one nine at example dot com ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e03",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "It's sophia.lee9219@example.com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e03",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "It's Sophia dot Lee nine two one nine at example dot com ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e03",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "It's sophia.lee9219@example.com."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e04",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'll send the receipt to Omar dot Anderson three to zero three at example dot com ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e04",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'll send the receipt to omar.anderson3203@example.com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e04",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'll send the receipt to Omar Anderson three two oh three at example dot com ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e04",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'll send the receipt to omar.anderson3203@example.com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e04",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'll send the receipt to Omar dot Anderson three two oh three at example dot com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e04",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'll send the receipt to omar.anderson3203@example.com."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e05",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My email address is Yusuf dot Rossi seven seven six nine at example dot com ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e05",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My email address is yusuf.rossi7769@example.com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e05",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My email address is Yusuf dot Rossi seven seven six nine at example dot com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e05",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My email address is yousif.rossi7769@example.com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e05",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My email address is Yusuf dot rosi seven seven six nine at example dot com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e05",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My email address is yousif.rossi7769@example.com."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e06",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The confirmation went to Ethan Dott Kim eight one one at example dot com few minutes ago"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e06",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The confirmation went to ethan.kim811@example.com a few minutes ago."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e06",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The confirmation went to Ethan dot Kim eighty eight eleven at example dot com a few minutes ago ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e06",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The confirmation went to ethan.kim8811@example.com a few minutes ago."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e06",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The confirmation went to Ethan dot Kim eight eight one one at example dot com a few minutes ago."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e06",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The confirmation went to ethan.kim8811@example.com a few minutes ago."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e07",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Ah , its Raj A J dot Covax at example dot com ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e07",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Uh, it's Raj, aj.kovacs@example.com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e07",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Uh it's Raj R A J dot Covax at example dot com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e07",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Uh, it's raj, R-A-J.Kovacs@example.com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e07",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Uh, it's Raj R. A J dot Covax at example dot com ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e07",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Uh, it's raj, R-A-J.Kovacs@example.com."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e08",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Could you confirm the email on file ? I see Lucas dot brown nine zero eight one at example dot com ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e08",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Could you confirm the email on file? I see lucas.brown9081@example.com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e08",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Could you confirm the email on file ? I see Lucas dot brown nine zero eight one at example dot com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e08",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Could you confirm the email on file? I see lucas.brown9081@example.com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e08",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Could you confirm the email on file ? I see Lucas dot brown nine zero eight one at example dot com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e08",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Could you confirm the email on file? I see lucas.brown9081@example.com."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d01",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I found order hash W for zero seven three six seven three . It was delivered on Monday ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d01",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I found order #W4073673. It was delivered on Monday."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d01",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I found order number W four zero seven three six seven three . It was delivered on Monday ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d01",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I found order number W4073673. It was delivered on Monday."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d01",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I found order W four zero seven three six seven three . It was delivered on Monday."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d01",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I found order W4073673. It was delivered on Monday."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d02",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The order number is W four three one six one five two"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d02",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The order number is W4316152."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d02",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The order number is W four three one six one five two"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d02",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The order number is W4316152."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d02",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The order number is W four three one six one five two"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d02",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The order number is W4316-152."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d03",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My user A is may underscore Covax underscore eight zero to zero"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d03",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My user A is may_kovacs_8020."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d03",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My user ID is MEI underscore COVAX underscore eight zero two zero."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d03",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My user ID is mei_kovacs_8020."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d03",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My user ID is MEI underscore COVAX underscore eight zero two zero"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d03",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My user ID is MEI_kovacs_8020."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d04",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your user ID is may underscore COVAX underscore eight thousand twenty and your zip code is one nine one two"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d04",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your user ID is may_kovacs_8020 and your zip code is 19122."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d04",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your user ID is MEI COVAX eight zero two zero and your zip code is one nine one two two ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d04",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your user ID is meikovacs8020 and your zip code is 19122."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d04",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your user ID is MEI COVAX eight zero two zero and your zip code is one nine one two two two"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d04",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your user ID is MEIKOVACS8020 and your zip code is 19122."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d05",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "You can reach me at five five five one to three to zero zero two"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d05",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "You can reach me at 555-123-2002."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d05",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "You can reach me at five five five one two three two zero zero two"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d05",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "You can reach me at 555-123-2002."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d05",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "You can reach me at five five five one two three two zero zero two."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d05",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "You can reach me at 555-123-2002."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d06",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The phone number on the account is five five five one two three two zero zero two"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d06",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The phone number on the account is 555-123-2002."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d06",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The phone number on the account is five five five one two three two zero zero two."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d06",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The phone number on the account is 555-123-2002."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d06",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The phone number on the account is five five five one two three two zero zero two."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d06",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The phone number on the account is 555-123-2002."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d07",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "By zip code is one nine one two."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d07",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My zip code is one nine one two two."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d07",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My zip code is one nine one two two two."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d07",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My zip code is 19122."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d07",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My zip code is one nine one two two two"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d07",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My zip code is 19122."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d08",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your reservation id is for Buy Yushi one hundred fifty on flight hat two hundred fourteen"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d08",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your reservation ID is for BUC150 on flight HA214."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d08",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your reservation ID is four WQ one five zero on flight HAT two one four."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d08",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your reservation ID is 4WQ150 on flight HAT214."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d08",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your reservation ID is four W two one five zero on flight HAT two one four"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d08",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your reservation ID is 4W2150 on flight HAT214."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d09",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My reservation number is four W Q one five zero"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d09",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My reservation number is 4WQ150."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d09",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My reservat ion number is four W Q one five zero."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d09",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My reservation number is 4WQ150."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d09",
+   "rep": 0,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My reservation number is four WQ one five zero."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d09",
+   "rep": 0,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My reservation number is 4WQ150."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p01",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Sure I can help you with that . Could you tell me a bit more about what went wrong with your order?"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p01",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Sure, I can help you with that. Could you tell me a bit more about what went wrong with your order?"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p01",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Sure I can help you with that . Could you tell me a bit more about what went wrong with your order?"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p01",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Sure, I can help you with that. Could you tell me a bit more about what went wrong with your order?"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p01",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Sure I can help you with that . Could you tell me a bit more about what went wrong with her order?"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p01",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Sure, I can help you with that. Could you tell me a bit more about what went wrong with your order?"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p02",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'm sorry to hear about the delay . Let me look into your reservat ion and see what options we have ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p02",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'm sorry to hear about the delay. Let me look into your reservation and see what options we have."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p02",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'm sorry to hear about the delay . Let me look into your reservation and see what options we have ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p02",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'm sorry to hear about the delay. Let me look into your reservation and see what options we have."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p02",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'm sorry to hear about the delay . Let me look into your reservation and see what options we have ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p02",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'm sorry to hear about the delay. Let me look into your reservation and see what options we have."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p03",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Hi yeah, I need to cancel my flight . Something came up at work and I can't travel next week ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p03",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Hi, yeah, I need to cancel my flight. Something came up at work and I can't travel next week."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p03",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Hi yeah, I need to cancel my flight . Something came up at work and I can't travel next week ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p03",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Hi, yeah, I need to cancel my flight. Something came up at work and I can't travel next week."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p03",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Hi yeah, I need to cancel my flight . Something came up at work and I can't travel next week."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p03",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Hi, yeah, I need to cancel my flight. Something came up at work and I can't travel next week."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p04",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "No, I'd rather keep the original payment method . Can you just refund it to the credit card instead?"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p04",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "No, I'd rather keep the original payment method. Can you just refund it to the credit card instead?"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p04",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "No, I'd rather keep the original payment method . Can you just refund it to the credit card instead?"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p04",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "No, I'd rather keep the original payment method. Can you just refund it to the credit card instead?"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p04",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "No, I'd rather keep the original payment method . Can you just refund it to the credit card instead?"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p04",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "No, I'd rather keep the original payment method. Can you just refund it to the credit card instead?"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p05",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your Internet should be working again . Please restart the router and let me know if the light turns green ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p05",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your internet should be working again. Please restart the router and let me know if the light turns green."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p05",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your Internet should be working again . Please restart the router and let me know if the light turns green."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p05",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your internet should be working again. Please restart the router and let me know if the light turns green."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p05",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your Internet should be working again . Please restart the router and let me know if the light turns green ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p05",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your internet should be working again. Please restart the router and let me know if the light turns green."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p06",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Okay , I turned airplane mode off and restarted the phone , but I still don't have any signal"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p06",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Okay, I turned airplane mode off and restarted the phone, but I still don't have any signal."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p06",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Okay , I turned airplane mode off and restarted the phone , but I still don't have any signal ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p06",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "OK, I turned airplane mode off and restarted the phone, but I still don't have any signal."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p06",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Okay , I turned airplane mode off and restarted the phone , but I still don't have any signal."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p06",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Okay, I turned airplane mode off and restarted the phone, but I still don't have any signal."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p07",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Before I make this change , please confirm that you want to exchange the blue jacket for the black one ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p07",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Before I make this change, please confirm that you want to exchange the blue jacket for the black one."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p07",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Before I make this change , please confirm that you want to exchange the blue jacket for the black one ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p07",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Before I make this change, please confirm that you want to exchange the blue jacket for the black one."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p07",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Before I make this change , please confirm that you want to exchange the blue jacket for the black one."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p07",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Before I make this change, please confirm that you want to exchange the blue jacket for the black one."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p08",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Yes, that's correct . Go ahead and process the exchange and send the new one to my home address ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "p08",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Yes, that's correct. Go ahead and process the exchange, and send the new one to my home address."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p08",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Yes , that's correct . Go ahead and process the exchange and send the new one to my home address ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "p08",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Yes, that's correct. Go ahead and process the exchange, and send the new one to my home address."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p08",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Yes , that's correct . Go ahead and process the exchange and send the new one to my home address."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "p08",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Yes, that's correct. Go ahead and process the exchange and send the new one to my home address."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n01",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The total for your new flight is one thousand two hundred and eighty six dollars forty cents , which will be charged to your credit card ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n01",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The total for your new flight is $1,286.40, which will be charged to your credit card."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n01",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The total for your new flight is one thousand two hundred eighty six dollars and forty cents , which will be charged to your credit card."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n01",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The total for your new flight is $1,286.40, which will be charged to your credit card."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n01",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The total for your new flight is one thousand two hundred eighty six dollars and forty cents , which will be charged to your credit card ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n01",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The total for your new flight is $1,286.40, which will be charged to your credit card."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n02",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your flight departs on May fifteenth at five thirty P.M. from Newark."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n02",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your flight departs on May fifteenth at five-thirty p.m. from Newark."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n02",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your flight departs on May fifteenth at five thirty PM from Newark."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n02",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your flight departs on May fifteenth at five-thirty p.m. from Newark."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n02",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your flight departs on May fifteenth at five thirty PM from Newark ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n02",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your flight departs on May fifteenth at five-thirty p.m. from Newark."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n03",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I was charged fifty four dollars and twenty cents , but the item was only thirty nine dollars and ninety nine cents ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n03",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I was charged $54.20, but the item was only $39.99."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n03",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I was charged fifty four dollars and twenty cents , but the item was only thirty nine dollars and ninety nine cents ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n03",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I was charged fifty-four dollars and twenty cents, but the item was only thirty-nine dollars and ninety-nine cents."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n03",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I was charged fifty four dollars and twenty cents , but the item was only thirty nine dollars and ninety nine cents ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n03",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I was charged fifty-four dollars and twenty cents, but the item was only thirty-nine dollars and ninety-nine cents."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n04",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My data plan is to point zero gigabytes , and I've already used one point eight this month."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n04",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My data plan is to point zero gigabytes, and I've already used one point eight this month."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n04",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My data plan is two point zero gigabytes and I've already used one point eight this month."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n04",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My data plan is 2.0 gigabytes, and I've already used 1.8 this month."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n04",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My data plan is two point zero gigabytes and I've already used one point eight this month"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n04",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My data plan is two point zero gigabytes, and I've already used one point eight this month."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n05",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The refund of fifty four dollars twenty cents will appear on your statement in five to seven business days ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n05",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The refund of $54.20 will appear on your statement in five to seven business days."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n05",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The refund of fifty four dollars and twenty cents will appear on your statement in five to seven business days"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n05",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The refund of $54.20 will appear on your statement in five to seven business days."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n05",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The refund of fifty four dollars and twenty cents will appear on your statement in five to seven business days."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n05",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The refund of $54.20 will appear on your statement in five to seven business days."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n06",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The flight was on March third , and it was delayed by about three , and hea's half hours ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n06",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "the flight was on March third, and it was delayed by about three and a half hours."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n06",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The flight was on March third , and it was delayed by about three and a half hours"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n06",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The flight was on March third, and it was delayed by about three and a half hours."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n06",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The flight was on March third , and it was delayed by about three and a half hours ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n06",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The flight was on March third and it was delayed by about three and a half hours."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n07",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your new departure is Tuesday , June fourth , at eleven forty five A.M. Arriving at two ten P.M."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n07",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your new departure is Tuesday, June fourth, at 11:45 a.m., arriving at 2:10 p.m."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n07",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your new departure is Tuesday , June fourth at eleven forty five AM , arriving at two ten PM ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n07",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your new departure is Tuesday, June 4th at 11:45 a.m., arriving at 2:10 p.m."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n07",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your new departure is Tuesday, June fourth at eleven forty five AM , arriving at two ten PM."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n07",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your new departure is Tuesday, June fourth at 11:45 a.m., arriving at 2:10 p.m."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n08",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'd like to upgrade to passengers and my budget is around five hundred dollars total ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "n08",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'd like to upgrade to Passengers, and my budget is around $500 total."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n08",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'd like to upgrade two passengers and my budget is around five hundred dollars total ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "n08",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'd like to upgrade two passengers, and my budget is around $500 total."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n08",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'd like to upgrade two passengers and my budget is around five hundred dollars total."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "n08",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'd like to upgrade two passengers, and my budget is around $500 total."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s01",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My last name is Rossi R O S I"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s01",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My last name is Rossi, R-O-S-S-I."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s01",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My last name is Rossi R O S I"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s01",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My last name is Rossi, R-O-S-S-I."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s01",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My last name is Rossi R O S I"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s01",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My last name is Rossi, R-O-S-S-I."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s02",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Its chin C as in Charlie Hen"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s02",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "It's Chen, C as in Charlie, H-E-N."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s02",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "It's Chen C as in Charlie H E N."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s02",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "It's Chen, C-H-E-N."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s02",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "It's Chen C as in Charlie H E N"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s02",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "It's Chen, C as in Charlie, H-E-N."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s03",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My first name is Dykey D A K I and my last name is Sanchez."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s03",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My first name is Daiki, D-A-K-I, and my last name is Sanchez."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s03",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My first name is Dai Ki Day ki and my last name is Sanchez."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s03",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My first name is Daiki and my last name is Sanchez."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s03",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My first name is Dike D A I K I and my last name is Sanchez."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s03",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My first name is Daiki, D-A-I-K-I, and my last name is Sanchez."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s04",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The reservation is under Sophia Lee . That's Sophia with an F , and Lee is L Ly."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s04",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The reservation is under Sophia Li. That's Sophia with an F, and Li is L-I."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s04",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The reservation is under Sophia Lee . That Sophia with an F and Lee is L.I."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s04",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The reservation is under Sophia Li, that's Sophia with an F, and Li is L-I."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s04",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The reservation is under Sophia Lee . That's Sophia with an F and Lee is L.I."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s04",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The reservation is under Sophia Li. That's Sophia with an F, and Li is L-I."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s05",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My last name is Kovax K O V A C. S."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s05",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My last name is Kovacs, K-O-V-A-C-S."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s05",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My last name is Kovax K O V A C S"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s05",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My last name is Kovacs, K-O-V-A-C-S."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s05",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My last name is Kovax K O V A C S."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s05",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My last name is Kovacs, K-O-V-A-C-S."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s06",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Thank you, Mister Kowalski. I've found the booking for you and Miss Nguyen."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s06",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Thank you, Mr. Kowalski. I've found the booking for you and Miss Nguyen."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s06",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Thank you , Mister Kowalski . I found the booking for you and Miss Nguyen"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s06",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Thank you, Mr. Kowalski. I found the booking for you and Ms. Nguyen."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s06",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Saint you, Mister Kowalski, I've found the booking for you and Miss Wynne."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s06",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Thank you, Mr. Kowalski. I found the booking for you and Ms. Nguyen."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s07",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The name is Yusuf Ahmed , U. S. U. F."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s07",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The name is Yusuf Ahmed, USUF."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s07",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The name is Yusuf Ahmed Yusuf"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s07",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The name is Yusuf Ahmed, Y-U-S-U-F."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s07",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The name is Yusuf Ahmed Y U S U F."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s07",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The name is Yusuf Ahmed, Y-U-S-U-F."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s08",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Just to confirm that's Daiki Sanchez spelled D I K."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "s08",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Just to confirm, that's Dikey Sanchez, spelled D-I-K?"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s08",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Just to confirm that's Deiki Sanchez spelled D A I K.I."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "s08",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Just to confirm, that's Daiki Sanchez, spelled D-A-I-K-I."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s08",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Just to confirm that's Deike Sanchez spelled D A I K ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "s08",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Just to confirm, that's Daiki Sanchez, spelled D-A-I-K-I."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e01",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Sure my email is Miadot Garcia for seven at example dot com ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e01",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Sure, my email is mia.garcia47@example.com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e01",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Sure my email is Mia dot Garcia four seven at example dot com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e01",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Sure, my email is mia.garcia47@example.com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e01",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Sure , my email is Mia dot Garcia four seven at example dot com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e01",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Sure, my email is mia.darcia47@example.com."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e02",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I have your email as Dikey dot Sanchez one for seven nine at example dot com . Is that right ?"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e02",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I have your email as daiki.sanchez1479@example.com. Is that right?"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e02",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I have your email as Deiki dot Sanchez one four seven nine at example dot com . Is that right?"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e02",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I have your email as daike.sanchez1479@example.com. Is that right?"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e02",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I have your email as deikey dot Sanchez one four seven nine at example dot com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e02",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I have your email as daiky.sanchez1479@example.com."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e03",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Its Sophia dot Lee nine to one nine at example dot com ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e03",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "It's sophia.lee9219@example.com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e03",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "It's Sophia dot Li nine two one nine at example dot com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e03",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "It's sophia.li9219@example.com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e03",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "It's Sophia dot Li nine two one nine at example dot com ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e03",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "It's sophia.li9219@example.com."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e04",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'll send the receipt to Omar dot Anderson three to zero three at example dot com ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e04",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'll send the receipt to omar.anderson3203@example.com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e04",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'll send the receipt to Omar Anderson three two zero three at example dot com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e04",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'll send the receipt to omar.anderson3203@example.com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e04",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I'll send a receipt to Omar Anderson three two zero three at example dot com ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e04",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I'll send the receipt to omar.anderson3203@example.com."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e05",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My email address is Yusuf dot Rossi seven seven six nine at example dot com ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e05",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My email address is yousef.rossi7769@example.com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e05",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My email address is Yusuf dot Rossi seven seven six nine at example dot com ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e05",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My email address is yusuf.rossi7769@example.com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e05",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My email address is Yusuf dot Rossi seven seven six nine at example dot com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e05",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My email address is yusuf.rossi7769@example.com."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e06",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The confirmation went to Ethan Dott Kim eight one one at example dot com few minutes ago ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e06",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The confirmation went to Ethan.DottKim811@example.com a few minutes ago."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e06",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The confirmation went to Ethan dot Kim eight eight one one at example dot com a few minutes ago ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e06",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The confirmation went to ethan.kim8811@example.com a few minutes ago."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e06",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The confirmation went to Ethan dot Kim eighty eight eleven at example dot com a few minutes ago."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e06",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The confirmation went to ethan.kim8811@example.com a few minutes ago."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e07",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Ah its Raj A J dot Covax at example dot com ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e07",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Uh, it's Raj, aj.kovacs@example.com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e07",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Uh it's Raj R A J dot Covax at example dot com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e07",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Uh, it's raj.kovacs@example.com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e07",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Ah, it's Raj R A J dot Covax at example dot com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e07",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Uh, it's raj, R-A-J.Kovacs@example.com."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e08",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Could you confirm the email on file ? I see Lucas dot brown nine zero eight one at example dot com ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "e08",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Could you confirm the email on file? I see lucas.brown9081@example.com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e08",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Could you confirm the email on file ? I see Lucas Brown nine zero eight one at example dot com."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "e08",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Could you confirm the email on file? I see lucas.brown9081@example.com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e08",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Could you confirm the email on file ? I see Lucas dot brown nine zero eight one at example dot com."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "e08",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Could you confirm the email on file? I see Lucas.Brown9081@example.com."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d01",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I found order W for zero seven three six seven three . It was delivered on Monday ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d01",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I found order #W4073673. It was delivered on Monday."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d01",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I found order number W four seven three six seven three . It was delivered on Monday ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d01",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I found order number W473673. It was delivered on Monday."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d01",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "I sound order W four zero seven three seven three . It was delivered on Monday ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d01",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "I found order W407373. It was delivered on Monday."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d02",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The order number is W four three one six one five two"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d02",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The order number is W4316152."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d02",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The order number is W four three one six one five two."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d02",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The order number is W4316152."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d02",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The order number is W four three one six one five two ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d02",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The order number is W4316-152."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d03",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My user ID is May underscore Covax underscore eight zero two zero"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d03",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My user ID is may_kovacs_8020."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d03",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My user ID is May K underscore COVAX underscore eight zero two zero."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d03",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My user ID is Makay_Kovacs_8020."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d03",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My user ID is May underscore COVAX underscore eight zero two zero"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d03",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My user ID is May_kovacs__8020."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d04",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your user ID is May underscore COVAX underscore eight thousand twenty and your zip code is one nine one two"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d04",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your user ID is may_kovacs_8020 and your zip code is 19122."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d04",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your user ID is MEI COVAX eight zero two zero and your zip code is one nine one two two ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d04",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your user ID is MEIKovacs8020 and your zip code is 19122."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d04",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your user ID is Mie Covax eight oh two oh and your zip code is one nine one two two"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d04",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your user ID is MIEKovacs8020 and your zip code is 19122."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d05",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "You can reach me at five five five one to three two zero zero two"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d05",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "You can reach me at 555-123-2002."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d05",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "You can reach me at five five five one two three two zero zero two ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d05",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "You can reach me at 555-123-2002."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d05",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "You can reach me at five five five one two three two zero zero two"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d05",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "You can reach me at 555-123-2002."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d06",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The phone number on the account is five five five one two three two zero zero two ."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d06",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The phone number on the account is 555-123-2002."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d06",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The phone number on the account is five five five one two three two zero zero two."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d06",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The phone number on the account is 555-123-2002."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d06",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "The phone number on the account is five five five one two three two zero zero two."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d06",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "The phone number on the account is 555-123-2002."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d07",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "By zip code is one nine one two two."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d07",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My zip code is one nine one two two."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d07",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My zip code is one nine one two two two ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d07",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My zip code is 19122."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d07",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My zip code is one nine one two two two"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d07",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My zip code is 19122."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d08",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your reservation A is for W one hundred fifty on flight hat two hundred fourteen"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d08",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your reservation A is for WU150 on flight HAT214."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d08",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your reservation ID is four WQ one five zero on flight HAT two one four"
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d08",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your reservation ID is 4WQ150 on flight PAT214."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d08",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "Your reservation ID is four WQ one five zero on flight HAT two one four"
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d08",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "Your reservation ID is 4WQ150 on flight HAT214."
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d09",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My reservat ion number is four W Q one five zero"
+  },
+  {
+   "arm": "magpie_john",
+   "id": "d09",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My reservation number is 4WQ150."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d09",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My reservation number is four WQ one five zero ."
+  },
+  {
+   "arm": "gpt4omini_ash",
+   "id": "d09",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My reservation number is 4WQ150."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d09",
+   "rep": 1,
+   "asr": "nemotron",
+   "ok": true,
+   "hyp": "My reservation number is four WQ one five zero ."
+  },
+  {
+   "arm": "gpt4omini_coral",
+   "id": "d09",
+   "rep": 1,
+   "asr": "gpt4o_transcribe",
+   "ok": true,
+   "hyp": "My reservation number is 4WQ150."
+  }
+ ]
+}
