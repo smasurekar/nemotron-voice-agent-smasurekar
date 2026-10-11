@@ -34,7 +34,7 @@ BACKEND_FEATURES: dict[str, bool] = {
     "transfer_check": False,  # C1: <before_transfer> required transfers at once, else remaining steps first
     "capability_check": False,  # C2: <before_transfer> check the tools before saying "I can't"
     # fix-plan-f1-f2-f4-f8.md (each off by default).
-    "situational_facts": False,  # F4: <situational_facts> ask for a situation no tool can show
+    "situational_facts": False,  # F4: <situational_facts> ask early where the user is, if the policy depends on it
     "identity_from_identifier": False,  # F8: a name inside a spoken identifier may be used once confirmed
 }
 

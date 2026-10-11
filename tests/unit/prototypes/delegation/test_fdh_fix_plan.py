@@ -393,14 +393,28 @@ class SituationalFactsTests(unittest.TestCase):
         templates = BackendTemplates(BACKEND_PROMPTS, prompt_features={**base, **features})
         return render_backend_system(templates, tau2_session_update("telecom")["session"]["instructions"])
 
-    def test_off_is_the_deployed_prompt_and_on_adds_only_the_block_at_the_end(self) -> None:
+    def test_off_is_the_deployed_prompt_and_on_adds_only_the_block_right_after_the_policy(self) -> None:
         off, on = self._render(), self._render(situational_facts=True)
         self.assertEqual(off, load_golden()["backend_system_telecom.txt"])
-        self.assertTrue(on.startswith(off))
-        added = on[len(off) :]
-        self.assertTrue(added.startswith("\n\n<situational_facts>"))
-        self.assertTrue(added.endswith("</situational_facts>"))
-        self.assertIn("never delays a transfer that your policy requires right away", added)
+        start = on.index("\n\n<situational_facts>")
+        end = on.index("</situational_facts>") + len("</situational_facts>")
+        self.assertEqual(on[:start] + on[end:], off)
+        self.assertTrue(on[:start].endswith("</policy>\n"))
+        added = on[start:end]
+        # analysis/2026-10-10_fdh-roaming-gpt55: ask early, only when not told, and before any transfer.
+        self.assertIn("where the user is right now", added)
+        self.assertIn("If the user has\nalready told you, do not ask", added)
+        self.assertIn("unless your policy requires the transfer right away", added)
+
+    def test_the_block_renders_only_with_its_switch_in_the_controls(self) -> None:
+        for name in ("gateway.eval_124acf7.yaml", "gateway.eval_control.yaml", "gateway.baseline.yaml"):
+            with self.subTest(gateway=name):
+                features = gc.load_gateway_config(PACKAGE / "config" / name).prompt_features
+                templates = BackendTemplates(BACKEND_PROMPTS, prompt_features=features)
+                text = render_backend_system(templates, tau2_session_update("telecom")["session"]["instructions"])
+                self.assertNotIn("<situational_facts>", text)
+        on = gc.load_gateway_config(PACKAGE / "config" / "gateway.yaml").prompt_features
+        self.assertTrue(on["situational_facts"])
 
     def test_the_block_renders_in_every_domain_and_uses_no_benchmark_words(self) -> None:
         for domain in ("airline", "retail", "telecom"):

@@ -104,8 +104,10 @@ the Python code defaults stay off. One arm per fix over the new control (§6.4):
 - **F1 + F2, no dead air** (`realtime_eval_liveness.yaml`): a silent reply to "are you still there?" or "could you
   repeat that?" is delegated or replaced by a replay of the unheard answer; a silent reply to a question is
   delegated; a ping while the backend works is a status request, which never interrupts the running model call.
-- **F4, situational facts** (`gateway.eval_situational.yaml`): a backend prompt block, in every session, that asks
-  about a situation the policy makes conditional and no tool can show.
+- **F4, situational facts** (`gateway.eval_situational.yaml`): a backend prompt block, in every session, right after
+  the policy. **Reworded 2026-10-10** (`analysis/2026-10-10_fdh-roaming-gpt55/`): when the policy makes a problem depend
+  on where the user is and the user has not said, the backend asks once, early, and not again; no transfer before
+  asking. Same switch, still on by default; `backend_system_sha256` changed, so pair runs by hash or agent commit.
 - **F8, identity recovery** (`realtime_eval_identity.yaml`, and the sub-arm `gateway.eval_identity_name.yaml`): after
   a failed identification lookup, the note lists the lookups tried, what the user spelled and where each spelling was
   sent, the user's corrections, and the other identification lookups the tools offer.
@@ -634,7 +636,7 @@ simulator and judge in arm and control) and accept them only by the plan's §5.4
 | All fixes (the default) | `realtime_eval.yaml` | `gateway.eval.yaml` | F1 + F2, F4, F8 and the F8 name line together (plan stage 3) |
 | Control | `realtime_eval_124acf7.yaml` | `gateway.eval_124acf7.yaml` | nothing new (agent `124acf7`) |
 | liveness (F1 + F2) | `realtime_eval_liveness.yaml` | `gateway.eval_124acf7.yaml` | `delegation.guards.{liveness_reply, question_never_silent, ping_as_status}`; `replay_unheard_answer` with `triggers: [backchannel, ping, repeat]`, `ttl_s: 60`, `whole_if_heard_below: 0.2` |
-| situational (F4) | `realtime_eval_124acf7.yaml` | `gateway.eval_situational.yaml` | backend variant `situational_facts` (`<situational_facts>` in every session) |
+| situational (F4) | `realtime_eval_124acf7.yaml` | `gateway.eval_situational.yaml` | backend variant `situational_facts` (`<situational_facts>` after the policy in every session: ask early where the user is, if the policy depends on it and the user has not said) |
 | identity (F8) | `realtime_eval_identity.yaml` | `gateway.eval_124acf7.yaml` | `result_hints.ledger` (`identification_tools: auto`), `max_hints: 6`, A3's `field_provenance` off |
 | identity_name (F8 sub-arm) | `realtime_eval_124acf7.yaml` | `gateway.eval_identity_name.yaml` | backend variant `identity_from_identifier` (every session) |
 
@@ -742,7 +744,7 @@ Profiles are in `src/prototypes/voice_delegation_hermes_agent/config/`. Unknown 
 | Backend decision trace (P0.3) | `gateway.yaml` `hermes.backend_trace`, env `FDH_BACKEND_TRACE` | off; on in `gateway.eval.yaml` and `gateway.eval_control.yaml` |
 | F2 no-silence guards | `delegation.guards.{liveness_reply,question_never_silent,ping_as_status}`; phrase lists `delegation.guards.lexicon.<language>` (picked by the voice profile's ASR `language_code`: the exact tag, then the base language); lines in `prompts.yaml` `liveness_lines` | on in `realtime_eval.yaml` and `realtime_eval_liveness.yaml`, off in the controls and the code defaults; `en` ships in the code defaults |
 | F1 replay triggers | `delegation.replay_unheard_answer.{triggers,whole_if_heard_below}` (`status_intent` is M2 and needs `replay_intent`; `backchannel`, `ping`, `repeat` do not) | `[status_intent]`, 0 (controls, code defaults); `[backchannel, ping, repeat]`, 0.2, `ttl_s: 60` in `realtime_eval.yaml` and `realtime_eval_liveness.yaml` |
-| F4 situational facts | `gateway.yaml` `prompt_features.situational_facts` | on (`gateway.yaml`, `gateway.eval.yaml`, `gateway.eval_situational.yaml`); off in `gateway.eval_124acf7.yaml` and every other control |
+| F4 situational facts (ask where the user is; reworded 2026-10-10) | `gateway.yaml` `prompt_features.situational_facts` | on (`gateway.yaml`, `gateway.eval.yaml`, `gateway.eval_situational.yaml`); off in `gateway.eval_124acf7.yaml` and every other control |
 | F8 identification ledger | `voice/*.yaml` `normalization.tool_arguments.result_hints.{ledger,ledger_message_key,identification_tools,ledger_max_age_turns,ledger_correction_cues}`; text `lookup_ledger` in `voice_frontend_backend_agent/config/prompts.voice.yaml` | on in `voice/realtime_eval.yaml` and `voice/realtime_eval_identity.yaml` (`identification_tools: auto`, `max_hints: 6`, A3 off); off in `voice/realtime_eval_124acf7.yaml`, `voice/realtime_eval_control.yaml` and the code defaults |
 | F8 name inside an identifier | `gateway.yaml` `prompt_features.identity_from_identifier` | on (`gateway.yaml`, `gateway.eval.yaml`, `gateway.eval_identity_name.yaml`); off in `gateway.eval_124acf7.yaml` and every other control |
 

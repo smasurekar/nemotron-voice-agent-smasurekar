@@ -68,7 +68,7 @@ prompt_features:
   request_scope: true                       # B3: <before_change> every record and option the request covers
   transfer_check: true                      # C1: <before_transfer> required transfers at once, else steps first
   capability_check: true                    # C2: <before_transfer> check the tools before saying "I can't"
-  situational_facts: true                   # F4: <situational_facts> ask for a situation no tool can show
+  situational_facts: true                   # F4: <situational_facts> ask early where the user is, if the policy depends on it
   identity_from_identifier: true            # F8: a name inside a spoken identifier, once confirmed
 
 # Domain detection by tool names: the first domain with one of its tools in the session's tool list wins;

@@ -6,8 +6,9 @@
 # Prompt variants: {% if features.<name> %} blocks switched by prompt_features in gateway.yaml
 # (spelling_v2, spoken_output, write_consent: tau3-failure-fixes-plan.md; phone_format; domain_notes;
 # format_correction, write_consent_v2, policy_check, request_scope, transfer_check, capability_check:
-# tau3-geval-failure-fixes-plan.md section 4; situational_facts (F4) and identity_from_identifier (F8):
-# fix-plan-f1-f2-f4-f8.md sections 3 and 4.4). All off = the baseline prompts. Examples are invented.
+# tau3-geval-failure-fixes-plan.md section 4; situational_facts (F4, reworded to ask where the user is:
+# analysis/2026-10-10_fdh-roaming-gpt55) and identity_from_identifier (F8): fix-plan-f1-f2-f4-f8.md
+# sections 3 and 4.4). All off = the baseline prompts. Examples are invented.
 
 # SOUL.md of every Hermes worker (loaded because load_soul_identity: true).
 backend_soul: |
@@ -51,6 +52,20 @@ backend_system: |
   <domain_notes>
   {{ domain_note }}
   </domain_notes>
+  {%- endif %}
+  {%- if features.situational_facts %}
+
+  <situational_facts>
+  Your policy may make the cause of a problem, or its fix, depend on where the user is right now,
+  for example whether they are away from home or in another country. None of your tools can show
+  where the user is: a setting or a record does not tell you, and neither does the signal or network
+  their device shows. If your policy names such a cause for the kind of problem the user reports, and
+  the user has not already told you where they are, ask them in one short question early: right after
+  you have identified them where your policy requires it, and before other checks. If the user has
+  already told you, do not ask; use what they said. Ask once, then follow your policy for the answer.
+  Do not transfer the user or say that nothing more can be done while that question is still unasked,
+  unless your policy requires the transfer right away.
+  </situational_facts>
   {%- endif %}
   {%- if features.phone_format %}
 
@@ -140,20 +155,6 @@ backend_system: |
   transfer for that case.
   {%- endif %}
   </before_transfer>
-  {%- endif %}
-  {%- if features.situational_facts %}
-
-  <situational_facts>
-  This applies only when your instructions make a cause or a step depend on the user's own situation,
-  for example where they are, what their device or screen shows, or what they have already tried, and
-  none of your tools can show that situation. If such a situation matters for the problem the user
-  reported and you do not already know it from the user or from your tools, do not treat it as absent:
-  ask the user, one short question at a time, when you reach that cause or step, and before you
-  conclude that nothing else can be done. Do not ask about anything your tools already show or that
-  does not change what you would do. This never delays a transfer that your policy requires right away.
-  When you ask the user to check something on their own device or screen, ask them to read out
-  everything it shows, exactly as shown, and check each item against your instructions.
-  </situational_facts>
   {%- endif %}
 
 # Instructions for one domain only, rendered into backend_system as <domain_notes> right after the

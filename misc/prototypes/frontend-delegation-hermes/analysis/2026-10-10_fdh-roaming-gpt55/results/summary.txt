@@ -1,0 +1,47 @@
+telecom tasks scored in all three runs: 82; user abroad: 39
+
+metric (roaming tasks)                           gpt55fix      gpt55      gpt52
+Pass^1                                              0.308      0.333      0.769
+Pass^1, not-abroad tasks                            0.814      0.814      0.767
+agent asked where the user is (a question)              0          0          0
+user said they are abroad (any time)                   14         14         39
+  ... in their opening turn                             5          6         39
+Pass^1 when user said it                            0.857      0.929      0.769
+Pass^1 when user never said it                      0.000      0.000          -
+  n user never said it                                 25         25          0
+a roaming tool was used (agent or user)                13         14         36
+ended in transfer_to_human_agents                      22         18          4
+never said + line roaming_enabled:false seen           24         22          0
+never said + phone 'Data Roaming: No' read              3          4          0
+
+Pass^1 by roaming variant (line roaming disabled/enabled at start, phone roaming on/off):
+  gpt55fix  user_abroad_roaming_disabled_off: 3/12  user_abroad_roaming_disabled_on: 5/14  user_abroad_roaming_enabled_off: 4/13
+  gpt55     user_abroad_roaming_disabled_off: 5/12  user_abroad_roaming_disabled_on: 3/14  user_abroad_roaming_enabled_off: 5/13
+  gpt52     user_abroad_roaming_disabled_off: 8/12  user_abroad_roaming_disabled_on: 12/14  user_abroad_roaming_enabled_off: 10/13
+
+Backend traces of the gpt55fix calls where the user never said it: 25 found, <situational_facts> in the backend system prompt: 25, any backend response mentioning roaming/abroad/travel/home network: 2
+  sess_76966824 … t, data connectivity is cut off \u2014 including for MMS.\n\nI didn't see any other issues: your signal is excellent, Wi-Fi Calling is off, roaming is on, and mobile data is enabled. The data limit is the blocker.\n\nWould you
+  sess_4fdbef3d … d: multiple reboots, airplane mode off, VPN off, data saver off, network mode to 4G/5G preferred, APN reset. Line active, device activated, roaming enabled. Issue persists after all troubleshooting.\"}", "provider_data": null}]
+
+Transfer summaries, gpt55fix, user never said it:
+  - Customer John Smith (C1001) with line L1002 (555-123-2002) cannot send MMS. Troubleshooting completed: airplane mode off, excellent 5G signal, mobile data refueled (2GB added), APN MMSC URL present, W
+  - Customer John Smith (C1001, line L1002, phone 555-123-2002) cannot send MMS messages. Troubleshooting completed: network mode changed from 2G to 4G/5G preferred (now shows excellent 5G), APN settings
+  - Customer John Smith (C1001, line L1002 ending in 2002) cannot send MMS picture messages. Troubleshooting completed: verified active line with 5G signal and mobile data enabled, Wi-Fi Calling is off, m
+  - Customer (C1001, John Smith) cannot send MMS/picture messages on line L1002 (555-123-2002). Troubleshooting completed: SIM reseated (fixed no signal), APN settings verified (APN: Internet, MMSC: http:
+  - Customer (C1001, line L1002, phone 555-123-2002) cannot send MMS/picture messages. All standard troubleshooting completed: line active, excellent 5G signal on home network, mobile data working (2GB re
+  - Customer John Smith (C1001, phone 555-123-2002) cannot send picture messages (MMS). SIM card was not detected initially; customer reseated it and now has 5G signal and data enabled. Wi-Fi Calling is o
+  - Customer has excellent 5G signal, data enabled, airplane mode off, data saver off, VPN disconnected, network mode set to auto, APN reset, SIM active, line active with refueled data (2GB added), but st
+  - Customer (C1001, line L1002) exceeded data limit (15.1/15 GB), refueled 2 GB. Completed all troubleshooting: Airplane Mode off, VPN off, network mode 4G/5G preferred, mobile data on, APN reset + reboo
+  - Customer (C1001, line L1002, 555-123-2002) has excellent 5G signal and data enabled but speed test shows 'no connection'. Exceeded data limit (15.1/15 GB), added 2 GB refuel. Tried: multiple reboots,
+  - Customer (C1001, line L1002, 555-123-2002) has excellent 5G signal and mobile data enabled but no data connection after extensive troubleshooting: airplane mode off, mobile data on, network mode set t
+  - Customer (C1001, John Smith) has mobile data not working on line L1002 (555-123-2002) despite all troubleshooting: line is active, 2GB data refueled (1.9GB remaining), device activated, phone shows 5G
+  - Customer paid overdue bill (B1002, $150) which is now showing as Paid. Line L1002 (555-123-2002) is Active with Premium Plan (15GB limit, 8.7GB used). Phone shows excellent 5G signal, data enabled, Ai
+  - Customer (C1001, John Smith) reports mobile data not working on line L1002 (555-123-2002). Line is active with Premium Plan (15GB limit), 8.7GB used. Troubleshooting completed: airplane mode off, Data
+  - Customer John Smith (C1001) with line L1002 (555-123-2002) experiencing mobile data connectivity issues. Despite excellent 5G signal, data enabled, data saver off, VPN disconnected, APN reset to defau
+  - Customer (C1001, line L1002, phone 555-123-2002) has 5G excellent signal but mobile data shows 'no connection' on speed test. Data limit was exceeded (15.1/15 GB), refueled 2 GB. All troubleshooting d
+  - Customer has excellent 5G signal, mobile data enabled, VPN disconnected, APN settings reset, device rebooted, line is active with 2GB refueled data (17GB total available), no overdue bills, but speed
+  - Customer's mobile data is stuck on 2G despite troubleshooting: SIM active, reseated, APN reset to default, phone restarted, VPN off. Network mode preference menu only shows '2G only' option. Device is
+  - Customer John Smith (C1001) with line L1002 (555-123-2002) on Premium Plan. Reports no mobile data connection despite excellent 5G signal, data enabled, VPN disconnected, APN reset to default, and dev
+  - Customer John Smith (C1001) experiencing no mobile data connection on line L1002 (555-123-2002) despite excellent 5G signal. Troubleshooting completed: network mode set to 4G/5G preferred, VPN disconn
+  - Customer (John Smith, C1001) with line L1002 (555-123-2002) experiencing mobile data connectivity issues. Data usage exceeded plan limit (15.1/15 GB), added 2 GB refuel ($4). Customer performed extens
+  - Customer (C1001, line L1002, phone 555-123-2002) has mobile data not working despite: excellent 5G signal, data enabled, 2GB refuel applied (now at 17.1GB total vs 15GB limit), data saver off, VPN off
