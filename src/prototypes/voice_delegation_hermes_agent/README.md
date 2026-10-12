@@ -11,7 +11,10 @@ An OpenAI Realtime (GA) voice agent with two agents that are decoupled in time:
   (`get_activity_summary`). It follows [`workflow.csv`](../../../misc/prototypes/frontend-delegation-hermes/workflow.csv).
 
 - **Run it:** [`runbook.md`](../../../misc/prototypes/frontend-delegation-hermes/runbook.md). It covers the
-  τ³ Realtime server on 8775 and the browser page on 8776 with a 5 s simulated delay.
+  τ³ Realtime server on 8775 and the browser page on 8776 with a 5 s simulated delay. The τ³ server is the
+  `fdh-voice` container ([`docker-compose.frontend-delegation-hermes.yaml`](../../../docker/docker-compose.frontend-delegation-hermes.yaml),
+  [`Dockerfile.fdh`](../../../docker/Dockerfile.fdh)): the voice server, the gateway and the Hermes workers in
+  one Python 3.14 image ([`hermes-in-container-plan.md`](../../../misc/prototypes/frontend-delegation-hermes/hermes-in-container-plan.md)).
 - **Design:** [`prototype-plan.md`](../../../misc/prototypes/frontend-delegation-hermes/prototype-plan.md).
   §22 has the implementation notes and measurements.
 - **τ³ failure fixes:** [`tau3-failure-fixes-plan.md`](../../../misc/prototypes/frontend-delegation-hermes/tau3-failure-fixes-plan.md).
@@ -33,7 +36,7 @@ An OpenAI Realtime (GA) voice agent with two agents that are decoupled in time:
 
 | Path | Process | Role |
 |---|---|---|
-| `server.py`, `config.py` | voice server (Py 3.12) | Plugs `DelegationTurnManager` into the voice package's `build_app` through `SessionHooks`; loads `delegation_agent.yaml` and profiles |
+| `server.py`, `config.py` | voice server (Py 3.14 in the `fdh-voice` image; 3.12 in the repository venv) | Plugs `DelegationTurnManager` into the voice package's `build_app` through `SessionHooks`; loads `delegation_agent.yaml` and profiles |
 | `prompt_features.py` | voice server, gateway | Prompt variants: the `prompt_features` maps and the prompt hashes of the deployed fingerprint |
 | `engine/` | voice server | `turn_manager.py` (frontend, backend and output lanes), `transcript.py` (shared history, playback outcomes), `output_scheduler.py` (hold and stale rules), `backend_link.py` (WebSocket to the gateway), `spelling_hold.py` (M3.2 predicate), `spoken_text.py` (G2 answer cleanup) |
 | `frontend/` | voice server | `delegate_tool.py` (the tool contract), `decider.py` (LLM decider with repair, hedging and guards; the rule-based stub), `status_verbalizer.py`, `prompts.py` |
@@ -41,7 +44,7 @@ An OpenAI Realtime (GA) voice agent with two agents that are decoupled in time:
 | `tools/result_hints.py` | voice server | I3 and I4: the per-session miss counter and the recovery note appended to a failed lookup's result (`tools: auto` watches every read tool of the session) |
 | `tools/format_retry.py`, `tools/field_provenance.py` | voice server | A1 and A1-lite: the format-retry trigger for a not-found phone lookup; A3: the spelled-or-heard line of a repeated person-lookup miss |
 | `backend/` | all (stdlib only) | The shared contract (`protocol.py`, `writer.py`), `controller.py` (state machine, run epochs, outcome table), `context_queue.py` (exactly-once history delivery), `agent_like.py` (`FakeAgent`) |
-| `sidecar/` | gateway (host) | `gateway_server.py` (`WS /v1/backend`, `/health`), `session_runtime.py`, `worker_pool.py` (spawn / stop / kill / respawn), `homes.py` (per-worker `HERMES_HOME`), `inprocess_link.py` (stub backend) |
+| `sidecar/` | gateway (inside `fdh-voice`; on the host for `fdh-voice-web`) | `gateway_server.py` (`WS /v1/backend`, `/health`), `session_runtime.py`, `worker_pool.py` (spawn / stop / kill / respawn), `homes.py` (per-worker `HERMES_HOME`), `inprocess_link.py` (stub backend) |
 | `worker/` | Hermes worker (Py 3.14) | `worker_main.py` (Unix-socket control loop), `tool_futures.py` (keyed result futures), `hermes_adapter.py` (the only Hermes import), `fake_host.py` |
 | `cli/` | tools | `delegation_replay.py` (frontend decision gate), `backend_probe.py` (gateway without audio), `report_adapter.py` (event log → `fba_voice_metrics.py` records), `fingerprint_check.py` (deployed fingerprint of an arm; exit 1 on a mismatch), `spelling_hold_replay.py` (spelling-hold predicate over an event log), `relay_replay.py` (geval gate G1), `backend_decision_replay.py` (geval gate G2) |
 | `config/` | — | `delegation_agent.yaml`, `gateway.yaml` (+ `gateway.fake.yaml`, `gateway.stub_gate.yaml`, the control `gateway.baseline.yaml`, the pinned evaluation gateway `gateway.eval.yaml`, and the backend prompt variants `gateway.spelling_v2.yaml`, `gateway.spoken_output.yaml`, `gateway.write_consent.yaml`; the identity-fix control `gateway.identity_control.yaml`; the geval-fix arms `gateway.eval_<fix>.yaml`), `prompts.yaml` (frontend), `prompts.backend.yaml` (backend), `voice/*.yaml` (voice-package profiles), `profiles/*.yaml` |
@@ -184,6 +187,19 @@ uv run pytest tests/unit/prototypes/delegation tests/unit/prototypes/voice -q
 - `test_fdh_hermes_multisession.py` runs real Hermes workers against a fake OpenAI server. It is skipped
   when the Hermes venv (`~/.cache/fdh/hermes-venv-314`) is missing.
 - `test_fdh_hermes_adapter.py` needs the Hermes interpreter; the command is in its docstring.
+- In the `fdh-voice` image, the same suites run with the image's Python 3.14 and real Hermes. The adapter test
+  runs with `unittest` and the worker's `PYTHONPATH`, because `src/utils.py` shadows Hermes's `utils` under pytest:
+
+  ```bash
+  docker compose --env-file .env -f docker/docker-compose.frontend-delegation-hermes.yaml run --rm --no-deps \
+    --entrypoint "" -v ./tests:/app/tests:ro -v ./misc:/app/misc:ro -v ./pyproject.toml:/app/pyproject.toml:ro \
+    -e FDH_HERMES_PYTHON=/app/.venv/bin/python \
+    fdh-voice sh -c 'uv pip install --python /app/.venv/bin/python pytest &&
+      PYTHONPATH=src python -m pytest tests/unit/prototypes/delegation tests/unit/prototypes/voice -q \
+        --deselect tests/unit/prototypes/delegation/test_fdh_hermes_adapter.py &&
+      mkdir -p /tmp/fdh-workers/pythonpath && ln -sfn /app/src/prototypes /tmp/fdh-workers/pythonpath/ &&
+      PYTHONPATH=/tmp/fdh-workers/pythonpath:tests/unit/prototypes/delegation python -m unittest test_fdh_hermes_adapter'
+  ```
 - `test_fdh_golden_prompts.py` checks the baseline prompts against `fixtures/golden_prompts.json`, and
   `test_fdh_tau3_fixes.py` and `test_fdh_identity_fixes.py` cover the failure-fix and identity-fix switches.
 - `test_fdh_geval_fixes.py` covers the geval-fix switches and the decision trace (gate G0) with invented tool

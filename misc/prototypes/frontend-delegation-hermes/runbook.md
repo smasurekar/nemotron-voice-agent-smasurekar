@@ -3,10 +3,12 @@
 **Code:** `src/prototypes/voice_delegation_hermes_agent/` · **Plan:** [`prototype-plan.md`](prototype-plan.md) ·
 **Spec:** [`workflow.csv`](workflow.csv)
 
-This runbook starts two deployments that share one backend gateway:
+This runbook starts two deployments:
 
-- the **OpenAI Realtime server for τ³-voice** (port 8775);
-- the **browser page** (port 8776), with the 5 s simulated backend delay.
+- the **OpenAI Realtime server for τ³-voice** (port 8775): the `fdh-voice` container, which runs the voice
+  server, the backend gateway and the Hermes workers in one Python 3.14 image (§3, §4);
+- the **browser page** (port 8776), with the 5 s simulated backend delay. It still uses a backend gateway on
+  the host (§5, Appendix A).
 
 Every command runs from the repository root unless it says otherwise. The τ³ campaign runbook for this
 prototype (reportable runs, archiving) is a separate, later document. §6 shows how to point τ³ at the
@@ -159,15 +161,25 @@ Verified 2026-10-11:
 
 No eval has run with the note.
 
+**Changed 2026-10-12:** the τ³ server `fdh-voice` runs in its own Python 3.14 image,
+`nemotron-voice-agent-fdh:latest`, with the backend gateway and the Hermes workers inside
+([`hermes-in-container-plan.md`](hermes-in-container-plan.md)). It starts with one Compose command (§4) and
+needs no host venv or host process. Its default pair is now `realtime_eval.yaml` with `gateway.eval.yaml`, and
+its default logs are the `*.realtime_eval.jsonl` files. The browser server `fdh-voice-web` keeps the host
+gateway (Appendix A). The port (8775) and the Realtime URL are unchanged, so the τ³ side needs no change.
+
 ## 0. What runs where
 
 ```
- browser page ──wss──► fdh-voice-web  (container, :8776 → 7860, TLS, demo tools, 5 s delay) ─┐
- tau2 / Realtime ─ws─► fdh-voice      (container, :8775 → 7860, client tools)               ─┤ ws://<docker0>:8790/v1/backend
-                                                                                             ▼
-                               backend gateway (host process, Hermes-free, :8790 on docker0)
-                                 └─ one Hermes worker process per Realtime session (Python $FDH_HERMES_PY)
-                                      └─ AIAgent → Inference Hub nvidia/nvidia/nemotron-3-ultra (reasoning on)
+ tau2 / Realtime ─ws─► fdh-voice  (container nemotron-voice-agent-fdh:latest, Python 3.14, :8775 → 7860, client tools)
+                        ├─ voice server :7860
+                        ├─ backend gateway 127.0.0.1:8790 (Hermes-free)
+                        └─ one Hermes worker process per Realtime session
+                             └─ AIAgent → Inference Hub nvidia/nvidia/nemotron-3-ultra (reasoning on)
+
+ browser page ──wss──► fdh-voice-web  (container, :8776 → 7860, TLS, demo tools, 5 s delay)
+                        └─ ws://<docker0>:8790/v1/backend → backend gateway on the host (Appendix A)
+
  speech: nemo-speech (container, :50051, ASR + TTS) ◄── both voice containers
  frontend LLM: Inference Hub nvidia/nvidia/nemotron-3.5-lightning (reasoning off) ◄── both voice containers
 ```
@@ -175,14 +187,18 @@ No eval has run with the note.
 | Component | Where | Port | Config |
 |---|---|---|---|
 | `nemo-speech` | container (Compose profile `frontend-backend-agent/single-gpu`) | 50051 | `docker/docker-compose.nemo-speech-cpp.yaml` |
-| Backend gateway + Hermes workers | host process | 8790, bound to the `docker0` address | `config/gateway.yaml` (an arm may use `config/gateway.<variant>.yaml`, §6.1, or `config/gateway.eval_<fix>.yaml`, §6.3) |
-| τ³ Realtime voice server `fdh-voice` | container (`nemotron-voice-agent:latest`, `src/` mounted read-only) | 8775 | `config/profiles/tau3_eval.yaml`, `config/profiles/realtime_eval.yaml` (§6.2), or an arm profile (§6.1, §6.3) |
-| Browser voice server `fdh-voice-web` | container | 8776 (https) | `config/profiles/browser_demo.yaml` |
+| τ³ Realtime voice server `fdh-voice`, with its backend gateway and Hermes workers | container (`nemotron-voice-agent-fdh:latest`, Python 3.14, `src/` mounted read-only) | 8775; the gateway listens on 127.0.0.1:8790 inside the container | `docker/docker-compose.frontend-delegation-hermes.yaml`; `FDH_PROFILE` (default `realtime_eval.yaml`, §6.2) and `FDH_GATEWAY_CONFIG` (default `gateway.eval.yaml`), or an arm pair (§6.1, §6.3) |
+| Browser voice server `fdh-voice-web` | container (`nemotron-voice-agent:latest`) | 8776 (https) | `config/profiles/browser_demo.yaml` |
+| Backend gateway for `fdh-voice-web` | host process | 8790, bound to the `docker0` address | Appendix A |
 
-Why the gateway runs on the host: Hermes needs its own venv and Python (3.13 or 3.14, whichever the
-Hermes checkout's lockfile supports; see §1.2), while the voice image ships Python 3.12 with this repository's dependencies (plan D1).
-The voice containers reach the host through `host.docker.internal`, which the Compose `app-base` maps to
-the `docker0` address.
+The `fdh-voice` image installs Hermes and this repository's voice dependencies in one Python 3.14 venv,
+from the lock `docker/fdh/requirements.txt` ([`hermes-in-container-plan.md`](hermes-in-container-plan.md)).
+Only the worker processes import Hermes, because `src/utils.py` would shadow Hermes's own `utils` module. The
+voice server reaches the gateway at `ws://host.docker.internal:8790/v1/backend`, the same URL string as a host
+run, so `config_hash` is unchanged; inside `fdh-voice`, `host.docker.internal` maps to `127.0.0.1`.
+
+**Default pair.** `fdh-voice` defaults to the τ³ submission pair, `realtime_eval.yaml` with `gateway.eval.yaml`.
+Before 2026-10-12, the default of this runbook was `tau3_eval.yaml` with `gateway.yaml`.
 
 Both profiles use:
 
@@ -206,8 +222,20 @@ test -f .env || cp .env.example .env      # then set NVIDIA_API_KEY
 grep -c '^NVIDIA_API_KEY=.\+' .env        # expect 1
 ```
 
-**1.2 Hermes checkout and its Python environment.** A separate venv under `~/.cache/fdh`, so the
-checkout's own `.venv` is not touched. The Python version depends on the Hermes checkout, so it differs
+**1.2 Hermes checkout and its Python environment.** The `fdh-voice` image needs only a **clean** Hermes
+checkout at the commit recorded in the header of `docker/fdh/requirements.txt`. Set its absolute path in
+`.env` as `HERMES_AGENT_DIR` (a relative path resolves against `docker/`); the default is
+`../hermes-agent-smasurekar` next to this repository:
+
+```bash
+echo "HERMES_AGENT_DIR=$(realpath ../hermes-agent-smasurekar)" >> .env    # once; keeps the rest of .env
+git -C ../hermes-agent-smasurekar status --porcelain                       # expect no output
+git -C ../hermes-agent-smasurekar rev-parse HEAD; grep -m1 'Hermes commit' docker/fdh/requirements.txt
+```
+
+The host venv below is needed only for the host gateway of `fdh-voice-web` (Appendix A) and for running
+Hermes tests on the host. It is a separate venv under `~/.cache/fdh`, so the checkout's own `.venv` is not
+touched. The Python version depends on the Hermes checkout, so it differs
 between machines. `FDH_HERMES_PY` selects it:
 
 | Hermes checkout | `FDH_HERMES_PY` | Hosts |
@@ -216,7 +244,7 @@ between machines. `FDH_HERMES_PY` selects it:
 | `requires-python` `<3.15`, with a lockfile that supports only `python_full_version >= '3.14'` | `3.14` | RTX 5000 Ada host `smasurekar` (2026-09-30) |
 
 `uv sync` with the wrong version fails with `The current Python platform is not compatible with the
-lockfile's supported environments`. Set the variable in every shell that runs §1.2 or §3:
+lockfile's supported environments`. Set the variable in every shell that runs §1.2 or Appendix A:
 
 ```bash
 export HERMES_REPO=$PWD/../hermes-agent-smasurekar     # adjust if the checkout lives elsewhere
@@ -231,8 +259,8 @@ A failed `uv sync` still creates an empty venv. Remove it (`rm -rf $FDH_HERMES_V
 versions, so the gateway cannot pick it up.
 
 If the last command fails with `ModuleNotFoundError: run_agent` from another directory, set
-`FDH_HERMES_REPO=$HERMES_REPO` when starting the gateway (§3). The pool then adds the checkout to the
-workers' `PYTHONPATH`.
+`FDH_HERMES_REPO=$HERMES_REPO` when starting the host gateway (Appendix A). The pool then adds the checkout
+to the workers' `PYTHONPATH`.
 
 **1.3 Speech models** (idempotent; it only downloads what is missing or fails its checksum):
 
@@ -241,14 +269,19 @@ bash scripts/download-nemo-speech-models.sh
 ls models/nemo-speech   # magpie-tts nano-codec nemotron-speech-streaming-en-0.6b.q8_0.gguf tn_configs ...
 ```
 
-**1.4 Voice image.** `nemotron-voice-agent:latest` must exist; build it if it does not. `src/` is mounted
-read-only into the container, so code changes need no rebuild:
+**1.4 Voice images.** `src/` is mounted read-only into both voice containers, so code and prompt changes
+need no rebuild, only a restart.
+
+- `fdh-voice` uses `nemotron-voice-agent-fdh:latest`. §4 builds it (`up --build`). Rebuild it after a change of
+  `docker/fdh/requirements.txt`, `docker/Dockerfile.fdh`, `docker/fdh/entrypoint.sh` or the Hermes checkout.
+- `fdh-voice-web` uses `nemotron-voice-agent:latest`; build it if it does not exist:
 
 ```bash
 docker image inspect nemotron-voice-agent:latest >/dev/null 2>&1 || docker compose build frontend-backend-agent-single-gpu
 ```
 
-**1.5 Common shell variables** for the rest of this runbook:
+**1.5 Common shell variables** for the rest of this runbook. `DOCKER_HOST_IP` is needed only for the host
+gateway (Appendix A):
 
 ```bash
 export DOCKER_HOST_IP=$(ip -4 -o addr show docker0 | awk '{print $4}' | cut -d/ -f1)   # e.g. 172.17.0.1
@@ -264,28 +297,25 @@ docker compose --profile frontend-backend-agent/single-gpu up -d nemo-speech
 docker logs -f nemotron-voice-agent-nemo-speech-1 2>&1 | grep -m1 'listening on 0.0.0.0:50051'   # ~20 s
 ```
 
-## 3. Start the backend gateway (host)
+## 3. The backend gateway (inside `fdh-voice`)
 
-The gateway binds only to the `docker0` address: it has no authentication, so it must not be reachable
-from the LAN. The backend model is pinned on the command line. `FDH_GATEWAY_CONFIG` selects the gateway
-file: `gateway.yaml` (every backend prompt variant on, including `domain_notes`, the telecom note) for normal runs, `gateway.eval.yaml`
-(the same variants, pinned, plus the backend decision trace) with `realtime_eval.yaml` (§6.2),
-`gateway.baseline.yaml` (every variant off) for the control, or the gateway config an arm needs (§6.1, §6.3).
-`FDH_GATEWAY_LOG` names the gateway event log: the τ³ campaign tooling expects
-`logs/fdh_gateway_events.realtime_eval.jsonl` for `gateway.eval.yaml` and its arms.
+The gateway and the Hermes workers run inside the `fdh-voice` container. Its entrypoint
+(`docker/fdh/entrypoint.sh`) starts the gateway on `127.0.0.1:8790` with `--max-sessions 8`, waits until its
+`/health` answers, then starts the voice server. If either process exits, the container exits and Docker
+restarts it. The gateway listens only on the container's loopback, so it is not reachable from the host
+or the LAN.
+
+`FDH_GATEWAY_CONFIG` selects the gateway file, and §4 passes it to the container:
+- `gateway.eval.yaml` (the default): every backend prompt variant on, pinned, plus the backend decision trace,
+  with `realtime_eval.yaml` (§6.2);
+- `gateway.yaml`: the same variants, with `tau3_eval.yaml`;
+- `gateway.baseline.yaml` (every variant off) for the control, or the gateway config an arm needs (§6.1, §6.3).
+
+`FDH_GATEWAY_LOG` names the gateway event log; the default is `logs/fdh_gateway_events.realtime_eval.jsonl`,
+which the τ³ campaign tooling expects for `gateway.eval.yaml` and its arms. Check the gateway after §4:
 
 ```bash
-export FDH_GATEWAY_CONFIG=${FDH_GATEWAY_CONFIG:-gateway.yaml}
-nohup env PYTHONPATH=src \
-  FDH_GATEWAY_HOST=$DOCKER_HOST_IP FDH_GATEWAY_PORT=8790 FDH_MAX_SESSIONS=8 \
-  FDH_HERMES_PYTHON=${FDH_HERMES_VENV:?set it in §1.2}/bin/python \
-  BACKEND_LLM_MODEL=nvidia/nvidia/nemotron-3-ultra BACKEND_LLM_BASE_URL=https://inference-api.nvidia.com/v1 \
-  FDH_GATEWAY_LOG=${FDH_GATEWAY_LOG:-logs/fdh_gateway_events.jsonl} FDH_WORKER_LOG_DIR=logs/fdh_workers \
-  uv run python -m prototypes.voice_delegation_hermes_agent.sidecar.gateway_server \
-    --config src/prototypes/voice_delegation_hermes_agent/config/$FDH_GATEWAY_CONFIG \
-  > logs/fdh_gateway.out 2>&1 &
-echo $! > logs/fdh_gateway.pid
-sleep 3; curl -s http://$DOCKER_HOST_IP:8790/health; echo
+docker exec fdh-voice curl -s 127.0.0.1:8790/health; echo
 ```
 
 Expected health:
@@ -308,39 +338,45 @@ Expected health:
 - `"domains"`: telecom only, detected by `get_customer_by_phone` (every gateway config extends `gateway.yaml`). With
   `domain_notes` off the detection changes nothing but `backend_domain`.
 
-The gateway loads its code and prompts at startup: restart it (§10, then this section) after a code or
-prompt change, or to switch `FDH_GATEWAY_CONFIG`.
+The gateway loads its code and prompts at startup: recreate `fdh-voice` (§4) after a code or prompt change,
+or to switch `FDH_GATEWAY_CONFIG`.
 
 **3.1 Optional backend-only check** (a real Hermes worker, text only, about 30 s). It drives the gateway
 directly, the way the voice server does. It covers a new task with a tool call, a continue, a status
-request while WORKING, and a steer during a slow tool:
+request while WORKING, and a steer during a slow tool. It runs inside the container, because the gateway
+listens on the container's loopback:
 
 ```bash
-PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.backend_probe \
-  --url ws://$DOCKER_HOST_IP:8790/v1/backend
+docker exec fdh-voice python -m prototypes.voice_delegation_hermes_agent.cli.backend_probe \
+  --url ws://127.0.0.1:8790/v1/backend
 ```
 
 ## 4. Start the τ³ Realtime voice server (`fdh-voice`, port 8775)
 
-`FDH_PROFILE` selects the profile: `tau3_eval.yaml` for normal runs (every τ³ failure fix except M2),
-`realtime_eval.yaml` for the domain-agnostic submission profile (§6.2), or the control or an arm profile
-(§6.1, §6.3). `FDH_PROACTIVE_AFTER_S` sets the M1 delay; calibrate it per host (§6.1). `FDH_EVENT_LOG` names
-the event log: the τ³ campaign tooling expects `logs/fdh_voice_events.realtime_eval.jsonl` for
-`realtime_eval.yaml` and its arms.
+`FDH_PROFILE` selects the profile: `realtime_eval.yaml` (the default) for the domain-agnostic submission
+profile (§6.2), `tau3_eval.yaml` (with `FDH_GATEWAY_CONFIG=gateway.yaml`) for the historical τ³ profile, or the
+control or an arm profile (§6.1, §6.3). `FDH_PROACTIVE_AFTER_S` sets the M1 delay; calibrate it per host
+(§6.1). `FDH_EVENT_LOG` names the event log; the default is `logs/fdh_voice_events.realtime_eval.jsonl`, which
+the τ³ campaign tooling expects for `realtime_eval.yaml` and its arms.
+
+Every setting is a `${VAR:-default}` entry of `docker/docker-compose.frontend-delegation-hermes.yaml`: a value
+exported in the shell wins over `.env`, which wins over the default. `up -d` recreates the container when a
+value changes, so the same command switches profiles and arms. Start `nemo-speech` first (§2): the container
+joins its network, `nemotron-voice-agent_default`, which Compose does not create.
 
 ```bash
-export FDH_PROFILE=${FDH_PROFILE:-tau3_eval.yaml}
-docker compose --profile frontend-backend-agent/single-gpu run --rm -d --no-deps --name fdh-voice -p 8775:7860 \
-  -v "$PWD/logs:/app/logs" -e PYTHONPATH=/app/src -e PIPELINE_TLS=false \
-  -e FDH_BACKEND_URL=ws://host.docker.internal:8790/v1/backend -e FDH_MAX_SESSIONS=4 \
-  -e FRONTEND_LLM_MODEL=nvidia/nvidia/nemotron-3.5-lightning -e FRONTEND_LLM_BASE_URL=https://inference-api.nvidia.com/v1 \
-  -e FDH_EVENT_LOG=${FDH_EVENT_LOG:-logs/fdh_voice_events.jsonl} -e FDH_PROACTIVE_AFTER_S=${FDH_PROACTIVE_AFTER_S:-15} \
-  frontend-backend-agent-single-gpu \
-  uv run python -m prototypes.voice_delegation_hermes_agent.server \
-    --config src/prototypes/voice_delegation_hermes_agent/config/profiles/$FDH_PROFILE --port 7860
-sleep 15; curl -s localhost:8775/health; echo
-docker logs fdh-voice 2>&1 | grep -E 'backend gateway|ready|VAD|features'
+F=docker/docker-compose.frontend-delegation-hermes.yaml
+export FDH_PROFILE=${FDH_PROFILE:-realtime_eval.yaml} FDH_GATEWAY_CONFIG=${FDH_GATEWAY_CONFIG:-gateway.eval.yaml}
+docker compose --env-file .env -f $F up -d --build      # --build only when the image inputs changed (§1.4)
+sleep 30; curl -s localhost:8775/health; echo
+docker logs fdh-voice 2>&1 | grep -E 'backend gateway|warm-up|VAD|config hash'
 ```
+
+The defaults equal the earlier `docker compose run` command of this section: voice `FDH_MAX_SESSIONS=4`,
+gateway 8, `PIPELINE_TLS=false`, the frontend and backend models on the Inference Hub, and
+`FDH_BACKEND_URL=ws://host.docker.internal:8790/v1/backend` (mapped to the in-container gateway), so
+`config_hash` matches a host run at the same commit. `FDH_VOICE_HOST_PORT` (default 8775) and
+`FDH_CONTAINER_NAME` (default `fdh-voice`) start a second container next to the first.
 
 Expected:
 
@@ -358,8 +394,10 @@ Expected:
 - The warm-up opens the HTTPS connection to the frontend endpoint at startup. Without it, the first user
   turn of a fresh server timed out (more than 4 s) and lost its filler.
 
-Keep `FDH_MAX_SESSIONS` for all voice servers together at or below the gateway's (8): a voice server
-refuses to start when its own limit exceeds the gateway's.
+Keep the voice server's `FDH_MAX_SESSIONS` (4) at or below the gateway's `FDH_GATEWAY_MAX_SESSIONS` (8): a
+voice server refuses to start when its own limit exceeds the gateway's. Keep the gateway above the voice
+server: the gateway frees a slot only after the worker stops (up to 15 s), so equal limits can refuse a
+back-to-back τ³ session with `capacity`.
 
 **4.1 Text smoke test through the whole stack.** The client registers the demo tools and executes them
 itself, as τ³ does. It exercises the frontend decision, the spoken filler, the delegation, the Hermes tool
@@ -386,7 +424,7 @@ Expected, in order:
 6. a spoken status update for "what's the update so far", if the backend is still working. If it
    already finished, the update is answered from history instead.
 
-The event log shows each step: `grep -E '"kind": "(delegation_decision|backend_action|tool_output_in|backend_answer|status_spoken)"' logs/fdh_voice_events.jsonl`.
+The event log shows each step: `grep -E '"kind": "(delegation_decision|backend_action|tool_output_in|backend_answer|status_spoken)"' logs/fdh_voice_events.realtime_eval.jsonl`.
 
 **4.2 Audio smoke test (real ASR, VAD and TTS).** This synthesizes three user turns with the local TTS and
 plays them in τ³'s wire format (μ-law 8 kHz). Expect the same flow as §4.1, with `you` lines transcribed by
@@ -406,6 +444,9 @@ PYTHONPATH=src uv run python -m prototypes.voice_frontend_backend_agent.cli.voic
 ```
 
 ## 5. Start the browser voice server (`fdh-voice-web`, port 8776, 5 s delay)
+
+`fdh-voice-web` still runs on the `nemotron-voice-agent:latest` image and needs the backend gateway on the
+host: start it first (Appendix A). It is optional; the τ³ server (§4) does not need it.
 
 ```bash
 docker compose --profile frontend-backend-agent/single-gpu run --rm -d --no-deps --name fdh-voice-web -p 8776:7860 \
@@ -498,11 +539,11 @@ a fresh control on the same host (plan §8). The following table lists the pairs
 `tau3_eval.yaml` and `tau3_eval_baseline.yaml` no longer behave the same: the baseline pins every new
 switch off, and it must run with `gateway.baseline.yaml`, not `gateway.yaml`. Likewise
 `tau3_identity_control.yaml` runs with `gateway.identity_control.yaml`. Their config hashes differ.
-To switch arms, stop both servers (§10) and start them again with the two variables, for example:
+To switch arms, set the two variables and run the §4 command again (`up -d` recreates `fdh-voice`), for example:
 
 ```bash
 export FDH_PROFILE=tau3_arm_m3_spelling.yaml FDH_GATEWAY_CONFIG=gateway.spelling_v2.yaml
-# then §3 (gateway) and §4 (fdh-voice)
+# then the §4 command (it recreates fdh-voice with the gateway inside)
 ```
 
 **Before M1: calibrate `FDH_PROACTIVE_AFTER_S` on the target host** (plan §2): from a control run, take the
@@ -540,13 +581,14 @@ scored:
 
 ```bash
 PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.fingerprint_check \
-  logs/fdh_voice_events.jsonl \
+  $FDH_EVENT_LOG \
   --profile src/prototypes/voice_delegation_hermes_agent/config/profiles/$FDH_PROFILE \
   --gateway-config src/prototypes/voice_delegation_hermes_agent/config/$FDH_GATEWAY_CONFIG
 # last line: fingerprint: OK
 ```
 
-Use one event log per arm and domain (`-e FDH_EVENT_LOG=...` in §4): the prompt hashes include the τ² policy
+Use one event log per arm and domain (`export FDH_EVENT_LOG=...` before the §4 command, for example
+`logs/fdh_voice_events.realtime_eval.<domain>.jsonl`): the prompt hashes include the τ² policy
 and tools. Events written before this change have no fingerprint, and the check fails on them. Since the
 identity fixes, the check also compares `backend_domain`: logs written before 2026-10-01 report it missing.
 Since 2026-10-05, it also requires `session_tools_sha256`, so logs written before that date fail the check.
@@ -575,11 +617,11 @@ The retry guard covers every tool (`scope: all`) with the pattern `(?i)\b(not fo
 telecom note, §6.5), so a later edit to `gateway.yaml` cannot change an evaluation. Before the first
 `session.update`, a session has no schema-derived rules.
 
-To start it, set the two variables and follow §3 and §4:
+It is the default of §4. To start it explicitly, set the two variables and run the §4 command:
 
 ```bash
 export FDH_PROFILE=realtime_eval.yaml FDH_GATEWAY_CONFIG=gateway.eval.yaml
-# then §3 (gateway) and §4 (fdh-voice)
+# then the §4 command
 ```
 
 In the event log, each session has a `session_rules` event with `session_tools_sha256`, the `schema_auto`
@@ -592,7 +634,7 @@ the adapter credits each run to the turn that started it and exits 1 on an orpha
 
 ```bash
 PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.report_adapter \
-  logs/fdh_voice_events.jsonl --out logs/fdh_voice_events.legacy.jsonl
+  logs/fdh_voice_events.realtime_eval.jsonl --out logs/fdh_voice_events.legacy.jsonl
 ```
 
 ### 6.3 Geval failure-fix arms and their gates
@@ -616,12 +658,13 @@ control. No arm has been evaluated, and the plan ships a fix only after its gate
 | C2 capability check | `realtime_eval_control.yaml` | `gateway.eval_c2_capability_check.yaml` | backend variant `capability_check` (`<before_transfer>`) |
 | All fixes (the default) | `realtime_eval.yaml` | `gateway.eval.yaml` | A1 (`mode: call`), A2, A3, B1, B2, B3, C1 and C2 together |
 
-Start an arm like any other (§3 and §4), with the event-log names the τ³ campaign tooling expects:
+Start an arm like any other (the §4 command), with the event-log names the τ³ campaign tooling expects (the §4
+defaults):
 
 ```bash
 export FDH_PROFILE=realtime_eval_arm_a1_format_retry.yaml FDH_GATEWAY_CONFIG=gateway.eval_control.yaml
 export FDH_EVENT_LOG=logs/fdh_voice_events.realtime_eval.jsonl FDH_GATEWAY_LOG=logs/fdh_gateway_events.realtime_eval.jsonl
-# then §3 (gateway) and §4 (fdh-voice)
+# then the §4 command
 ```
 
 **Gates (plan §5).** Run them in this order; a fix that fails one is not shipped:
@@ -686,7 +729,7 @@ If an arm does not pass, turn its switch off in the default files (`profiles/rea
 ```bash
 export FDH_PROFILE=realtime_eval_liveness.yaml FDH_GATEWAY_CONFIG=gateway.eval_124acf7.yaml
 export FDH_EVENT_LOG=logs/fdh_voice_events.realtime_eval.jsonl FDH_GATEWAY_LOG=logs/fdh_gateway_events.realtime_eval.jsonl
-# then §3 (gateway) and §4 (fdh-voice); check the fingerprint as in §6.1 with the arm's --profile and --gateway-config
+# then the §4 command; check the fingerprint as in §6.1 with the arm's --profile and --gateway-config
 ```
 
 What to check in an arm's events:
@@ -716,7 +759,7 @@ ablation changes only `domain_notes`.
 ```bash
 export FDH_PROFILE=realtime_eval.yaml FDH_GATEWAY_CONFIG=gateway.eval_no_note.yaml   # or gateway.eval.yaml
 export FDH_EVENT_LOG=logs/fdh_voice_events.realtime_eval.jsonl FDH_GATEWAY_LOG=logs/fdh_gateway_events.realtime_eval.jsonl
-# then §3 (gateway; restart it to switch) and §4 (fdh-voice, unchanged between the two runs)
+# then the §4 command (it recreates fdh-voice; only the gateway config differs between the two runs)
 ```
 
 What to check:
@@ -737,12 +780,13 @@ What to check:
 
 | File | Content |
 |---|---|
-| `logs/fdh_voice_events.jsonl`, `logs/fdh_voice_web_events.jsonl` | Voice server events per session: `fdh_session_start` (config hash, `features`, `invalid_message_keys`), `frontend_prompt` (prompt hash), `backend_configured` (backend fingerprint), `delegation_decision`, `backend_action`, `tool_calls_out`, `tool_output_in`, `call_answered_locally` (`reason`, `message_key`), `backend_answer`, `status_spoken`, `playback_outcome`, `delivery_note`, `history_sync`, `turn_latency`, `filler_timing`, `barge_in`. Only with the fix's switch on (the defaults or an arm): `status_proactive` (M1), `spelling_hold` (M3), `answer_replayed` / `answer_replay_skipped` (M2), `filler_deduped` (G1), `answer_cleaned` (G2), `result_hint` (I3/I4: `tool`, `message_key`, `n`). `backend_configured` carries `backend_domain` (`"telecom"` in telecom sessions, `""` otherwise) and `session_tools_sha256`. With an `auto` switch on (`realtime_eval.yaml`): `session_rules` (`session_tools_sha256`, `schema_auto`, the derived rules, `format_retry_arguments`, `read_only_tools`). Since 2026-10-07, `tool_calls_out` carries `call_ids` and `arguments`; the geval-fix arms add `format_retry` (`tool`, `argument`, `before`, `after`, `mode`, `outcome`: `hint`, `found`, `not_found`, `transient`, `timeout` or `cancelled`; the relay's own retry is a `tool_calls_out` with `format_retry: true` and call id `<id>.fmt`) and `field_provenance` (the line added to a note) |
-| `logs/fdh_gateway_events.jsonl` | Gateway: `gateway_start` (`backend_features`, `backend_catalog_sha256`), sessions, `backend_fingerprint`, worker spawn/ready/exit (`start_ms`, `rss_mb`), run epochs and outcomes, context delivery states, watchdog, respawns |
+| `logs/fdh_voice_events.realtime_eval.jsonl` (`fdh-voice`; earlier runs: `logs/fdh_voice_events.jsonl`), `logs/fdh_voice_web_events.jsonl` | Voice server events per session: `fdh_session_start` (config hash, `features`, `invalid_message_keys`), `frontend_prompt` (prompt hash), `backend_configured` (backend fingerprint), `delegation_decision`, `backend_action`, `tool_calls_out`, `tool_output_in`, `call_answered_locally` (`reason`, `message_key`), `backend_answer`, `status_spoken`, `playback_outcome`, `delivery_note`, `history_sync`, `turn_latency`, `filler_timing`, `barge_in`. Only with the fix's switch on (the defaults or an arm): `status_proactive` (M1), `spelling_hold` (M3), `answer_replayed` / `answer_replay_skipped` (M2), `filler_deduped` (G1), `answer_cleaned` (G2), `result_hint` (I3/I4: `tool`, `message_key`, `n`). `backend_configured` carries `backend_domain` (`"telecom"` in telecom sessions, `""` otherwise) and `session_tools_sha256`. With an `auto` switch on (`realtime_eval.yaml`): `session_rules` (`session_tools_sha256`, `schema_auto`, the derived rules, `format_retry_arguments`, `read_only_tools`). Since 2026-10-07, `tool_calls_out` carries `call_ids` and `arguments`; the geval-fix arms add `format_retry` (`tool`, `argument`, `before`, `after`, `mode`, `outcome`: `hint`, `found`, `not_found`, `transient`, `timeout` or `cancelled`; the relay's own retry is a `tool_calls_out` with `format_retry: true` and call id `<id>.fmt`) and `field_provenance` (the line added to a note) |
+| `logs/fdh_gateway_events.realtime_eval.jsonl` (`fdh-voice`; the host gateway of Appendix A: `logs/fdh_gateway_events.web.jsonl`; earlier runs: `logs/fdh_gateway_events.jsonl`) | Gateway: `gateway_start` (`backend_features`, `backend_catalog_sha256`), sessions, `backend_fingerprint`, worker spawn/ready/exit (`start_ms`, `rss_mb`), run epochs and outcomes, context delivery states, watchdog, respawns |
 | `logs/fdh_workers/*.log` | Each Hermes worker's stdout/stderr. "Auxiliary Nous client unavailable" lines are harmless. `Error code: 429` or `Retrying API call` makes the run invalid (§6.3, P0.1) |
 | `logs/fdh_workers/<session>.trace.jsonl` | With `hermes.backend_trace` (on in `gateway.eval.yaml`): one `session` record (the tool schemas as the model sees them, the rendered `backend_system`), then a `request` (the messages as sent) and a `response` (content, tool calls, finish reason, usage) per model call, joined by `api_request_id`. The input of the G2 replay (§6.3). Every `request` repeats the whole conversation, so the file grows with each model call |
-| `logs/fdh_gateway.out` | Gateway process output |
-| `docker logs fdh-voice`, `docker logs fdh-voice-web` | Voice server output (latency breakdowns, errors) |
+| `logs/fdh_gateway.out` | Output of the host gateway (Appendix A) |
+| `docker logs fdh-voice` | Voice server and gateway output of the τ³ container (latency breakdowns, errors) |
+| `docker logs fdh-voice-web` | Browser voice server output |
 
 Offline frontend decision check (gate G3, live frontend model, about 1 minute, 51 cases). The latest
 result is 0.98 accuracy and 1.00 on `request` in the WORKING state:
@@ -751,6 +795,9 @@ result is 0.98 accuracy and 1.00 on `request` in the WORKING state:
 PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.delegation_replay \
   --concurrency 2 --out logs/fdh_delegation_replay.json
 ```
+
+Files written by `fdh-voice` (event logs, `logs/fdh_workers/`, traces) are owned by root on the host. Run
+`sudo chown -R "$USER" logs` before you move or delete them.
 
 ## 8. No-GPU / no-LLM smoke mode
 
@@ -794,7 +841,10 @@ Profiles are in `src/prototypes/voice_delegation_hermes_agent/config/`. Unknown 
 | Output hold / stale policy | `output.hold_max_ms`, `output.on_stale` | 4000; keep answers and apologies, drop stale status and fillers |
 | Tool/instruction change after the agent exists | `session.update_after_start` | `error` |
 | Backend model | `gateway.yaml` `hermes.model`, `base_url`, `request_overrides`; env `BACKEND_LLM_MODEL`, `BACKEND_LLM_BASE_URL` | `nvidia/nvidia/nemotron-3-ultra` on the Inference Hub, `enable_thinking: true`, budget 1024 |
-| Capacity | env `FDH_MAX_SESSIONS` (gateway and each voice server) | 8 |
+| Capacity | `fdh-voice`: env `FDH_MAX_SESSIONS` (voice server), `FDH_GATEWAY_MAX_SESSIONS` (its gateway, passed as `--max-sessions`); the host gateway (Appendix A): env `FDH_MAX_SESSIONS` | 4 and 8 in `fdh-voice`; 8 on the host gateway |
+| `fdh-voice` container | `docker/docker-compose.frontend-delegation-hermes.yaml`: env `FDH_PROFILE`, `FDH_GATEWAY_CONFIG`, `FDH_EVENT_LOG`, `FDH_GATEWAY_LOG`, `FDH_WORKER_LOG_DIR`, `FDH_VOICE_HOST_PORT`, `FDH_CONTAINER_NAME` | `realtime_eval.yaml`, `gateway.eval.yaml`, the `*.realtime_eval.jsonl` logs, `logs/fdh_workers`, 8775, `fdh-voice` |
+| Hermes checkout baked into the image | `.env` `HERMES_AGENT_DIR` (absolute path; the build context `hermes`) | `../hermes-agent-smasurekar` |
+| Image dependencies | `docker/fdh/requirements.txt` (Python 3.14 lock with hashes, regenerated as its header says), `docker/fdh/overrides.txt` | Hermes commit in the lock header |
 | Hermes budgets | `hermes.max_iterations`, `run_budget_seconds`, `run_hard_deadline_s` | 30, 300 (soft), 330 (hard, kills the worker) |
 | Worker processes | `workers.start_timeout_s`, `stop_timeout_s`, `kill_grace_s`, `warm`, `recovery.*` | 15, 12, 3, 0; respawn at most 2 per session |
 | M1 proactive status | `output.proactive_status.{enabled,after_s,max_per_run}` (`after_s` from env `FDH_PROACTIVE_AFTER_S`); lines in `prompts.yaml` `status_proactive_lines` | on, 15 s, 1 per run |
@@ -822,22 +872,32 @@ Profiles are in `src/prototypes/voice_delegation_hermes_agent/config/`. Unknown 
 ## 10. Stop and clean up
 
 ```bash
-docker stop fdh-voice fdh-voice-web          # --rm removes them
-kill "$(cat logs/fdh_gateway.pid)"           # the gateway stops its workers (SIGTERM, then SIGKILL)
+# fdh-voice first: it is attached to the root project's network
+docker compose --env-file .env -f docker/docker-compose.frontend-delegation-hermes.yaml down   # stops its gateway and workers (up to 75 s)
+docker stop fdh-voice-web                    # if started (§5); --rm removes it
+kill "$(cat logs/fdh_gateway.pid)"           # the host gateway, if started (Appendix A); it stops its workers
 pgrep -f sidecar.gateway_server && pkill -f sidecar.gateway_server   # if the pid was only the uv wrapper
 docker compose --profile frontend-backend-agent/single-gpu stop nemo-speech   # optional
 ```
 
-Runtime state that must never be committed: `.cache/fdh-hermes-homes/` (per-worker `HERMES_HOME`, removed
-when each worker exits), `/tmp/fdh-workers/` (sockets), and `logs/`.
+A root `docker compose … down` fails to remove `nemotron-voice-agent_default` while `fdh-voice` is still
+attached to it ("active endpoints"): take `fdh-voice` down first.
+
+Runtime state that must never be committed: `.cache/fdh-hermes-homes/` (per-worker `HERMES_HOME` of the host
+gateway, removed when each worker exits; inside `fdh-voice` it lives in the container), `/tmp/fdh-workers/`
+(sockets), and `logs/`.
 
 ## 11. Troubleshooting
 
 | Symptom | Cause / fix |
 |---|---|
-| Voice server logs "backend gateway not reachable" | The gateway is not running, or it is bound to `127.0.0.1`. Start it with `FDH_GATEWAY_HOST=$DOCKER_HOST_IP` (§3). Check with `docker exec fdh-voice curl -s http://host.docker.internal:8790/health` |
+| `fdh-voice` exits at start with `gateway not healthy` | The in-container gateway did not answer within 30 s: `docker logs fdh-voice` shows its error (usually a broken gateway config name in `FDH_GATEWAY_CONFIG`) |
+| `fdh-voice` restarts again and again | The speech warm-up fails until `nemo-speech` is up (§2), or the external network `nemotron-voice-agent_default` is missing (start `nemo-speech` first) |
+| `docker compose -f … up` fails with `network nemotron-voice-agent_default … not found` | Start `nemo-speech` from the root project first (§2) |
+| Image build fails in the `uv pip check` step | The lock no longer matches Hermes's pins: regenerate `docker/fdh/requirements.txt` as its header says (with `--no-config`), from a clean Hermes checkout at the recorded commit |
+| `fdh-voice-web` logs "backend gateway not reachable" | The host gateway is not running, or it is bound to `127.0.0.1`. Start it with `FDH_GATEWAY_HOST=$DOCKER_HOST_IP` (Appendix A). Check with `docker exec fdh-voice-web curl -s http://host.docker.internal:8790/health` |
 | Voice server exits with `server.max_sessions (N) exceeds the gateway's max_sessions` | Lower `-e FDH_MAX_SESSIONS` on the voice server, or raise it on the gateway |
-| `session.update` fails with `worker_start_timeout` or `backend_unavailable` | Read `logs/fdh_workers/*.log`. Usually the Hermes venv is missing or wrong (§1.2): check `FDH_HERMES_PYTHON`, set `FDH_HERMES_REPO` |
+| `session.update` fails with `worker_start_timeout` or `backend_unavailable` | Read `logs/fdh_workers/*.log`. In `fdh-voice`, rebuild the image if the Hermes checkout changed (§1.4). With the host gateway, the Hermes venv is usually missing or wrong (§1.2): check `FDH_HERMES_PYTHON`, set `FDH_HERMES_REPO` |
 | Worker log: `tool surface ... tool_search` | Stale `HERMES_HOME`. Homes are regenerated per worker with `tools.tool_search.enabled: "off"`; delete `.cache/fdh-hermes-homes/` |
 | τ³: `Session configuration failed` | The server sent `error` on `session.update`; the voice log's `backend_error` has the code |
 | τ³: `RuntimeError: Not connected to API` | Keepalive pings closed the session while tau2 was frozen. The profiles set `ws_ping_interval_s: 0`, so check you used `tau3_eval.yaml` |
@@ -846,7 +906,8 @@ when each worker exits), `/tmp/fdh-workers/` (sockets), and `logs/`.
 | Browser: no microphone | Use `https://<IP>:8776/` (not http, not a proxied hostname) and accept the certificate |
 | tau2: `No module named 'pyaudio'` | In the tau2 checkout: `uv sync --extra voice --extra dev` (needs the `portaudio19-dev` package) |
 | Gate A against the real server fails on the transcript | Gate A streams a tone, which real ASR does not transcribe. Use the stub gate (§8) for Gate A, and §4.2 or §6 for the real stack |
-| `fingerprint_check` fails with `missing [...]` | The voice server or the gateway runs code from before the fingerprint change: restart both (§10, §3, §4) |
+| `fingerprint_check` fails with `missing [...]` | The voice server or the gateway runs code from before the fingerprint change: recreate `fdh-voice` (§4) |
+| `fingerprint_check` fails because sessions disagree | The log holds several domains or older sessions: use one fresh `FDH_EVENT_LOG` per arm and domain (§6.1) |
 | `fingerprint_check` fails with `the arm declares` | A server runs another arm's profile or gateway config: check `FDH_PROFILE` / `FDH_GATEWAY_CONFIG` and `curl` both `/health` endpoints. The control pairs with `gateway.baseline.yaml`, not `gateway.yaml` |
 | Voice server fails with `replay_unheard_answer.enabled needs prompt_features.replay_intent` | M2 needs its frontend prompt variant: use `tau3_arm_m2_replay.yaml` |
 | Status update says "still working" after the answer | This should not happen: a status line is dropped when its run has already finished (`status_dropped` in the event log). If you see it, report the session id |
@@ -858,3 +919,29 @@ when each worker exits), `/tmp/fdh-workers/` (sockets), and `logs/`.
 | An F1/F2 arm shows no `delegation_guard` or `answer_replayed` events | Look for `lexicon_missing`: the session's ASR `language_code` has no `delegation.guards.lexicon` entry, so the rules are inactive by design |
 | `identity_ledger` never appears in an identity arm | `session_rules.identification_tools` is empty or misses the lookup: check the tool's name or description says it returns a person, or list the tools in `result_hints.identification_tools` |
 | Manual-mode client gets `conversation_already_has_active_response` | It sent `response.create` while the previous turn was still deciding or speaking. Wait for `response.done`, as Realtime requires |
+
+## Appendix A. Host Gateway (for `fdh-voice-web` and Development)
+
+`fdh-voice` runs its own gateway (§3). The browser server `fdh-voice-web` (§5) still needs a gateway on the
+host, with the Hermes venv of §1.2 and `DOCKER_HOST_IP` of §1.5. The gateway binds only to the `docker0`
+address: it has no authentication, so it must not be reachable from the LAN. Give it its own event log, so it
+never appends to the log of the `fdh-voice` gateway:
+
+```bash
+export FDH_GATEWAY_CONFIG=gateway.yaml
+nohup env PYTHONPATH=src \
+  FDH_GATEWAY_HOST=$DOCKER_HOST_IP FDH_GATEWAY_PORT=8790 FDH_MAX_SESSIONS=8 \
+  FDH_HERMES_PYTHON=${FDH_HERMES_VENV:?set it in §1.2}/bin/python \
+  BACKEND_LLM_MODEL=nvidia/nvidia/nemotron-3-ultra BACKEND_LLM_BASE_URL=https://inference-api.nvidia.com/v1 \
+  FDH_GATEWAY_LOG=logs/fdh_gateway_events.web.jsonl FDH_WORKER_LOG_DIR=logs/fdh_workers_web \
+  uv run python -m prototypes.voice_delegation_hermes_agent.sidecar.gateway_server \
+    --config src/prototypes/voice_delegation_hermes_agent/config/$FDH_GATEWAY_CONFIG \
+  > logs/fdh_gateway.out 2>&1 &
+echo $! > logs/fdh_gateway.pid
+sleep 3; curl -s http://$DOCKER_HOST_IP:8790/health; echo
+```
+
+The expected health is the same as §3. The backend-only check of §3.1 runs from the host against this gateway
+with `PYTHONPATH=src uv run python -m prototypes.voice_delegation_hermes_agent.cli.backend_probe --url
+ws://$DOCKER_HOST_IP:8790/v1/backend`. Restart the gateway after a code or prompt change, or to switch
+`FDH_GATEWAY_CONFIG`.

@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# fdh-voice: the τ³ Realtime voice server of the frontend-delegation Hermes prototype, with its backend
+# gateway and Hermes workers in the same Python 3.14 container (docker/Dockerfile.fdh). Standalone file;
+# run it from the repository root after nemo-speech (it joins the root project's network):
+#
+#   docker compose --profile frontend-backend-agent/single-gpu up -d nemo-speech
+#   docker compose --env-file .env -f docker/docker-compose.frontend-delegation-hermes.yaml up -d --build
+#
+# Set HERMES_AGENT_DIR in .env to an absolute path of a clean Hermes checkout at the commit recorded in
+# docker/fdh/requirements.txt. Runbook: misc/prototypes/frontend-delegation-hermes/runbook.md.
+
+name: nemotron-voice-agent-fdh
+
+services:
+  fdh-voice:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.fdh
+      additional_contexts:
+        hermes: ${HERMES_AGENT_DIR:-../../hermes-agent-smasurekar}
+    image: nemotron-voice-agent-fdh:latest
+    container_name: ${FDH_CONTAINER_NAME:-fdh-voice}
+    init: true
+    ports:
+      - "${FDH_VOICE_HOST_PORT:-8775}:7860"
+    env_file:
+      - ../.env
+    environment:
+      PYTHONPATH: /app/src
+      FDH_PROFILE: ${FDH_PROFILE:-realtime_eval.yaml}
+      FDH_GATEWAY_CONFIG: ${FDH_GATEWAY_CONFIG:-gateway.eval.yaml}
+      FDH_MAX_SESSIONS: ${FDH_MAX_SESSIONS:-4}
+      FDH_GATEWAY_MAX_SESSIONS: ${FDH_GATEWAY_MAX_SESSIONS:-8}
+      # Same string as a host run so config_hash matches; resolved to the in-container gateway below.
+      FDH_BACKEND_URL: ${FDH_BACKEND_URL:-ws://host.docker.internal:8790/v1/backend}
+      PIPELINE_TLS: "false"
+      FRONTEND_LLM_MODEL: ${FRONTEND_LLM_MODEL:-nvidia/nvidia/nemotron-3.5-lightning}
+      FRONTEND_LLM_BASE_URL: ${FRONTEND_LLM_BASE_URL:-https://inference-api.nvidia.com/v1}
+      BACKEND_LLM_MODEL: ${BACKEND_LLM_MODEL:-nvidia/nvidia/nemotron-3-ultra}
+      BACKEND_LLM_BASE_URL: ${BACKEND_LLM_BASE_URL:-https://inference-api.nvidia.com/v1}
+      FDH_PROACTIVE_AFTER_S: ${FDH_PROACTIVE_AFTER_S:-15}
+      FDH_EVENT_LOG: ${FDH_EVENT_LOG:-logs/fdh_voice_events.realtime_eval.jsonl}
+      FDH_GATEWAY_LOG: ${FDH_GATEWAY_LOG:-logs/fdh_gateway_events.realtime_eval.jsonl}
+      FDH_WORKER_LOG_DIR: ${FDH_WORKER_LOG_DIR:-logs/fdh_workers}
+    extra_hosts:
+      - "host.docker.internal:127.0.0.1"
+    volumes:
+      - ../src:/app/src:ro
+      - ../logs:/app/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs -m 5 http://localhost:7860/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    # The gateway closes open sessions one after another (about 15 s each); 4 sessions fit in 75 s.
+    stop_grace_period: 75s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+networks:
+  default:
+    external: true
+    name: nemotron-voice-agent_default

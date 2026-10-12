@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frontend Delegation to a Hermes Backend: architecture</title>
+<style>
+  :root { color-scheme: light dark;
+    --bg:#f4f3f0; --card:#fcfcfb; --text:#0b0b0b; --text2:#52514e; --muted:#75746f; --border:#e1e0db;
+    --client:#e8eaed; --voice:#e3effc; --voice-b:#2a78d6; --gw:#e2f4ec; --gw-b:#1d9a6c; --wk:#fdeee6; --wk-b:#eb6834;
+    --ext:#f1ebf8; --ext-b:#7b52b8; --inner:#ffffff; --lane-f:#d3e5fa; --lane-b:#d3efe2; --lane-o:#fbe3d6; --arrow:#3d3c38; --accent:#c0392b; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#111110; --card:#1a1a19; --text:#f5f5f2; --text2:#c3c2b7; --muted:#9a998f; --border:#33332f;
+    --client:#2a2b2d; --voice:#16283d; --voice-b:#3987e5; --gw:#13302a; --gw-b:#2bb583; --wk:#3a2418; --wk-b:#d95926;
+    --ext:#2a2038; --ext-b:#a07fd6; --inner:#232321; --lane-f:#1d3858; --lane-b:#1a4036; --lane-o:#4a2e1f; --arrow:#d6d5cd; --accent:#ff7b6b; } }
+  :root[data-theme="dark"] { --bg:#111110; --card:#1a1a19; --text:#f5f5f2; --text2:#c3c2b7; --muted:#9a998f; --border:#33332f;
+    --client:#2a2b2d; --voice:#16283d; --voice-b:#3987e5; --gw:#13302a; --gw-b:#2bb583; --wk:#3a2418; --wk-b:#d95926;
+    --ext:#2a2038; --ext-b:#a07fd6; --inner:#232321; --lane-f:#1d3858; --lane-b:#1a4036; --lane-o:#4a2e1f; --arrow:#d6d5cd; --accent:#ff7b6b; }
+  :root[data-theme="light"] { color-scheme: light }
+  :root[data-theme="dark"] { color-scheme: dark }
+  html, body { margin:0 }
+  body { background:var(--bg); color:var(--text); font-family:"NVIDIA Sans",Arial,Helvetica,sans-serif; padding:24px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:24px; max-width:1560px; margin:0 auto 20px; }
+  h1 { font-size:22px; margin:0 0 6px } h2 { font-size:17px; margin:0 0 4px } h3 { font-size:14px; margin:16px 0 6px }
+  p, li { font-size:13px; line-height:1.5; color:var(--text2) } p.sub { margin:0 0 14px }
+  code { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; background:var(--bg); padding:1px 4px; border-radius:4px; color:var(--text) }
+  .tiles { display:flex; gap:12px; flex-wrap:wrap; margin:12px 0 0 }
+  .tile { border:1px solid var(--border); border-radius:8px; padding:8px 12px; min-width:150px }
+  .tile b { display:block; font-size:15px; color:var(--text) } .tile span { font-size:12px; color:var(--text2) }
+  svg { width:100%; height:auto; display:block } svg text { font-family:"NVIDIA Sans",Arial,Helvetica,sans-serif; fill:var(--text) }
+  .proc { stroke-width:2 } .box { fill:var(--inner); stroke:var(--border); stroke-width:1.2 }
+  .t { font-size:13px; font-weight:600 } .s { font-size:11px; fill:var(--text2) } .h { font-size:15px; font-weight:700 } .lbl { font-size:11px; font-weight:600 }
+  .arrow { stroke:var(--arrow); stroke-width:1.8; fill:none } .dash { stroke-dasharray:6 4 }
+  .lblbg { fill:var(--card); stroke:none; opacity:.92 }
+  table { border-collapse:collapse; width:100%; font-size:12.5px; margin:6px 0 }
+  th, td { border:1px solid var(--border); padding:6px 9px; text-align:left; vertical-align:top; color:var(--text2) }
+  th { background:var(--bg); color:var(--text) } td b, td code { color:var(--text) }
+  .cols { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:18px }
+  ol { margin:6px 0; padding-left:20px } li { margin:3px 0 }
+  .toggle { position:fixed; top:14px; right:18px; z-index:10; border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:16px; padding:5px 14px; font-size:12px; font-weight:600; cursor:pointer }
+  .pill { display:inline-block; border-radius:10px; padding:0 8px; font-size:11px; font-weight:600; color:#fff }
+</style>
+</head>
+<body>
+<button class="toggle" id="theme" type="button" aria-label="Toggle light and dark theme">Theme: auto</button>
+
+<div class="card">
+  <h1>Voice Frontend Delegation to a Hermes Backend: architecture</h1>
+  <p class="sub">Prototype in <code>src/prototypes/voice_delegation_hermes_agent/</code>. An OpenAI Realtime (GA) voice agent made of two agents decoupled in time:
+  a fast <b>frontend</b> LLM that only routes and speaks fillers, and a slow reasoning <b>Hermes backend</b> that does the work, one worker process per session.</p>
+  <div class="tiles">
+    <div class="tile"><b>Frontend</b><span>nemotron-3.5-lightning, one <code>delegate()</code> call per turn</span></div>
+    <div class="tile"><b>Backend</b><span>Hermes <code>AIAgent</code>, nemotron-3-ultra, reasoning on</span></div>
+    <div class="tile"><b>3 processes</b><span>voice server (Py 3.12), gateway (Py 3.12), worker (Py 3.14)</span></div>
+    <div class="tile"><b>Ports</b><span>8775 τ³ Realtime · 8776 browser · 8790 gateway</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>How it works</h2>
+  <p class="sub">A fast frontend LLM keeps the conversation going; a reasoning backend does the work in the background. Fast path: the user hears a filler immediately. Slow path: the answer is spoken when the backend finishes.</p>
+  <svg viewBox="0 0 1335 640" role="img" aria-label="Logic block diagram"><defs><marker id="ah4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--arrow)"/></marker></defs><rect x="50" y="110" width="150" height="350" rx="10" fill="var(--client)" stroke="var(--muted)" stroke-width="2"/><text x="64" y="139" font-size="18" font-weight="700">User</text><text x="64" y="159" font-size="12.5" style="fill:var(--text2)">Speaks and listens</text><text x="64" y="177" font-size="12.5" style="fill:var(--text2)">Executes the</text><text x="64" y="194" font-size="12.5" style="fill:var(--text2)">backend's tools</text><text x="64" y="212" font-size="12.5" style="fill:var(--text2)">on the client</text><rect x="268" y="110" width="300" height="350" rx="10" fill="var(--voice)" stroke="var(--voice-b)" stroke-width="2"/><text x="282" y="139" font-size="18" font-weight="700">Frontend LLM</text><text x="282" y="155" font-size="12" style="fill:var(--text2)">nemotron-3.5-lightning</text><text x="282" y="170" font-size="12" style="fill:var(--text2)">Non-reasoning LLM · every turn</text><rect x="283" y="185" width="270" height="62" rx="10" fill="var(--inner)" stroke="var(--border)" stroke-width="1"/><text x="291" y="204" font-size="13" font-weight="700">delegate(delegate, filler_text, request)</text><text x="291" y="221" font-size="11.5" style="fill:var(--text2)">one forced call per user turn</text><rect x="283" y="252" width="270" height="62" rx="10" fill="var(--inner)" stroke="var(--border)" stroke-width="1"/><text x="291" y="271" font-size="13" font-weight="700">delegate: true | false</text><text x="291" y="288" font-size="11.5" style="fill:var(--text2)">true: backend acts; false: answer directly</text><rect x="283" y="319" width="270" height="62" rx="10" fill="var(--inner)" stroke="var(--border)" stroke-width="1"/><text x="291" y="338" font-size="13" font-weight="700">filler_text</text><text x="291" y="355" font-size="11.5" style="fill:var(--text2)">spoken to the user at once</text><rect x="283" y="386" width="270" height="62" rx="10" fill="var(--inner)" stroke="var(--border)" stroke-width="1"/><text x="291" y="405" font-size="13" font-weight="700">request: task | status</text><text x="291" y="422" font-size="11.5" style="fill:var(--text2)">new work or correction | progress question</text><rect x="636" y="110" width="300" height="350" rx="10" fill="var(--gw)" stroke="var(--gw-b)" stroke-width="2"/><text x="650" y="139" font-size="18" font-weight="700">Interaction Manager</text><text x="650" y="159" font-size="12.5" style="fill:var(--text2)">backend state × request</text><rect x="651" y="185" width="270" height="70" rx="10" fill="var(--inner)" stroke="var(--border)" stroke-width="1"/><text x="659" y="204" font-size="13" font-weight="700">Idle or no session</text><text x="659" y="221" font-size="11.5" style="fill:var(--text2)">task or status → run_conversation()</text><rect x="651" y="260" width="270" height="70" rx="10" fill="var(--inner)" stroke="var(--border)" stroke-width="1"/><text x="659" y="279" font-size="13" font-weight="700">Working · request = task</text><text x="659" y="296" font-size="11.5" style="fill:var(--text2)">steer() / redirect()</text><rect x="651" y="335" width="270" height="70" rx="10" fill="var(--inner)" stroke="var(--border)" stroke-width="1"/><text x="659" y="354" font-size="13" font-weight="700">Working · request = status</text><text x="659" y="371" font-size="11.5" style="fill:var(--text2)">get_activity_summary()</text><text x="651" y="430" font-size="11" font-style="italic" style="fill:var(--text2)">request changes the Hermes call only while</text><text x="651" y="445" font-size="11" font-style="italic" style="fill:var(--text2)">the backend is working</text><rect x="1004" y="110" width="280" height="350" rx="10" fill="var(--wk)" stroke="var(--wk-b)" stroke-width="2"/><text x="1018" y="139" font-size="18" font-weight="700">Hermes backend</text><text x="1018" y="155" font-size="12" style="fill:var(--text2)">nemotron-3-ultra</text><text x="1018" y="170" font-size="12" style="fill:var(--text2)">Reasoning LLM · Hermes AIAgent</text><rect x="1019" y="185" width="250" height="80" rx="10" fill="var(--inner)" stroke="var(--border)" stroke-width="1"/><text x="1027" y="204" font-size="13" font-weight="700">Reasons and plans</text><text x="1027" y="221" font-size="11.5" style="fill:var(--text2)">thinking enabled</text><rect x="1019" y="275" width="250" height="80" rx="10" fill="var(--inner)" stroke="var(--border)" stroke-width="1"/><text x="1027" y="294" font-size="13" font-weight="700">Calls tools</text><text x="1027" y="311" font-size="11.5" style="fill:var(--text2)">executed on the client</text><rect x="1019" y="365" width="250" height="80" rx="10" fill="var(--inner)" stroke="var(--border)" stroke-width="1"/><text x="1027" y="384" font-size="13" font-weight="700">Returns</text><text x="1027" y="401" font-size="11.5" style="fill:var(--text2)">answer or progress</text><path class="arrow" marker-end="url(#ah4)" d="M200 230 L268 230"/><text x="234" y="220" font-size="12" font-weight="600" text-anchor="middle" style="fill:var(--text2)">speech</text><path class="arrow" marker-end="url(#ah4)" d="M568 230 L636 230"/><text x="602" y="220" font-size="12" font-weight="600" text-anchor="middle" style="fill:var(--text2)">= true</text><text x="602" y="205" font-size="12" font-weight="600" text-anchor="middle" style="fill:var(--text2)">delegate</text><path class="arrow" marker-end="url(#ah4)" d="M936 230 L1004 230"/><text x="970" y="220" font-size="12" font-weight="600" text-anchor="middle" style="fill:var(--text2)">call</text><text x="970" y="205" font-size="12" font-weight="600" text-anchor="middle" style="fill:var(--text2)">Hermes</text><rect x="50" y="535" width="150" height="90" rx="10" fill="var(--client)" stroke="var(--muted)" stroke-width="2"/><text x="64" y="576" font-size="15" font-weight="700">User hears</text><text x="64" y="596" font-size="12.5" style="fill:var(--text2)">speech</text><rect x="340" y="535" width="400" height="90" rx="10" fill="var(--lane-o)" stroke="var(--wk-b)" stroke-width="2"/><text x="354" y="576" font-size="15" font-weight="700">Output queue → speech</text><text x="354" y="596" font-size="12.5" style="fill:var(--text2)">one response at a time; never over the user</text><rect x="1004" y="535" width="280" height="90" rx="10" fill="var(--wk)" stroke="var(--wk-b)" stroke-width="2"/><text x="1014" y="578" font-size="15" font-weight="700">Answer or status</text><text x="1014" y="595" font-size="11" style="fill:var(--text2)">status is put into words by the frontend LLM</text><path class="arrow" marker-end="url(#ah4)" d="M420 460 L420 535"/><text x="430" y="502" font-size="12" font-weight="600" style="fill:var(--text2)">filler_text, spoken at once</text><path class="arrow" marker-end="url(#ah4)" d="M1144 460 L1144 535"/><path class="arrow" marker-end="url(#ah4)" d="M1004 580 L740 580"/><path class="arrow" marker-end="url(#ah4)" d="M340 580 L200 580"/></svg>
+</div>
+
+<div class="card">
+  <h2>The delegate tool and the Hermes calls</h2>
+  <p class="sub">The frontend LLM calls <code>delegate()</code> once per user turn; the gateway turns it into a Hermes call.</p>
+  <table>
+    <tr><th>Argument</th><th>Type</th><th>Meaning</th><th>Hermes side</th></tr>
+    <tr><td><b>delegate</b></td><td>boolean, required</td><td><code>true</code>: the backend must act on this turn. <code>false</code>: nothing for the backend (thanks, backchannel)</td><td><code>false</code>: no Hermes call. <code>true</code>: the call is chosen from the table below</td></tr>
+    <tr><td><b>filler_text</b></td><td>string, required</td><td>What the user hears at once, e.g. "Let me check that for you"</td><td>Not a Hermes call. Spoken immediately; reaches Hermes as context only if the user heard it</td></tr>
+    <tr><td><b>request</b></td><td><code>task</code> | <code>status</code>, default <code>task</code></td><td><code>task</code>: new work, follow-up or correction. <code>status</code>: "how is it going?"</td><td>Changes the Hermes call only while the backend is working</td></tr>
+  </table>
+  <h3>Hermes call by backend state (<code>delegate = true</code>)</h3>
+  <table>
+    <tr><th>Backend state</th><th><code>request = task</code></th><th><code>request = status</code></th></tr>
+    <tr><td><b>No session yet</b></td><td>new <code>AIAgent</code>, then <code>run_conversation()</code></td><td>same: a new run with this query</td></tr>
+    <tr><td><b>Idle (mid-conversation)</b></td><td><code>run_conversation()</code> on the existing session</td><td>same: a follow-up run</td></tr>
+    <tr><td><b>Working</b></td><td><code>redirect()</code> during a model call, otherwise <code>steer()</code></td><td><code>get_activity_summary()</code>; the running task is not disturbed</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Appendix A. Detailed system view</h2>
+  <p class="sub">Solid arrows are the main request path; dashed arrows are the tool-call round trip (the backend's tools execute on the client, or in the server for the browser demo).</p>
+  <svg viewBox="0 0 1500 960" role="img" aria-label="System architecture">
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--arrow)"/></marker></defs>
+
+    <!-- Client -->
+    <rect class="proc" x="20" y="60" width="180" height="170" rx="12" fill="var(--client)" stroke="var(--muted)"/>
+    <text class="h" x="110" y="86" text-anchor="middle">Realtime client</text>
+    <text class="s" x="110" y="108" text-anchor="middle">τ³-voice client (:8775)</text>
+    <text class="s" x="110" y="124" text-anchor="middle">or browser page (:8776)</text>
+    <text class="s" x="110" y="150" text-anchor="middle">mic audio, session.update</text>
+    <text class="s" x="110" y="166" text-anchor="middle">tools + instructions</text>
+    <text class="s" x="110" y="188" text-anchor="middle">executes function_call</text>
+    <text class="s" x="110" y="204" text-anchor="middle">returns function_call_output</text>
+
+    <!-- Riva -->
+    <rect class="proc" x="20" y="470" width="180" height="120" rx="12" fill="var(--ext)" stroke="var(--ext-b)"/>
+    <text class="h" x="110" y="496" text-anchor="middle">Riva NIM</text>
+    <text class="s" x="110" y="518" text-anchor="middle">ASR (streaming)</text>
+    <text class="s" x="110" y="534" text-anchor="middle">TTS</text>
+    <text class="s" x="110" y="556" text-anchor="middle">compose service: nemo-speech</text>
+    <text class="s" x="110" y="572" text-anchor="middle">(--stub-speech: none)</text>
+
+    <!-- Voice server -->
+    <rect class="proc" x="250" y="40" width="610" height="800" rx="14" fill="var(--voice)" stroke="var(--voice-b)"/>
+    <text class="h" x="270" y="66">Voice server  ·  Python 3.12</text>
+    <text class="s" x="270" y="82"><tspan>server.py + config.py plug DelegationTurnManager into the voice package's build_app via SessionHooks</tspan></text>
+
+    <rect class="box" x="270" y="100" width="570" height="76" rx="8"/>
+    <text class="t" x="285" y="122">Voice package shell  (WS /v1/realtime, health, TLS, browser page)</text>
+    <text class="s" x="285" y="141">Realtime GA events · VAD + 800 ms end-of-turn silence · ASR/TTS clients</text>
+    <text class="s" x="285" y="158">transcript normalization (spelled runs, M3.1) · argument normalization (ArgumentNormalizer)</text>
+
+    <rect class="box" x="270" y="196" width="570" height="470" rx="10" style="stroke:var(--voice-b)"/>
+    <text class="t" x="285" y="218">DelegationTurnManager  (engine/turn_manager.py): three lanes decoupled in time</text>
+
+    <!-- lanes -->
+    <rect x="282" y="236" width="178" height="262" rx="8" fill="var(--lane-f)"/>
+    <text class="t" x="291" y="256">Frontend lane</text>
+    <text class="s" x="291" y="272">one decision per user turn</text>
+    <rect class="box" x="290" y="282" width="162" height="78" rx="6"/>
+    <text class="lbl" x="298" y="299">Decider (frontend/decider.py)</text>
+    <text class="s" x="298" y="315">LLMDecider: forced tool call,</text>
+    <text class="s" x="298" y="329">repair, hedge @1.5 s, guards</text>
+    <text class="s" x="298" y="343">RuleDecider = stub</text>
+    <rect class="box" x="290" y="368" width="162" height="56" rx="6"/>
+    <text class="lbl" x="298" y="385">delegate(delegate,</text>
+    <text class="lbl" x="298" y="399">filler_text, request)</text>
+    <text class="s" x="298" y="414">request = task | status</text>
+    <rect class="box" x="290" y="432" width="162" height="56" rx="6"/>
+    <text class="lbl" x="298" y="449">Spelling hold (M3.2)</text>
+    <text class="s" x="298" y="465">wait before deciding a turn</text>
+    <text class="s" x="298" y="479">that ends mid-spelling</text>
+
+    <rect x="470" y="236" width="178" height="262" rx="8" fill="var(--lane-b)"/>
+    <text class="t" x="479" y="256">Backend lane</text>
+    <text class="s" x="479" y="272">never waits for the backend</text>
+    <rect class="box" x="478" y="282" width="162" height="62" rx="6"/>
+    <text class="lbl" x="486" y="299">BackendLink</text>
+    <text class="s" x="486" y="315">engine/backend_link.py</text>
+    <text class="s" x="486" y="329">WebSocket to gateway</text>
+    <rect class="box" x="478" y="352" width="162" height="76" rx="6"/>
+    <text class="lbl" x="486" y="369">ToolRelay (tools/relay.py)</text>
+    <text class="s" x="486" y="385">batch 30 ms, wire | local</text>
+    <text class="s" x="486" y="399">screen args, ResultHints</text>
+    <text class="s" x="486" y="413">(I3/I4 recovery notes)</text>
+    <rect class="box" x="478" y="436" width="162" height="52" rx="6"/>
+    <text class="lbl" x="486" y="453">Status verbalizer</text>
+    <text class="s" x="486" y="469">LLM, template fallback</text>
+    <text class="s" x="486" y="481">(status report → speech)</text>
+
+    <rect x="658" y="236" width="170" height="262" rx="8" fill="var(--lane-o)"/>
+    <text class="t" x="667" y="256">Output lane</text>
+    <text class="s" x="667" y="272">one response at a time</text>
+    <rect class="box" x="666" y="282" width="154" height="92" rx="6"/>
+    <text class="lbl" x="674" y="299">OutputQueue</text>
+    <text class="s" x="674" y="315">calls first, never held;</text>
+    <text class="s" x="674" y="329">audio never over the user;</text>
+    <text class="s" x="674" y="343">hold_max 4 s → stale rules</text>
+    <text class="s" x="674" y="357">(keep | drop per kind)</text>
+    <rect class="box" x="666" y="382" width="154" height="52" rx="6"/>
+    <text class="lbl" x="674" y="399">Spoken-text cleanup</text>
+    <text class="s" x="674" y="415">G2: strip markdown</text>
+    <text class="s" x="674" y="427">before TTS</text>
+    <rect class="box" x="666" y="442" width="154" height="46" rx="6"/>
+    <text class="lbl" x="674" y="459">Proactive status (M1)</text>
+    <text class="s" x="674" y="475">1 line after 15 s silent</text>
+
+    <!-- transcript -->
+    <rect class="box" x="282" y="510" width="546" height="70" rx="8"/>
+    <text class="t" x="296" y="531">Shared transcript (engine/transcript.py)</text>
+    <text class="s" x="296" y="548">history of user / frontend / controller / derived entries, each spoken item gets a playback</text>
+    <text class="s" x="296" y="563">outcome heard | partial | not_heard; unheard speech is not sent to Hermes as heard</text>
+    <rect class="box" x="282" y="594" width="546" height="60" rx="8"/>
+    <text class="t" x="296" y="614">Fix switches (all on except M2)</text>
+    <text class="s" x="296" y="630">M1 proactive status · M3 spelling · G1 filler dedupe · G2 clean answers · I3/I4 result hints</text>
+    <text class="s" x="296" y="645">realtime_eval: rules / hint targets / spelling patterns derived from each session's tool schemas</text>
+
+    <!-- config -->
+    <rect class="box" x="270" y="686" width="570" height="136" rx="8"/>
+    <text class="t" x="285" y="708">Configuration layering</text>
+    <text class="s" x="285" y="727"><tspan>profiles/*.yaml → delegation_agent.yaml → voice/*.yaml (voice package profile)</tspan></text>
+    <text class="s" x="285" y="745">prompts.yaml (frontend prompt catalog, prompt_features) · prompt_features.py (variant hashes)</text>
+    <text class="s" x="285" y="763">Deployed fingerprint logged per session: fdh_session_start.features, frontend_prompt,</text>
+    <text class="s" x="285" y="779">backend_configured (backend_domain, session_tools_sha256); checked by cli/fingerprint_check.py</text>
+    <text class="s" x="285" y="801">Profiles: realtime_eval · tau3_eval · browser_demo · stub · tau3_arm_* (one fix each)</text>
+
+    <!-- Gateway -->
+    <rect class="proc" x="920" y="40" width="290" height="800" rx="14" fill="var(--gw)" stroke="var(--gw-b)"/>
+    <text class="h" x="940" y="66">Backend gateway  ·  Py 3.12</text>
+    <text class="s" x="940" y="82">sidecar/ (host process, gateway.yaml)</text>
+    <rect class="box" x="936" y="100" width="258" height="64" rx="8"/>
+    <text class="t" x="948" y="121">gateway_server.py</text>
+    <text class="s" x="948" y="138">WS /v1/backend · /health</text>
+    <text class="s" x="948" y="153">max_sessions 8 · one runtime per session</text>
+    <rect class="box" x="936" y="176" width="258" height="288" rx="8" style="stroke:var(--gw-b)"/>
+    <text class="t" x="948" y="197">BackendController  (backend/controller.py)</text>
+    <text class="s" x="948" y="212">stdlib only; owns one session's state</text>
+    <rect class="box" x="948" y="224" width="234" height="62" rx="6"/>
+    <text class="lbl" x="956" y="241">State machine</text>
+    <text class="s" x="956" y="257">NO_SESSION → IDLE ⇄ WORKING</text>
+    <text class="s" x="956" y="271">→ CLOSING → CLOSED; run epochs</text>
+    <rect class="box" x="948" y="294" width="234" height="58" rx="6"/>
+    <text class="lbl" x="956" y="311">ContextQueue</text>
+    <text class="s" x="956" y="327">exactly-once history delivery:</text>
+    <text class="s" x="956" y="341">queued → in_flight → committed</text>
+    <rect class="box" x="948" y="360" width="234" height="46" rx="6"/>
+    <text class="lbl" x="956" y="377">Settle + outcome table</text>
+    <text class="s" x="956" y="393">ok / failed / interrupted commit</text>
+    <rect class="box" x="948" y="414" width="234" height="40" rx="6"/>
+    <text class="lbl" x="956" y="431">Watchdog 330 s · recovery</text>
+    <text class="s" x="956" y="446">respawn ≤ 2 from controller state</text>
+    <rect class="box" x="936" y="476" width="258" height="76" rx="8"/>
+    <text class="t" x="948" y="497">Backend prompt templates</text>
+    <text class="s" x="948" y="514">prompts.backend.yaml, rendered with</text>
+    <text class="s" x="948" y="528">prompt_features (spelling_v2, spoken_output,</text>
+    <text class="s" x="948" y="542">write_consent, phone_format)</text>
+    <rect class="box" x="936" y="564" width="258" height="104" rx="8"/>
+    <text class="t" x="948" y="585">WorkerPool  (worker_pool.py)</text>
+    <text class="s" x="948" y="602">spawn · ready · stop · SIGTERM → SIGKILL</text>
+    <text class="s" x="948" y="616">own process group per worker</text>
+    <text class="s" x="948" y="630">warm spares (optional)</text>
+    <text class="s" x="948" y="646">homes.py: one HERMES_HOME per worker</text>
+    <rect class="box" x="936" y="680" width="258" height="64" rx="8"/>
+    <text class="t" x="948" y="701">inprocess_link.py</text>
+    <text class="s" x="948" y="718">--stub-backend: in-process gateway</text>
+    <text class="s" x="948" y="732">with FakeAgent (no GPU, no Hermes)</text>
+    <rect class="box" x="936" y="756" width="258" height="70" rx="8"/>
+    <text class="t" x="948" y="777">Event log</text>
+    <text class="s" x="948" y="794">logs/fdh_gateway_events.jsonl</text>
+    <text class="s" x="948" y="808">logs/fdh_workers/ per worker</text>
+
+    <!-- Worker -->
+    <rect class="proc" x="1260" y="40" width="220" height="800" rx="14" fill="var(--wk)" stroke="var(--wk-b)"/>
+    <text class="h" x="1278" y="66">Hermes worker</text>
+    <text class="s" x="1278" y="82">Python 3.14 · 1 per session</text>
+    <rect class="box" x="1274" y="100" width="192" height="64" rx="8"/>
+    <text class="t" x="1286" y="121">worker_main.py</text>
+    <text class="s" x="1286" y="138">Unix-socket control loop</text>
+    <text class="s" x="1286" y="153">JSON lines, one writer</text>
+    <rect class="box" x="1274" y="176" width="192" height="88" rx="8"/>
+    <text class="t" x="1286" y="197">WorkerCore</text>
+    <text class="s" x="1286" y="214">configure · run · steer</text>
+    <text class="s" x="1286" y="228">redirect · status · interrupt</text>
+    <text class="s" x="1286" y="242">emits run_outcome, activity</text>
+    <rect class="box" x="1274" y="276" width="192" height="64" rx="8"/>
+    <text class="t" x="1286" y="297">ToolFutures</text>
+    <text class="s" x="1286" y="314">keyed result futures: a Hermes</text>
+    <text class="s" x="1286" y="328">tool blocks until tool.result</text>
+    <rect class="box" x="1274" y="352" width="192" height="110" rx="8" style="stroke:var(--wk-b)"/>
+    <text class="t" x="1286" y="373">hermes_adapter.py</text>
+    <text class="s" x="1286" y="390">the only Hermes import</text>
+    <text class="s" x="1286" y="404">registers session tools as</text>
+    <text class="s" x="1286" y="418">toolset fdh_client; verifies</text>
+    <text class="s" x="1286" y="432">the tool surface is exact;</text>
+    <text class="s" x="1286" y="446">tool_search off</text>
+    <rect class="box" x="1274" y="474" width="192" height="120" rx="8" style="stroke:var(--wk-b)"/>
+    <text class="t" x="1286" y="495">Hermes AIAgent</text>
+    <text class="s" x="1286" y="512">run_conversation()</text>
+    <text class="s" x="1286" y="526">steer() / redirect()</text>
+    <text class="s" x="1286" y="540">get_activity_summary()</text>
+    <text class="s" x="1286" y="554">hard_interrupt()</text>
+    <text class="s" x="1286" y="574">max 30 iterations, 300 s budget</text>
+    <rect class="box" x="1274" y="606" width="192" height="64" rx="8"/>
+    <text class="t" x="1286" y="627">fake_host.py</text>
+    <text class="s" x="1286" y="644">FakeAgent host for tests</text>
+    <text class="s" x="1286" y="658">(agent_kind: fake)</text>
+    <rect class="box" x="1274" y="682" width="192" height="64" rx="8"/>
+    <text class="t" x="1286" y="703">HERMES_HOME</text>
+    <text class="s" x="1286" y="720">config.yaml per worker, runtime</text>
+    <text class="s" x="1286" y="734">state in .cache/fdh-hermes-homes</text>
+
+    <!-- external LLMs -->
+    <rect class="proc" x="470" y="880" width="250" height="64" rx="12" fill="var(--ext)" stroke="var(--ext-b)"/>
+    <text class="h" x="595" y="905" text-anchor="middle">Frontend LLM</text>
+    <text class="s" x="595" y="923" text-anchor="middle">nemotron-3.5-lightning (thinking off)</text>
+    <text class="s" x="595" y="936" text-anchor="middle">OpenAI-compatible chat completions</text>
+    <rect class="proc" x="1260" y="880" width="220" height="64" rx="12" fill="var(--ext)" stroke="var(--ext-b)"/>
+    <text class="h" x="1370" y="905" text-anchor="middle">Backend LLM</text>
+    <text class="s" x="1370" y="923" text-anchor="middle">nemotron-3-ultra, thinking on</text>
+    <text class="s" x="1370" y="936" text-anchor="middle">reasoning budget 1024</text>
+
+    <!-- arrows -->
+    <path class="arrow" marker-start="url(#ah)" marker-end="url(#ah)" d="M200 120 H250"/>
+    <rect class="lblbg" x="188" y="136" width="74" height="16"/><text class="lbl" x="225" y="148" text-anchor="middle">WS Realtime</text>
+    <path class="arrow" marker-start="url(#ah)" marker-end="url(#ah)" d="M200 530 H250"/>
+    <rect class="lblbg" x="194" y="540" width="62" height="16"/><text class="lbl" x="225" y="552" text-anchor="middle">gRPC audio</text>
+    <path class="arrow" marker-end="url(#ah)" d="M371 360 V868 H470 V880"/>
+    <text class="lbl" x="380" y="858">1 decision / turn</text>
+    <path class="arrow" marker-start="url(#ah)" marker-end="url(#ah)" d="M860 316 H920"/>
+    <rect class="lblbg" x="846" y="244" width="88" height="46" rx="4"/>
+    <text class="lbl" x="890" y="258" text-anchor="middle">WS /v1/backend</text>
+    <text class="s" x="890" y="272" text-anchor="middle">JSON, v1</text>
+    <text class="s" x="890" y="284" text-anchor="middle">protocol.py</text>
+    <path class="arrow" marker-start="url(#ah)" marker-end="url(#ah)" d="M1210 316 H1260"/>
+    <rect class="lblbg" x="1204" y="324" width="62" height="30" rx="4"/>
+    <text class="lbl" x="1235" y="337" text-anchor="middle">Unix</text><text class="lbl" x="1235" y="349" text-anchor="middle">socket</text>
+    <path class="arrow" marker-end="url(#ah)" d="M1370 594 V880"/>
+    <text class="lbl" x="1378" y="760">LLM calls</text>
+    <!-- tool round trip -->
+    <path class="arrow dash" marker-end="url(#ah)" d="M1260 300 H1226 V800 H900 V440 H860"/>
+    <text class="lbl" x="1040" y="822" text-anchor="middle">tool.call (worker → gateway → voice) → function_call to client; function_call_output → tool.result back</text>
+  </svg>
+</div>
+
+<div class="card">
+  <h2>Appendix B. Frontend action vs. backend state</h2>
+  <p class="sub">The frontend calls <code>delegate(delegate, filler_text, request)</code> every turn. The gateway's <code>BackendController</code> classifies the delegation against a <em>settled</em> state, so the Hermes action depends on the state, not on the frontend. Source: <code>workflow.csv</code> (12 rows, checked by <code>test_fdh_workflow_table.py</code>).</p>
+  <div class="cols">
+    <table>
+      <tr><th>User turn</th><th>NO_SESSION</th><th>IDLE (mid-conversation)</th><th>WORKING</th></tr>
+      <tr><td><b>New task / follow-up</b><br>filler spoken, <code>delegate</code></td><td>new <code>AIAgent(new_id)</code></td><td><code>run_conversation()</code> continues the session</td><td><code>steer()</code> or <code>redirect()</code> (<code>steer_mode: auto</code>: redirect during a model call, else steer)</td></tr>
+      <tr><td><b>Asks for updates</b><br><code>request=status</code></td><td>starts a new session with the query</td><td>goes as a follow-up <code>run_conversation()</code></td><td><code>get_activity_summary()</code>; the task is not disturbed; verbalized by the frontend</td></tr>
+      <tr><td><b>Acknowledges the filler</b> ("okay", "thanks")</td><td colspan="3">frontend answers directly or stays silent; nothing is delegated (backchannel guard; a backchannel after a backend question is delegated)</td></tr>
+    </table>
+    <svg viewBox="0 0 560 250" role="img" aria-label="Backend state machine">
+      <defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--arrow)"/></marker></defs>
+      <rect class="box" x="10" y="90" width="110" height="46" rx="23"/><text class="t" x="65" y="118" text-anchor="middle">NO_SESSION</text>
+      <rect class="box" x="190" y="90" width="90" height="46" rx="23"/><text class="t" x="235" y="118" text-anchor="middle">IDLE</text>
+      <rect class="box" x="350" y="90" width="100" height="46" rx="23"/><text class="t" x="400" y="118" text-anchor="middle">WORKING</text>
+      <rect class="box" x="350" y="190" width="100" height="40" rx="20"/><text class="t" x="400" y="215" text-anchor="middle">CLOSING</text>
+      <rect class="box" x="470" y="190" width="80" height="40" rx="20"/><text class="t" x="510" y="215" text-anchor="middle">CLOSED</text>
+      <path class="arrow" marker-end="url(#ah2)" d="M120 113 H190"/><text class="s" x="155" y="84" text-anchor="middle">delegate</text><text class="s" x="155" y="96" text-anchor="middle">AIAgent()</text>
+      <path class="arrow" marker-end="url(#ah2)" d="M280 100 H350"/><text class="s" x="315" y="92" text-anchor="middle">delegate</text>
+      <path class="arrow" marker-end="url(#ah2)" d="M350 126 H280"/><text class="s" x="315" y="146" text-anchor="middle">run settles</text>
+      <path class="arrow" marker-end="url(#ah2)" d="M400 136 V190"/><text class="s" x="408" y="168">close</text>
+      <path class="arrow" marker-end="url(#ah2)" d="M450 210 H470"/>
+      <path class="arrow" marker-end="url(#ah2)" d="M380 90 C370 40 430 40 420 90"/><text class="s" x="400" y="38" text-anchor="middle">steer / redirect / status</text>
+      <text class="s" x="10" y="170">Worker died or watchdog (330 s): respawn from controller state,</text>
+      <text class="s" x="10" y="184">history rolled back; ≤ 2 respawns per session.</text>
+    </svg>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Appendix C. One delegated turn, end to end</h2>
+  <div class="cols">
+    <ol>
+      <li>Client streams mic audio over <code>WS /v1/realtime</code>; VAD ends the turn after 800 ms of silence; Riva ASR returns the transcript, which is normalized (spelled letters joined).</li>
+      <li><b>Frontend lane:</b> the spelling hold may wait; the <code>LLMDecider</code> forces one <code>delegate</code> call (hedged at 1.5 s, repaired once, 4 s timeout). New speech before it returns cancels it and merges into the next transcript.</li>
+      <li>The <b>filler</b> goes to the OutputQueue and is spoken at once through TTS; the same turn is sent as <code>delegate</code> (<code>turn_id</code>, <code>request</code>, <code>run_input</code>) over <code>BackendLink</code>.</li>
+      <li><b>Gateway:</b> the controller settles the previous run, renders the context-queue entries into the next user message, and sends <code>run</code> / <code>steer</code> / <code>redirect</code> / <code>status</code> to the worker (state-dependent, section 2).</li>
+      <li><b>Worker:</b> Hermes <code>AIAgent</code> reasons with nemotron-3-ultra and calls session tools. Each tool call becomes <code>tool.call</code> and blocks in <code>ToolFutures</code>.</li>
+      <li><b>Tool round trip:</b> gateway → voice server → <code>ToolRelay</code> (screen arguments, batch 30 ms) → client <code>function_call</code>; the client's output returns through <code>ResultHints</code> (recovery note on a failed lookup) → <code>tool.result</code> → worker unblocks.</li>
+      <li>While WORKING, <code>activity</code> events are kept as recent backend activity for the frontend's next decision, and M1 can speak one proactive line after 15 s of silence. A <code>request=status</code> turn is answered from the status summary, put into words by the status verbalizer.</li>
+      <li>The worker emits <code>run_outcome</code>; the controller commits history, sends <code>answer</code> and <code>backend_run_done</code>; the <b>output lane</b> cleans the text (G2) and speaks it, recording heard / partial / not_heard in the transcript.</li>
+    </ol>
+    <div>
+      <h3>Process boundaries</h3>
+      <table>
+        <tr><th>Link</th><th>Transport</th><th>Messages</th></tr>
+        <tr><td>client ⇄ voice</td><td>WS, OpenAI Realtime GA</td><td>audio, <code>session.update</code>, <code>function_call</code>(_output)</td></tr>
+        <tr><td>voice → gateway</td><td>WS <code>/v1/backend</code></td><td><code>session.open</code>, <code>session.configure</code>, <code>history.append</code>, <code>delegate</code>, <code>tool.result</code>, <code>session.close</code></td></tr>
+        <tr><td>gateway → voice</td><td>same WS</td><td><code>session.ready</code>, <code>session.configured</code>, <code>history.ack</code>, <code>state</code>, <code>action</code>, <code>tool.call</code>, <code>tool.cancel</code>, <code>activity</code>, <code>answer</code>, <code>backend_run_done</code>, <code>status</code>, <code>worker</code>, <code>error</code></td></tr>
+        <tr><td>gateway → worker</td><td>Unix socket, JSON lines</td><td><code>configure</code>, <code>run</code>, <code>steer</code>, <code>redirect</code>, <code>status</code>, <code>tool.result</code>, <code>interrupt</code>, <code>close</code></td></tr>
+        <tr><td>worker → gateway</td><td>same socket</td><td><code>ready</code>, <code>configured</code>, <code>steer_result</code>, <code>status_result</code>, <code>tool.call</code>, <code>tool.cancel</code>, <code>activity</code>, <code>run_outcome</code>, <code>closed</code>, <code>error</code></td></tr>
+      </table>
+      <p>All four directions share the validated contract <code>backend/protocol.py</code> (version <code>v: 1</code>, stdlib only, so Python 3.12 and 3.14 processes agree). Run statuses: <code>ok, failed, interrupted, error, deadline, worker_died, closed</code>.</p>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Appendix D. Module map and tooling</h2>
+  <table>
+    <tr><th>Path</th><th>Runs in</th><th>Role</th></tr>
+    <tr><td><code>server.py</code>, <code>config.py</code></td><td>voice server</td><td>Entry point, config and profile loading, SessionHooks</td></tr>
+    <tr><td><code>engine/</code></td><td>voice server</td><td>turn_manager, transcript, output_scheduler, backend_link, spelling_hold, spoken_text</td></tr>
+    <tr><td><code>frontend/</code></td><td>voice server</td><td>delegate_tool, decider, status_verbalizer, prompts, llm</td></tr>
+    <tr><td><code>tools/</code></td><td>voice server</td><td>relay (tool batches, normalization), result_hints (I3/I4)</td></tr>
+    <tr><td><code>backend/</code></td><td>all (stdlib only)</td><td>protocol, writer, controller, context_queue, agent_like (FakeAgent)</td></tr>
+    <tr><td><code>sidecar/</code></td><td>gateway</td><td>gateway_server, session_runtime, worker_pool, homes, templates, gateway_config, inprocess_link</td></tr>
+    <tr><td><code>worker/</code></td><td>Hermes worker</td><td>worker_main, worker_core, tool_futures, hermes_adapter, fake_host</td></tr>
+    <tr><td><code>cli/</code></td><td>tools</td><td>delegation_replay (frontend decision gate), backend_probe (gateway without audio), report_adapter, fingerprint_check, spelling_hold_replay</td></tr>
+    <tr><td><code>config/</code></td><td>none</td><td>delegation_agent.yaml, gateway*.yaml, prompts*.yaml, voice/*.yaml, profiles/*.yaml</td></tr>
+  </table>
+  <p>Design: <code>prototype-plan.md</code> · run it: <code>runbook.md</code> · spec: <code>workflow.csv</code> · fixes: <code>tau3-failure-fixes-plan.md</code>, <code>tau3-identity-fixes-plan.md</code>.</p>
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement, btn = document.getElementById("theme"), modes = ["auto", "light", "dark"];
+    var cur = localStorage.getItem("fdh-arch-theme") || "auto";
+    function apply() { if (cur === "auto") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", cur); btn.textContent = "Theme: " + cur; }
+    btn.addEventListener("click", function () { cur = modes[(modes.indexOf(cur) + 1) % 3]; localStorage.setItem("fdh-arch-theme", cur); apply(); });
+    apply();
+  })();
+</script>
+</body>
+</html>
