@@ -3,10 +3,11 @@
 
 # ruff: noqa: D100, D101, D102, D103, D107
 
-"""I1 (now the domain-agnostic <phone_numbers> block; no domain notes ship) and I3/I4 (recovery notes)."""
+"""I1 (the domain-agnostic <phone_numbers> block), the one shipped domain note (telecom) and I3/I4 (recovery notes)."""
 
 from __future__ import annotations
 
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -29,6 +30,17 @@ ALL_ON_BUT_PHONE = {**ALL_ON, "phone_format": False}
 NOT_FOUND = "Error: User not found"
 FOUND = '"sara_doe_496"'
 DOMAINS = ("airline", "retail", "telecom", "mock")
+#: The telecom note, exactly as disclosed with the submission (analysis/2026-10-11_fdh-telecom-gpt55-deep). Changing it
+#: needs a new held-out validation and a new disclosure (telecom-domain-note-plan.md sections 4 and 5).
+TELECOM_NOTE = (
+    "Customers' location affects mobile service. For any problem with service, mobile data or messaging,\n"
+    "ask early, right after you have identified the customer, whether they are at home or travelling,\n"
+    "unless they have already said or your policy requires an immediate transfer. Ask once, and use the\n"
+    "answer only for troubleshooting."
+)
+TELECOM_RULE = (("telecom", ("get_customer_by_phone",)),)
+#: Benchmark words, fault names and digits that the note must not contain (submission doc section 0.2).
+NOTE_FORBIDDEN = re.compile(r"roaming|apn|refuel|telecom|airline|retail|user_abroad|break_|_issue|mms|\d", re.I)
 
 
 def _instructions(domain: str) -> str:
@@ -42,29 +54,62 @@ def _phone_block(text: str) -> str:
 def _catalog_with_note(tmp: str) -> Path:
     """The shipped backend catalog plus one invented domain note (the mechanism, not a shipped note)."""
     text = BACKEND_PROMPTS.read_text(encoding="utf-8")
-    assert "backend_domain_notes: {}" in text  # noqa: S101 - no shipped note
+    assert "backend_domain_notes:\n  telecom: |-\n" in text  # noqa: S101 - the one shipped note
     path = Path(tmp) / "prompts.backend.yaml"
     path.write_text(
         text.replace(
-            "backend_domain_notes: {}",
+            "backend_domain_notes:\n",
             "backend_domain_notes:\n  widgets: |-\n"
-            "    {% if features.domain_notes %}Widget codes are case-sensitive.{% endif %}",
+            "    {% if features.domain_notes %}Widget codes are case-sensitive.{% endif %}\n",
         ),
         encoding="utf-8",
     )
     return path
 
 
-# -- I1: the phone-number block, and no domain notes ------------------------------------------------
+# -- the telecom domain note (analysis/2026-10-11_fdh-telecom-gpt55-deep) ---------------------------
+
+
+class TelecomNoteTests(unittest.TestCase):
+    def test_only_telecom_is_detected_and_only_it_has_a_note(self) -> None:
+        for name in ("gateway.yaml", "gateway.eval.yaml", "gateway.eval_no_note.yaml"):
+            with self.subTest(gateway=name):
+                self.assertEqual(gc.load_gateway_config(CONFIG / name).domains, TELECOM_RULE)
+        self.assertEqual(BackendTemplates(BACKEND_PROMPTS).domains_with_notes, ("telecom",))
+
+    def test_the_note_is_on_by_default_and_off_in_the_controls_and_the_ablation(self) -> None:
+        for name in ("gateway.yaml", "gateway.eval.yaml"):
+            with self.subTest(gateway=name):
+                self.assertTrue(gc.load_gateway_config(CONFIG / name).prompt_features["domain_notes"])
+        off = ("gateway.eval_no_note.yaml", "gateway.eval_control.yaml", "gateway.eval_124acf7.yaml",
+               "gateway.eval_situational.yaml", "gateway.baseline.yaml", "gateway.identity_control.yaml")  # fmt: skip
+        for name in off:
+            with self.subTest(gateway=name):
+                self.assertFalse(gc.load_gateway_config(CONFIG / name).prompt_features["domain_notes"])
+        on = gc.load_gateway_config(CONFIG / "gateway.eval.yaml")
+        ablation = gc.load_gateway_config(CONFIG / "gateway.eval_no_note.yaml")
+        changed = {k for k, v in on.prompt_features.items() if v != ablation.prompt_features[k]}
+        self.assertEqual(changed, {"domain_notes"})
+        self.assertEqual(on.hermes, ablation.hermes)
+
+    def test_the_note_renders_word_for_word_only_with_its_switch(self) -> None:
+        self.assertEqual(BackendTemplates(BACKEND_PROMPTS, prompt_features={"domain_notes": True}).domain_note(
+            "telecom"), TELECOM_NOTE)  # fmt: skip
+        self.assertEqual(BackendTemplates(BACKEND_PROMPTS).domain_note("telecom"), "")
+        for domain in ("airline", "retail", "mock", ""):
+            with self.subTest(domain=domain):
+                note = BackendTemplates(BACKEND_PROMPTS, prompt_features={"domain_notes": True}).domain_note(domain)
+                self.assertEqual(note, "")
+
+    def test_the_note_names_no_benchmark_term_fault_or_digit(self) -> None:
+        self.assertEqual(NOTE_FORBIDDEN.findall(TELECOM_NOTE), [])
+        self.assertLessEqual(TELECOM_NOTE.count(". ") + 1, 4)  # a few sentences at most
+
+
+# -- I1: the phone-number block ----------------------------------------------------------------------
 
 
 class PhoneFormatTests(unittest.TestCase):
-    def test_no_domain_detection_and_no_note_ships(self) -> None:
-        for name in ("gateway.yaml", "gateway.eval.yaml"):
-            with self.subTest(gateway=name):
-                self.assertEqual(gc.load_gateway_config(CONFIG / name).domains, ())
-        self.assertEqual(BackendTemplates(BACKEND_PROMPTS, prompt_features=ALL_ON).domains_with_notes, ())
-
     def test_block_renders_only_with_its_feature_and_identically_in_every_domain(self) -> None:
         on = BackendTemplates(BACKEND_PROMPTS, prompt_features=ALL_ON)
         off = BackendTemplates(BACKEND_PROMPTS, prompt_features=ALL_ON_BUT_PHONE)
@@ -118,7 +163,7 @@ class ControllerDomainTests(unittest.IsolatedAsyncioTestCase):
         await h.controller.configure(tools, instructions)
         return h
 
-    async def test_every_domain_gets_the_same_prompt_shape_and_no_domain(self) -> None:
+    async def test_without_the_note_every_domain_gets_the_same_prompt_shape(self) -> None:
         for domain in DOMAINS:
             for features in (ALL_ON, ALL_ON_BUT_PHONE):
                 with self.subTest(domain=domain, features=features):
@@ -132,8 +177,32 @@ class ControllerDomainTests(unittest.IsolatedAsyncioTestCase):
                     )
                     self.assertEqual(system, plain)
                     configured = h.of_type("session.configured")[0]
-                    self.assertEqual(configured["backend_domain"], "")
+                    self.assertEqual(configured["backend_domain"], "telecom" if domain == "telecom" else "")
                     self.assertEqual(configured["backend_system_sha256"], sha256_text(system))
+
+    async def test_the_note_changes_the_telecom_prompt_only(self) -> None:
+        eval_features = dict(gc.load_gateway_config(CONFIG / "gateway.eval.yaml").prompt_features)
+        for domain in DOMAINS:
+            with self.subTest(domain=domain):
+                tools, instructions = tau2_session_update(domain)["session"]["tools"], _instructions(domain)
+                # Read each harness before building the next one (the fake worker belongs to the latest harness).
+                on = await self._configure(tools, instructions, eval_features)
+                with_note = on.worker.of_type("configure")[0]["instructions"]
+                configured = on.of_type("session.configured")[0]
+                off = await self._configure(tools, instructions, {**eval_features, "domain_notes": False})
+                without = off.worker.of_type("configure")[0]["instructions"]
+                if domain != "telecom":
+                    self.assertEqual(with_note, without)  # byte-identical: the fingerprint is unchanged
+                    self.assertEqual(configured["backend_domain"], "")
+                    continue
+                block = f"\n\n<domain_notes>\n{TELECOM_NOTE}\n</domain_notes>"
+                self.assertEqual(with_note.count("<domain_notes>"), 1)
+                self.assertIn(block, with_note)
+                self.assertEqual(with_note.replace(block, "", 1), without)
+                self.assertLess(with_note.index("</policy>"), with_note.index("<domain_notes>"))
+                self.assertLess(with_note.index("</domain_notes>"), with_note.index("<situational_facts>"))
+                self.assertEqual(configured["backend_domain"], "telecom")
+                self.assertEqual(configured["backend_system_sha256"], sha256_text(with_note))
 
     async def test_an_invented_domain_gets_its_note_and_the_fingerprint_hashes_it(self) -> None:
         tools = [{"type": "function", "name": "lookup_widget", "description": "Look up a widget.", "parameters": {}}]

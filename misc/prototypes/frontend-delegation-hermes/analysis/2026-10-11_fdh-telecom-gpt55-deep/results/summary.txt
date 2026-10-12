@@ -1,0 +1,54 @@
+1. Pass^1 by issue type (all scored tasks of each run)
+
+group                              gpt55roam          gpt55fix             gpt55             gpt52
+mms_issue                     14   0.43          7   0.71         14   0.50         14   0.21
+mms_issue +roam               35   0.17         10   0.20         35   0.03         35   0.60
+mobile_data_issue              7   0.86          7   1.00          7   0.86          7   1.00
+mobile_data_issue +roam       29   0.52         29   0.34         29   0.41         29   0.76
+service_issue                 29   0.83         29   0.79         29   0.83         29   0.83
+ALL                          114   0.50         82   0.57        114   0.44        114   0.68
+
+2. Who brought up the user's location, roaming tasks (audio; backend answer from the trace)
+
+gpt55roam (n=64, pass 0.33)
+  agent asked first            13 ( 20%) pass 0.85
+  user volunteered first       17 ( 27%) pass 0.59
+  location never known         34 ( 53%) pass 0.00
+  backend answer asked (trace) 16 ( 25%) pass 0.69
+gpt55fix (n=39, pass 0.31)
+  agent asked first             0 (  0%) pass   -
+  user volunteered first       14 ( 36%) pass 0.86
+  location never known         25 ( 64%) pass 0.00
+  backend answer asked (trace)  2 (  5%) pass 1.00
+gpt55 (n=64, pass 0.20)
+  agent asked first             0 (  0%) pass   -
+  user volunteered first       20 ( 31%) pass 0.65
+  location never known         44 ( 69%) pass 0.00
+  backend answer asked (trace)  1 (  2%) pass 0.00
+gpt52 (n=64, pass 0.67)
+  agent asked first             0 (  0%) pass   -
+  user volunteered first       64 (100%) pass 0.67
+  location never known          0 (  0%) pass   -
+
+   gpt55roam, roaming tasks, backend asked / never known, by:
+     mobile_data_issue +roam            n=29  backend asked 10 ( 34%)  never known 11
+     no visible cause in the records    n=26  backend asked 11 ( 42%)  never known  9
+     records show data over the limit   n=38  backend asked  5 ( 13%)  never known 25
+     mms_issue +roam                    n=35  backend asked  6 ( 17%)  never known 23
+
+3. Failure causes, gpt55roam (57 failed tasks)
+
+   13  N1 not roaming, a step missed                                ended: {'user_stop': 4, 'transfer': 9}
+    1  N2 not roaming, every action done, assertion failed          ended: {'transfer': 1}
+    9  R1 roaming, location never known (+ other steps missed)      ended: {'transfer': 7, 'user_stop': 2}
+   25  R1 roaming, location never known (only roaming)              ended: {'transfer': 21, 'max_steps': 4}
+    5  R2 roaming, location known, roaming still not fixed          ended: {'transfer': 5}
+    4  R3 roaming fixed, another step missed                        ended: {'transfer': 4}
+  non-roaming steps missed in failed tasks: {'refuel_data': 12, 'grant_app_permission(storage)': 10, 'set_network_mode_preference': 9, 'grant_app_permission(sms)': 8, 'reset_apn_settings': 7, 'reseat_sim_card': 6, 'toggle_airplane_mode': 5, 'reboot_device': 3, 'toggle_data': 3, 'toggle_wifi_calling': 3}
+
+4. Transfers, cut-off answers and calls to tools the backend does not have (traced runs)
+
+  gpt55roam  transfers  67/114 (pass 0.30); backend turns 3928, answer cut off 51%; unknown-tool calls 97
+  gpt55fix   transfers  42/82 (pass 0.40); backend turns 2338, answer cut off 53%; unknown-tool calls 55
+  gpt55      transfers  56/114 (pass 0.30); backend turns 4148, answer cut off 50%; unknown-tool calls 114
+  gpt52      no backend traces

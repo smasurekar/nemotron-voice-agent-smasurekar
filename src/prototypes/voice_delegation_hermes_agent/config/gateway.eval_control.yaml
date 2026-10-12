@@ -16,3 +16,4 @@ prompt_features:
   capability_check: false
   situational_facts: false        # fix-plan-f1-f2-f4-f8.md variants: off in the geval runs' control too
   identity_from_identifier: false
+  domain_notes: false             # the telecom note (analysis/2026-10-11_fdh-telecom-gpt55-deep): off in the control

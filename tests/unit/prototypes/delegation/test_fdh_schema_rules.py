@@ -472,6 +472,32 @@ TAU2_NAMES = re.compile(
     r"get_user_details|find_user_id|get_customer_by_phone|get_reservation_details|telecom|airline|retail"
 )
 BENCHMARK_VALUES = re.compile(r"ROSSI|IFOYYZ|NQNU5R|K1NW8N|mia_kim|mia_fancy|555-123|\\d\{4\}")
+#: The one exception, disclosed word for word with the submission (analysis/2026-10-11_fdh-telecom-gpt55-deep):
+#: the telecom detection rule (gateway.yaml, gateway.eval.yaml) and the key of the telecom note
+#: (prompts.backend.yaml). Comments may name domains; they are never sent to a model.
+DISCLOSED_DOMAIN_LINES = {
+    "gateway.yaml": "telecom: {tools_any: [get_customer_by_phone]}",
+    "gateway.eval.yaml": "telecom: {tools_any: [get_customer_by_phone]}",
+    "prompts.backend.yaml": "telecom: |-",
+}
+
+
+def _code_lines(text: str) -> list[str]:
+    """The stripped lines of a YAML file without full-line and trailing comments."""
+    lines = []
+    for line in text.splitlines():
+        if line.lstrip().startswith("#"):
+            continue
+        lines.append(re.sub(r"\s+#\s.*$", "", line).strip())
+    return lines
+
+
+def _tau2_hits(path: Path) -> list[str]:
+    """Lines naming a tau2 tool or domain, except the disclosed telecom lines."""
+    allowed = DISCLOSED_DOMAIN_LINES.get(path.name)
+    return [
+        line for line in _code_lines(path.read_text(encoding="utf-8")) if TAU2_NAMES.search(line) and line != allowed
+    ]
 
 
 class SubmissionConfigTests(unittest.TestCase):
@@ -479,16 +505,17 @@ class SubmissionConfigTests(unittest.TestCase):
         for path in SUBMISSION_FILES:
             text = path.read_text(encoding="utf-8")
             with self.subTest(path=path.name):
-                self.assertEqual(TAU2_NAMES.findall(text), [])
+                self.assertEqual(_tau2_hits(path), [])
                 self.assertEqual(BENCHMARK_VALUES.findall(text), [])
+
+    def test_the_disclosed_telecom_lines_are_present_once(self) -> None:
+        for name, line in DISCLOSED_DOMAIN_LINES.items():
+            with self.subTest(file=name):
+                self.assertEqual(_code_lines((PACKAGE / "config" / name).read_text(encoding="utf-8")).count(line), 1)
 
     def test_other_hits_are_historical_tau3_files(self) -> None:
         config = PACKAGE / "config"
-        hits = {
-            path.relative_to(config).as_posix()
-            for path in config.rglob("*.yaml")
-            if TAU2_NAMES.search(path.read_text(encoding="utf-8"))
-        }
+        hits = {path.relative_to(config).as_posix() for path in config.rglob("*.yaml") if _tau2_hits(path)}
         self.assertTrue(all(Path(hit).name.startswith("tau3") for hit in hits), hits)
 
 

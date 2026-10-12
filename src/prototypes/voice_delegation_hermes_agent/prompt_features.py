@@ -24,7 +24,7 @@ BACKEND_FEATURES: dict[str, bool] = {
     "spelling_v2": False,
     "spoken_output": False,
     "write_consent": False,
-    "domain_notes": False,
+    "domain_notes": False,  # <domain_notes>: the telecom note (on in gateway.yaml)
     "phone_format": False,
     # tau3-geval-failure-fixes-plan.md section 4 (each off by default; gateway.eval_<fix>.yaml turns one on).
     "format_correction": False,  # A2: a separator or case change is a format correction, not a variant

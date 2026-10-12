@@ -8,7 +8,8 @@
 # format_correction, write_consent_v2, policy_check, request_scope, transfer_check, capability_check:
 # tau3-geval-failure-fixes-plan.md section 4; situational_facts (F4, reworded to ask where the user is:
 # analysis/2026-10-10_fdh-roaming-gpt55) and identity_from_identifier (F8): fix-plan-f1-f2-f4-f8.md
-# sections 3 and 4.4). All off = the baseline prompts. Examples are invented.
+# sections 3 and 4.4; domain_notes: the telecom note at the end of this file,
+# analysis/2026-10-11_fdh-telecom-gpt55-deep). All off = the baseline prompts. Examples are invented.
 
 # SOUL.md of every Hermes worker (loaded because load_soul_identity: true).
 backend_soul: |
@@ -159,10 +160,20 @@ backend_system: |
 
 # Instructions for one domain only, rendered into backend_system as <domain_notes> right after the
 # policy when the gateway detects the domain from the session's tool names (gateway.yaml domains).
-# A session with no domain, or a note that renders empty, gets no block. Rules for a note: facts the
-# tools or policy state, never policy; a few sentences at most; invented examples only. No notes ship:
-# domain-agnostic rules (such as <phone_numbers>) belong in backend_system.
-backend_domain_notes: {}
+# A session with no domain, or a note that renders empty, gets no block. Rules for a note: an operator
+# brief that a real operator would give its agents without having seen the benchmark; it never restates
+# or changes the policy; a few sentences at most; no task, fault or data values; invented examples only.
+# Domain-agnostic rules (such as <phone_numbers>) belong in backend_system.
+# One note ships, telecom (analysis/2026-10-11_fdh-telecom-gpt55-deep/telecom-domain-note-plan.md). It is
+# disclosed word for word with the submission; any change to its text needs a new validation and disclosure.
+backend_domain_notes:
+  telecom: |-
+    {% if features.domain_notes -%}
+    Customers' location affects mobile service. For any problem with service, mobile data or messaging,
+    ask early, right after you have identified the customer, whether they are at home or travelling,
+    unless they have already said or your policy requires an immediate transfer. Ask once, and use the
+    answer only for troubleshooting.
+    {%- endif %}
 
 # One context line per entry kind.
 context_user: '{% if during_run %}[while you were working] {% else %}[earlier] {% endif %}user: "{{ text }}"'

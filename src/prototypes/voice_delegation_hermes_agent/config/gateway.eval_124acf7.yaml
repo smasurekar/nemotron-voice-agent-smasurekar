@@ -9,3 +9,4 @@ extends: gateway.eval.yaml
 prompt_features:
   situational_facts: false
   identity_from_identifier: false
+  domain_notes: false             # the telecom note came after 124acf7

@@ -786,7 +786,8 @@ class DefaultsTests(unittest.TestCase):
         new = {"situational_facts", "identity_from_identifier"}
         on = gc.load_gateway_config(config / "gateway.eval.yaml").prompt_features
         off = gc.load_gateway_config(GATEWAY).prompt_features
-        self.assertEqual({k for k in on if on[k] != off[k]}, new)
+        # The telecom domain note (analysis/2026-10-11_fdh-telecom-gpt55-deep) came after 124acf7 too.
+        self.assertEqual({k for k in on if on[k] != off[k]}, {*new, "domain_notes"})
         self.assertTrue(all(gc.load_gateway_config(config / "gateway.yaml").prompt_features[k] for k in new))
         for control in ("gateway.eval_control.yaml", "gateway.baseline.yaml", "gateway.identity_control.yaml"):
             with self.subTest(control=control):

@@ -110,10 +110,11 @@ class ShippedProfileTests(unittest.TestCase):
     def test_gateway_defaults_turn_on_every_backend_variant_and_the_baseline_none(self) -> None:
         config_dir = PROFILES.parent
         defaults = gc.load_gateway_config(config_dir / "gateway.yaml").prompt_features
-        self.assertEqual({k for k, v in defaults.items() if not v}, {"domain_notes"})  # no domain notes ship
+        self.assertEqual({k for k, v in defaults.items() if not v}, set())  # domain_notes too: the telecom note
         control = gc.load_gateway_config(config_dir / "gateway.eval_control.yaml").prompt_features
         self.assertEqual(
-            {k for k, v in defaults.items() if v != control[k]}, {*GEVAL_BACKEND_FIXES, *FIX_PLAN_BACKEND_FIXES}
+            {k for k, v in defaults.items() if v != control[k]},
+            {*GEVAL_BACKEND_FIXES, *FIX_PLAN_BACKEND_FIXES, "domain_notes"},
         )
         self.assertFalse(any(gc.load_gateway_config(config_dir / "gateway.baseline.yaml").prompt_features.values()))
         for name in ("spelling_v2", "spoken_output", "write_consent"):
@@ -168,7 +169,7 @@ class ShippedProfileTests(unittest.TestCase):
         identity_control = dict(gc.load_gateway_config(config_dir / "gateway.identity_control.yaml").prompt_features)
         self.assertEqual(
             {k for k in full if full[k] != identity_control[k]},
-            {"phone_format", *GEVAL_BACKEND_FIXES, *FIX_PLAN_BACKEND_FIXES},
+            {"phone_format", *GEVAL_BACKEND_FIXES, *FIX_PLAN_BACKEND_FIXES, "domain_notes"},
         )
 
     def test_delay_is_env_configurable_in_the_browser_profile(self) -> None:

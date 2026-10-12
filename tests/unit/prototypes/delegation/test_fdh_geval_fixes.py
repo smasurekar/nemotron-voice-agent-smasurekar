@@ -155,7 +155,12 @@ class BackendPromptTests(unittest.TestCase):
         self.assertFalse(any(control.prompt_features[name] for name in GEVAL_BACKEND_FIXES))
         self.assertTrue(default.hermes.backend_trace and control.hermes.backend_trace)
         # fix-plan-f1-f2-f4-f8.md arms extend gateway.eval.yaml instead (test_fdh_fix_plan.py).
-        later = {"gateway.eval_124acf7.yaml", "gateway.eval_situational.yaml", "gateway.eval_identity_name.yaml"}
+        later = {
+            "gateway.eval_124acf7.yaml",
+            "gateway.eval_situational.yaml",
+            "gateway.eval_identity_name.yaml",
+            "gateway.eval_no_note.yaml",  # the telecom note's ablation (test_fdh_identity_fixes.py)
+        }
         arms = [p for p in CONFIG.glob("gateway.eval_*") if p.name not in {"gateway.eval_control.yaml", *later}]
         self.assertEqual(len(arms), len(GEVAL_BACKEND_FIXES))
         for path in arms:

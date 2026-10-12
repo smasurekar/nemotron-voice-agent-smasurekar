@@ -120,6 +120,45 @@ Verified: unit tests (`tests/` all green); the stack restarted with `realtime_ev
 of the smoke session carried the same `tools_canonical_sha256`. No arm has run, so no fix is reportable yet. The
 `config_hash` of `realtime_eval.yaml` changed with the new settings: pair runs by profile name.
 
+**Changed 2026-10-11:** one **telecom domain note**, **on by default**
+([`telecom-domain-note-plan.md`](analysis/2026-10-11_fdh-telecom-gpt55-deep/telecom-domain-note-plan.md); why:
+[`telecom-gpt55-deep-analysis.md`](analysis/2026-10-11_fdh-telecom-gpt55-deep/telecom-gpt55-deep-analysis.md)).
+- `gateway.yaml` and `gateway.eval.yaml` detect telecom by its tool `get_customer_by_phone`
+  (`domains: {telecom: {tools_any: [get_customer_by_phone]}}`) and turn `domain_notes` on.
+- The note (`prompts.backend.yaml` `backend_domain_notes.telecom`) is a short operator brief: ask early whether the
+  customer is at home or travelling, unless they already said. It renders as `<domain_notes>` right after the policy,
+  in telecom sessions only.
+- **Every other session's backend prompt is byte-identical** to the one without the note: no domain is detected and
+  no block renders.
+- **Disclosure:** the note is disclosed word for word with the submission, and any change to its text needs a new
+  held-out validation (the plan's §4 and §5). The unit tests pin the text.
+- **Configs:**
+  - `gateway.eval_no_note.yaml` is its ablation (§6.5);
+  - `gateway.eval_control.yaml` and `gateway.eval_124acf7.yaml` pin it off;
+  - `gateway.baseline.yaml` and `gateway.identity_control.yaml` already did.
+- **Fingerprints:** `backend_catalog_sha256` changed in every domain. `backend_system_sha256` changed in telecom
+  only, and the telecom `backend_configured.backend_domain` is now `"telecom"`.
+
+Verified 2026-10-11:
+- **Unit tests:** `tests/` all green (1059 passed, 7 skipped).
+- **Stack:** restarted by §10, §3 and §4 with `realtime_eval.yaml` + `gateway.eval.yaml`.
+  - Gateway `/health`: `domain_notes: true`, `domains: ["telecom"]`, `backend_catalog_sha256` `55639a8b238b7eec`
+    (was `9d574cd28dd61107`).
+  - `fdh-voice`: `/health` ok, Docker `healthy`, `config_hash` `45362d8aa85a` (unchanged).
+  - The §3.1 probe: OK.
+- **Re-rendering the 2026-10-10 campaign's real prompts:**
+
+  | Domain | Note on (`gateway.eval.yaml`) | Note off (`gateway.eval_no_note.yaml`) |
+  |---|---|---|
+  | airline | `a13de147cfce3178`, unchanged | unchanged |
+  | retail | `7b790db22f8e371f`, unchanged | unchanged |
+  | telecom | `c25362d11d4a716b` → `606356dbc62bbcf6`, one note block | `c25362d11d4a716b`, the previous telecom prompt exactly |
+
+- **A live telecom session through the gateway:** `backend_domain: "telecom"`, `backend_system_sha256`
+  `606356dbc62bbcf6`, and its trace has the note right after `</policy>`.
+
+No eval has run with the note.
+
 ## 0. What runs where
 
 ```
@@ -229,8 +268,7 @@ docker logs -f nemotron-voice-agent-nemo-speech-1 2>&1 | grep -m1 'listening on 
 
 The gateway binds only to the `docker0` address: it has no authentication, so it must not be reachable
 from the LAN. The backend model is pinned on the command line. `FDH_GATEWAY_CONFIG` selects the gateway
-file: `gateway.yaml` (every backend prompt variant on, except `domain_notes` and the
-[`tau3-geval-failure-fixes-plan.md`](tau3-geval-failure-fixes-plan.md) variants) for normal runs, `gateway.eval.yaml`
+file: `gateway.yaml` (every backend prompt variant on, including `domain_notes`, the telecom note) for normal runs, `gateway.eval.yaml`
 (the same variants, pinned, plus the backend decision trace) with `realtime_eval.yaml` (§6.2),
 `gateway.baseline.yaml` (every variant off) for the control, or the gateway config an arm needs (§6.1, §6.3).
 `FDH_GATEWAY_LOG` names the gateway event log: the τ³ campaign tooling expects
@@ -256,17 +294,19 @@ Expected health:
 - `"agent_kind": "hermes"`;
 - `"hermes": {"model": "nvidia/nvidia/nemotron-3-ultra", "base_url": "https://inference-api.nvidia.com/v1",
   "reasoning": true}`;
-- `"backend_features"` with `spelling_v2`, `spoken_output`, `write_consent` and `phone_format` `true` and
-  `domain_notes` `false` with `gateway.yaml` and `gateway.eval.yaml` (all `false` with `gateway.baseline.yaml`,
-  one `true` with a `gateway.<variant>.yaml`, `phone_format` and `domain_notes` `false` with
-  `gateway.identity_control.yaml`), and `"backend_catalog_sha256"`, the hash of `prompts.backend.yaml`.
+- `"backend_features"` with `spelling_v2`, `spoken_output`, `write_consent`, `phone_format` and `domain_notes`
+  `true` with `gateway.yaml` and `gateway.eval.yaml` (all `false` with `gateway.baseline.yaml`, one `true` with a
+  `gateway.<variant>.yaml`, `phone_format` and `domain_notes` `false` with `gateway.identity_control.yaml`;
+  `domain_notes` `false` with `gateway.eval_no_note.yaml`, `gateway.eval_control.yaml` and
+  `gateway.eval_124acf7.yaml`), and `"backend_catalog_sha256"`, the hash of `prompts.backend.yaml`.
   `format_correction`, `write_consent_v2`, `policy_check`, `request_scope`, `transfer_check` and
   `capability_check` are `true` with `gateway.yaml` and `gateway.eval.yaml`, `false` with
   `gateway.eval_control.yaml`, `gateway.baseline.yaml` and `gateway.identity_control.yaml`, and one `true` with a
   `gateway.eval_<fix>.yaml` arm (§6.3);
 - `"hermes"` also reports `"backend_trace"`: `true` with `gateway.eval.yaml`, `gateway.eval_control.yaml` and the arms (unless
   `FDH_BACKEND_TRACE=false`), `false` otherwise;
-- `"domains": []`: no domain detection (every gateway config extends `gateway.yaml`, which sets `domains: {}`).
+- `"domains"`: telecom only, detected by `get_customer_by_phone` (every gateway config extends `gateway.yaml`). With
+  `domain_notes` off the detection changes nothing but `backend_domain`.
 
 The gateway loads its code and prompts at startup: restart it (§10, then this section) after a code or
 prompt change, or to switch `FDH_GATEWAY_CONFIG`.
@@ -514,7 +554,7 @@ Since 2026-10-05, it also requires `session_tools_sha256`, so logs written befor
 ### 6.2 Domain-Agnostic Evaluation Profile
 
 `realtime_eval.yaml` with `gateway.eval.yaml` is the single frozen profile for every domain. No setting names a
-tool or a domain. The voice profile `voice/realtime_eval.yaml` derives three things per session from the tool
+tool or a domain, except the disclosed telecom note's detection rule (§6.5). The voice profile `voice/realtime_eval.yaml` derives three things per session from the tool
 schemas in the client's `session.update`, after the gateway applies the tools:
 
 - **Tool-argument rules** (`normalization.tool_arguments.rules: auto`): for read tools only (name prefix
@@ -531,8 +571,8 @@ schemas in the client's `session.update`, after the gateway applies the tools:
   after the example's digit count. Such a turn waits at most `hold_ms` when the hold's evidence rules apply.
 
 The retry guard covers every tool (`scope: all`) with the pattern `(?i)\b(not found|no such|does not exist)\b`.
-`gateway.eval.yaml` pins `spelling_v2`, `spoken_output`, `write_consent` and `phone_format` on, and
-`domain_notes` off, so a later edit to `gateway.yaml` cannot change an evaluation. Before the first
+`gateway.eval.yaml` pins `spelling_v2`, `spoken_output`, `write_consent`, `phone_format` and `domain_notes` on (the
+telecom note, §6.5), so a later edit to `gateway.yaml` cannot change an evaluation. Before the first
 `session.update`, a session has no schema-derived rules.
 
 To start it, set the two variables and follow §3 and §4:
@@ -662,11 +702,42 @@ The G2 replay (§6.3) now compares a `U` decision's **complete, ordered** tool-c
 `extract` since 2026-10-09); decisions extracted earlier keep the old rule. It renders the arm's prompt with the
 same function as the gateway (`prompt_features.render_backend_system`).
 
+### 6.5 Telecom domain note and its ablation
+
+The default pair runs the telecom note
+([`telecom-domain-note-plan.md`](analysis/2026-10-11_fdh-telecom-gpt55-deep/telecom-domain-note-plan.md)). Its
+ablation changes only `domain_notes`.
+
+| Run | `FDH_PROFILE` | `FDH_GATEWAY_CONFIG` | Telecom note |
+|---|---|---|---|
+| Note on (the default) | `realtime_eval.yaml` | `gateway.eval.yaml` | on |
+| Note off (ablation) | `realtime_eval.yaml` | `gateway.eval_no_note.yaml` | off |
+
+```bash
+export FDH_PROFILE=realtime_eval.yaml FDH_GATEWAY_CONFIG=gateway.eval_no_note.yaml   # or gateway.eval.yaml
+export FDH_EVENT_LOG=logs/fdh_voice_events.realtime_eval.jsonl FDH_GATEWAY_LOG=logs/fdh_gateway_events.realtime_eval.jsonl
+# then §3 (gateway; restart it to switch) and §4 (fdh-voice, unchanged between the two runs)
+```
+
+What to check:
+
+- **Gateway `/health`:** `backend_features.domain_notes` is `true` (note on) or `false` (ablation), and `domains`
+  lists telecom with `get_customer_by_phone`.
+- **Telecom sessions:**
+  - `backend_configured.backend_domain` is `"telecom"`;
+  - with the note on, the backend trace's system prompt has one `<domain_notes>` block right after `</policy>`;
+  - `backend_system_sha256` differs between the two runs.
+- **Airline, retail and every other domain:** `backend_domain` is `""`, and `backend_system_sha256` is the same in
+  both runs. It also equals the value before the note: airline `a13de147cfce3178`, retail `7b790db22f8e371f`
+  (2026-10-10 campaign).
+- **Held-out sample:** the plan validates the note on telecom tasks outside the scored `base` split, before any
+  scored run. The plan has the gates.
+
 ## 7. Logs and what to look at
 
 | File | Content |
 |---|---|
-| `logs/fdh_voice_events.jsonl`, `logs/fdh_voice_web_events.jsonl` | Voice server events per session: `fdh_session_start` (config hash, `features`, `invalid_message_keys`), `frontend_prompt` (prompt hash), `backend_configured` (backend fingerprint), `delegation_decision`, `backend_action`, `tool_calls_out`, `tool_output_in`, `call_answered_locally` (`reason`, `message_key`), `backend_answer`, `status_spoken`, `playback_outcome`, `delivery_note`, `history_sync`, `turn_latency`, `filler_timing`, `barge_in`. Only with the fix's switch on (the defaults or an arm): `status_proactive` (M1), `spelling_hold` (M3), `answer_replayed` / `answer_replay_skipped` (M2), `filler_deduped` (G1), `answer_cleaned` (G2), `result_hint` (I3/I4: `tool`, `message_key`, `n`). `backend_configured` carries `backend_domain` (always `""`) and `session_tools_sha256`. With an `auto` switch on (`realtime_eval.yaml`): `session_rules` (`session_tools_sha256`, `schema_auto`, the derived rules, `format_retry_arguments`, `read_only_tools`). Since 2026-10-07, `tool_calls_out` carries `call_ids` and `arguments`; the geval-fix arms add `format_retry` (`tool`, `argument`, `before`, `after`, `mode`, `outcome`: `hint`, `found`, `not_found`, `transient`, `timeout` or `cancelled`; the relay's own retry is a `tool_calls_out` with `format_retry: true` and call id `<id>.fmt`) and `field_provenance` (the line added to a note) |
+| `logs/fdh_voice_events.jsonl`, `logs/fdh_voice_web_events.jsonl` | Voice server events per session: `fdh_session_start` (config hash, `features`, `invalid_message_keys`), `frontend_prompt` (prompt hash), `backend_configured` (backend fingerprint), `delegation_decision`, `backend_action`, `tool_calls_out`, `tool_output_in`, `call_answered_locally` (`reason`, `message_key`), `backend_answer`, `status_spoken`, `playback_outcome`, `delivery_note`, `history_sync`, `turn_latency`, `filler_timing`, `barge_in`. Only with the fix's switch on (the defaults or an arm): `status_proactive` (M1), `spelling_hold` (M3), `answer_replayed` / `answer_replay_skipped` (M2), `filler_deduped` (G1), `answer_cleaned` (G2), `result_hint` (I3/I4: `tool`, `message_key`, `n`). `backend_configured` carries `backend_domain` (`"telecom"` in telecom sessions, `""` otherwise) and `session_tools_sha256`. With an `auto` switch on (`realtime_eval.yaml`): `session_rules` (`session_tools_sha256`, `schema_auto`, the derived rules, `format_retry_arguments`, `read_only_tools`). Since 2026-10-07, `tool_calls_out` carries `call_ids` and `arguments`; the geval-fix arms add `format_retry` (`tool`, `argument`, `before`, `after`, `mode`, `outcome`: `hint`, `found`, `not_found`, `transient`, `timeout` or `cancelled`; the relay's own retry is a `tool_calls_out` with `format_retry: true` and call id `<id>.fmt`) and `field_provenance` (the line added to a note) |
 | `logs/fdh_gateway_events.jsonl` | Gateway: `gateway_start` (`backend_features`, `backend_catalog_sha256`), sessions, `backend_fingerprint`, worker spawn/ready/exit (`start_ms`, `rss_mb`), run epochs and outcomes, context delivery states, watchdog, respawns |
 | `logs/fdh_workers/*.log` | Each Hermes worker's stdout/stderr. "Auxiliary Nous client unavailable" lines are harmless. `Error code: 429` or `Retrying API call` makes the run invalid (§6.3, P0.1) |
 | `logs/fdh_workers/<session>.trace.jsonl` | With `hermes.backend_trace` (on in `gateway.eval.yaml`): one `session` record (the tool schemas as the model sees them, the rendered `backend_system`), then a `request` (the messages as sent) and a `response` (content, tool calls, finish reason, usage) per model call, joined by `api_request_id`. The input of the G2 replay (§6.3). Every `request` repeats the whole conversation, so the file grows with each model call |
@@ -732,12 +803,12 @@ Profiles are in `src/prototypes/voice_delegation_hermes_agent/config/`. Unknown 
 | M3 local "invalid ID" wording | `voice/*.yaml` `normalization.tool_arguments.invalid_message_key`, `escalate_invalid_message_key` | `tool_argument_invalid_readback`, `tool_argument_invalid_spell_all` (`voice/tau3_spelling.yaml`, which the default voice profile `voice/tau3_fixes.yaml` extends, and `voice/realtime_eval.yaml`); `tool_argument_invalid`, none in `voice/tau3.yaml` |
 | I3/I4 recovery notes | `voice/*.yaml` `normalization.tool_arguments.result_hints.{enabled,tools,failure_pattern,count_local_invalid,max_hints,message_key,escalate_message_key}`; texts in `voice_frontend_backend_agent/config/prompts.voice.yaml` | on in `voice/tau3_fixes.yaml` (the default; `voice/tau3_recovery_hint.yaml` is I3 without escalation): `find_user_id_by_name_zip`, `find_user_id_by_email`, `get_user_details`; `^Error: .*\bnot found\b`; local invalid answers count; 3; `lookup_not_found_hint`, `lookup_not_found_hint_words`. In `voice/realtime_eval.yaml`: `tools: auto`, a not-found text that names a user, customer, member, client or profile, local invalid answers only for a person argument. Off in `voice/tau3.yaml`, `voice/tau3_spelling.yaml` and the code defaults |
 | I1 phone numbers | `gateway.yaml` `prompt_features.phone_format`; text in `prompts.backend.yaml` `backend_system` (`<phone_numbers>`) | on (off in `gateway.baseline.yaml` and `gateway.identity_control.yaml`) |
-| Domain notes | `gateway.yaml` `prompt_features.domain_notes`, `domains.<name>.tools_any`; note texts in `prompts.backend.yaml` `backend_domain_notes` | off, `domains: {}`, no notes ship |
+| Domain notes | `gateway.yaml` `prompt_features.domain_notes`, `domains.<name>.tools_any`; note texts in `prompts.backend.yaml` `backend_domain_notes` | on, `domains: {telecom: {tools_any: [get_customer_by_phone]}}`, one note (telecom); off in the controls and `gateway.eval_no_note.yaml` |
 | M2 replay an unheard answer | `delegation.replay_unheard_answer.{enabled,ttl_s}` (needs `prompt_features.replay_intent`) | off, 30 s |
 | G1 filler de-duplication | `delegation.filler_dedupe.{enabled,recent}`; lines in `prompts.yaml` `filler_alternatives` | on, 3 |
 | G2 answer cleanup | `output.clean_answers` | on |
 | Frontend prompt variants | `delegation_agent.yaml` `prompt_features.replay_intent` | off |
-| Backend prompt variants | `gateway.yaml` `prompt_features.{spelling_v2,spoken_output,write_consent,phone_format,domain_notes}` (`gateway.baseline.yaml` turns all off; `gateway.<variant>.yaml` turns one on over it; `gateway.eval.yaml` pins them) | all on except `domain_notes` |
+| Backend prompt variants | `gateway.yaml` `prompt_features.{spelling_v2,spoken_output,write_consent,phone_format,domain_notes}` (`gateway.baseline.yaml` turns all off; `gateway.<variant>.yaml` turns one on over it; `gateway.eval.yaml` pins them) | all on |
 | Geval-fix backend variants (A2, B1–C2) | `gateway.yaml` `prompt_features.{format_correction,write_consent_v2,policy_check,request_scope,transfer_check,capability_check}`; text in `prompts.backend.yaml` (`spelling_v2`, `<consent>`, `<before_change>`, `<before_transfer>`) | on (`gateway.eval.yaml` pins them on; `gateway.eval_control.yaml` turns them off; `gateway.eval_<fix>.yaml` turns one on over the control) |
 | A1 / A1-lite format retry | `voice/*.yaml` `normalization.tool_arguments.format_retry.{enabled,mode,fields,hint_message_key,found_message_key,not_found_message_key}` (needs the retry guard); texts `format_retry_*` in `voice_frontend_backend_agent/config/prompts.voice.yaml` | on in `voice/realtime_eval.yaml` (`mode: call`, `fields: phone`); off in `voice/realtime_eval_control.yaml` and the code defaults |
 | A3 field provenance | `voice/*.yaml` `normalization.tool_arguments.result_hints.field_provenance` | on in `voice/realtime_eval.yaml` (with the A2 note `lookup_not_found_hint_format`); off in `voice/realtime_eval_control.yaml` and the code defaults |
